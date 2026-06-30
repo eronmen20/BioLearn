@@ -15,9 +15,9 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   _hydrated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
   logout: () => void;
-  register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
 }
 
 const STORAGE_KEY = "biolearn-auth";
@@ -62,14 +62,13 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
       if (!res.ok) {
         set({ isLoading: false });
-        return { success: false, error: data.error || "Login gagal" };
+        return { success: false, error: data.error || "Login gagal", needsVerification: data.needsVerification };
       }
 
       const user: User = data.user;
       saveToStorage(user, true);
       set({ user, isAuthenticated: true, isLoading: false });
 
-      // Load progress for this user
       loadUserProgress(user.email);
 
       return { success: true };
@@ -102,14 +101,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         return { success: false, error: data.error || "Register gagal" };
       }
 
-      const user: User = data.user;
-      saveToStorage(user, true);
-      set({ user, isAuthenticated: true, isLoading: false });
-
-      // Fresh progress for new user
-      loadUserProgress(user.email);
-
-      return { success: true };
+      set({ isLoading: false });
+      return { success: true, needsVerification: data.needsVerification };
     } catch (e) {
       set({ isLoading: false });
       return { success: false, error: "Gagal terhubung ke server" };
@@ -117,7 +110,6 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   },
 }));
 
-// Hydrate after mount + load progress
 export function useAuthHydration() {
   useEffect(() => {
     const stored = loadFromStorage();

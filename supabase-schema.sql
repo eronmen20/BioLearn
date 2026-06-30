@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   password TEXT NOT NULL,
   name TEXT NOT NULL,
   role TEXT DEFAULT 'user',
+  email_verified BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -21,3 +22,14 @@ CREATE TABLE IF NOT EXISTS progress (
   updated_at TIMESTAMPTZ DEFAULT now(),
   UNIQUE(user_id, bab_id)
 );
+
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_codes_email ON verification_codes(email);

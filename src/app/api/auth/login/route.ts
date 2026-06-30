@@ -14,6 +14,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
     }
 
+    if (!user.email_verified) {
+      return NextResponse.json({ error: "Email belum diverifikasi. Silakan cek inbox kamu.", needsVerification: true }, { status: 403 });
+    }
+
     return NextResponse.json({ user });
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

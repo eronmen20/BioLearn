@@ -38,17 +38,24 @@ export function LoginPage() {
     e.preventDefault();
     setError("");
 
-    let result;
     if (mode === "login") {
-      result = await login(email, password);
+      const result = await login(email, password);
+      if (result.success) {
+        router.push("/dashboard");
+      } else if (result.needsVerification) {
+        router.push(`/verify?email=${encodeURIComponent(email)}`);
+      } else {
+        setError(result.error || t("auth.error"));
+      }
     } else {
-      result = await register(email, password, name);
-    }
-
-    if (result.success) {
-      router.push("/dashboard");
-    } else {
-      setError(result.error || t("auth.error"));
+      const result = await register(email, password, name);
+      if (result.success && result.needsVerification) {
+        router.push(`/verify?email=${encodeURIComponent(email)}`);
+      } else if (result.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result.error || t("auth.error"));
+      }
     }
   };
 

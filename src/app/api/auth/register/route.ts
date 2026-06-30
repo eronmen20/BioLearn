@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await createUser(email, password, name);
-    return NextResponse.json({ user });
+    return NextResponse.json({ user, needsVerification: true });
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
