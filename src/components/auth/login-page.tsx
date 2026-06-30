@@ -127,6 +127,13 @@ export function LoginPage() {
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {mode === "login" && (
+                <div className="text-right">
+                  <button type="button" onClick={() => router.push("/forgot-password")} className="text-xs text-accent font-semibold hover:underline">
+                    Lupa password?
+                  </button>
+                </div>
+              )}
             </div>
 
             <button

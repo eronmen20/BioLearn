@@ -36,26 +36,32 @@ export async function verifyPassword(email: string, password: string) {
   return { id: user.id, email: user.email, name: user.name, role: user.role, email_verified: user.email_verified };
 }
 
-// ── Email Verification ──
+export async function resetPassword(email: string, newPassword: string) {
+  const hash = crypto.createHash("sha256").update(newPassword).digest("hex");
+  const { error } = await getDb().from("users").update({ password: hash }).eq("email", email);
+  if (error) throw error;
+}
 
-export async function createVerificationCode(email: string): Promise<string> {
+// ── Verification Codes ──
+
+export async function createVerificationCode(email: string, purpose: string = "verify_email"): Promise<string> {
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-  // Delete old codes for this email
-  await getDb().from("verification_codes").delete().eq("email", email).eq("used", false);
+  await getDb().from("verification_codes").delete().eq("email", email).eq("purpose", purpose).eq("used", false);
 
-  const { error } = await getDb().from("verification_codes").insert({ email, code, expires_at: expiresAt });
+  const { error } = await getDb().from("verification_codes").insert({ email, code, purpose, expires_at: expiresAt });
   if (error) throw error;
   return code;
 }
 
-export async function verifyCode(email: string, code: string): Promise<boolean> {
+export async function verifyCode(email: string, code: string, purpose: string = "verify_email"): Promise<boolean> {
   const { data } = await getDb()
     .from("verification_codes")
     .select("*")
     .eq("email", email)
     .eq("code", code)
+    .eq("purpose", purpose)
     .eq("used", false)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false })
@@ -64,11 +70,11 @@ export async function verifyCode(email: string, code: string): Promise<boolean> 
 
   if (!data) return false;
 
-  // Mark code as used
   await getDb().from("verification_codes").update({ used: true }).eq("id", data.id);
 
-  // Mark user email as verified
-  await getDb().from("users").update({ email_verified: true }).eq("email", email);
+  if (purpose === "verify_email") {
+    await getDb().from("users").update({ email_verified: true }).eq("email", email);
+  }
 
   return true;
 }

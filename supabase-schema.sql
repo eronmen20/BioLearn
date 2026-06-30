@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS verification_codes (
   id BIGSERIAL PRIMARY KEY,
   email TEXT NOT NULL,
   code TEXT NOT NULL,
+  purpose TEXT DEFAULT 'verify_email',
   expires_at TIMESTAMPTZ NOT NULL,
   used BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT now()
