@@ -4,6 +4,8 @@ An interactive biology learning platform designed for high school students (SMA)
 
 ## About
 
+> **Note:** This project is actively under development. New features, chapters, and improvements are continuously being added.
+
 BioLearn makes biology fun and accessible. The platform covers 8 major biology chapters across three grade levels (X, XI, XII), featuring interactive visualizations, drag-and-drop activities, hotspot diagrams, and comprehensive quizzes with instant feedback.
 
 ## Features
