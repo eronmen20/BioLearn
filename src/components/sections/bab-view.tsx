@@ -93,7 +93,7 @@ export function BabContent({ babId }: { babId: string }) {
       )}
 
       {/* Interactive Image */}
-      <HotspotSection bab={bab} lang={lang} />
+      <HotspotSection bab={bab} />
 
       {/* Quiz */}
       <QuizSection babId={bab.id} subIdx={subIdx} />
@@ -190,7 +190,8 @@ function AnimationSection({ bab, lang }: { bab: BabData; lang: string }) {
   );
 }
 
-function HotspotSection({ bab, lang }: { bab: BabData; lang: string }) {
+function HotspotSection({ bab }: { bab: BabData }) {
+  const { t } = useLangStore();
   if (bab.hotspotted === "sel") {
     return (
       <div className="mb-6">
