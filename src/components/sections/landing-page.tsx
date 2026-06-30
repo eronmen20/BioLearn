@@ -65,7 +65,7 @@ const SUBJECTS = [
 // AnimatedTitle - slide-up reveal animation
 function AnimatedTitle() {
   return (
-    <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+    <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
         <motion.div
           initial={{ y: "100%", opacity: 0 }}

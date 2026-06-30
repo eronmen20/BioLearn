@@ -149,12 +149,6 @@ export function LoginPage() {
               </>
             )}
           </div>
-
-          <div className="mt-6 p-4 bg-bg-alt rounded-xl border border-border">
-            <p className="text-xs text-muted-2 text-center">
-              🔑 {t("auth.demo")}<span className="font-mono text-accent">demo@biolearn.id</span> / <span className="font-mono text-accent">demo123</span>
-            </p>
-          </div>
         </div>
       </div>
     </div>
