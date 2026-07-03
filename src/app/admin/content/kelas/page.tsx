@@ -5,7 +5,6 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
-import { BAB } from '@/lib/bab-data';
 import { GraduationCap, BookOpen, Edit, Trash2, Save, Loader2, Palette } from 'lucide-react';
 
 interface KelasItem {
@@ -26,6 +25,7 @@ const COLOR_OPTIONS = ['#6c5ce7', '#00b894', '#00cec9', '#e17055', '#6ab04c', '#
 
 export default function KelasPage() {
   const [kelas, setKelas] = useState<KelasItem[]>([]);
+  const [babCounts, setBabCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [editing, setEditing] = useState<KelasItem | null>(null);
@@ -50,6 +50,16 @@ export default function KelasPage() {
       const res = await fetch('/api/admin/kelas');
       const data = await res.json();
       setKelas(data.kelas || []);
+
+      // Fetch bab counts per kelas
+      const resBab = await fetch('/api/admin/bab');
+      const babData = await resBab.json();
+      const counts: Record<string, number> = {};
+      (babData.bab || []).forEach((b: { kelas_id?: string }) => {
+        const kid = b.kelas_id || 'unknown';
+        counts[kid] = (counts[kid] || 0) + 1;
+      });
+      setBabCounts(counts);
     } catch {
       showToast('Gagal memuat data kelas');
     } finally {
@@ -164,14 +174,11 @@ export default function KelasPage() {
       key: 'id',
       label: 'Jumlah Bab',
       render: (row) => {
-        const babCount = BAB.filter((b) => {
-          // Estimate based on matching kelas id pattern
-          return false; // Will show dynamic count from DB later
-        }).length;
+        const count = babCounts[row.id] || 0;
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
             <BookOpen className="w-3 h-3" />
-            {babCount} bab
+            {count} bab
           </span>
         );
       },
@@ -214,18 +221,16 @@ export default function KelasPage() {
           <p className="text-xs text-muted mt-1">Total Kelas</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
-          <p className="text-2xl font-bold text-ink">{BAB.length}</p>
+          <p className="text-2xl font-bold text-ink">{Object.values(babCounts).reduce((a, b) => a + b, 0)}</p>
           <p className="text-xs text-muted mt-1">Total Bab</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
-          <p className="text-2xl font-bold text-ink">
-            {BAB.reduce((acc, b) => acc + b.subs.length, 0)}
-          </p>
-          <p className="text-xs text-muted mt-1">Total Sub Bab</p>
+          <p className="text-2xl font-bold text-ink">{kelas.length}</p>
+          <p className="text-xs text-muted mt-1">Tingkat</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
           <p className="text-2xl font-bold text-accent">3</p>
-          <p className="text-xs text-muted mt-1">Tingkat (X, XI, XII)</p>
+          <p className="text-xs text-muted mt-1">X, XI, XII</p>
         </div>
       </div>
 
