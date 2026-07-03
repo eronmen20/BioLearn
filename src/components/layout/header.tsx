@@ -6,13 +6,11 @@ import { useIsMounted } from "@/lib/use-is-mounted";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, User, ChevronDown, Menu, Shield, Sun, Moon } from "lucide-react";
-import { useThemeStore } from "@/lib/theme-store";
+import { LogOut, User, ChevronDown, Menu, Shield } from "lucide-react";
 
 export function Header() {
   const { lang, setLang, t } = useLangStore();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { resolved, setTheme } = useThemeStore();
   const mounted = useIsMounted();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -49,19 +47,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Theme toggle */}
-        <button
-          onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
-          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-bg-alt transition-colors"
-          title={resolved === "dark" ? "Mode Terang" : "Mode Gelap"}
-        >
-          {resolved === "dark" ? (
-            <Sun className="w-4 h-4 text-yellow" />
-          ) : (
-            <Moon className="w-4 h-4 text-muted" />
-          )}
-        </button>
-
         {/* Language toggle */}
         <div className="flex gap-1 bg-border/50 rounded-full p-[3px]">
           <button

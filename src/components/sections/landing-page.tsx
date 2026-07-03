@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Sun, Moon } from "lucide-react";
-import { useThemeStore } from "@/lib/theme-store";
+import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna } from "lucide-react";
 
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
@@ -110,29 +109,6 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
   );
 }
 
-// Floating Theme Switcher
-function ThemeSwitcher() {
-  const { resolved, setTheme } = useThemeStore();
-
-  return (
-    <motion.button
-      onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
-      className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-surface border-2 border-border shadow-lg flex items-center justify-center hover:border-accent hover:shadow-xl transition-all"
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: 1, type: "spring", stiffness: 200 }}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      title={resolved === "dark" ? "Mode Terang" : "Mode Gelap"}
-    >
-      {resolved === "dark" ? (
-        <Sun className="w-5 h-5 text-yellow" />
-      ) : (
-        <Moon className="w-5 h-5 text-accent" />
-      )}
-    </motion.button>
-  );
-}
 
 export function LandingPage() {
   const { scrollYProgress } = useScroll();
@@ -433,8 +409,6 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Floating Theme Switcher */}
-      <ThemeSwitcher />
 
       {/* Footer */}
       <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-white/50">

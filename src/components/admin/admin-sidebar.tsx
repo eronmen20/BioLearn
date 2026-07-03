@@ -66,6 +66,7 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/admin/content/materi-editor", icon: <Sparkles className="w-[18px] h-[18px]" />, label: "Editor Materi" },
       { href: "/admin/content/flashcard", icon: <CreditCard className="w-[18px] h-[18px]" />, label: "Flashcard" },
       { href: "/admin/content/quiz", icon: <HelpCircle className="w-[18px] h-[18px]" />, label: "Quiz" },
+      { href: "/admin/content/struktur", icon: <FlaskConical className="w-[18px] h-[18px]" />, label: "Struktur & Fungsi" },
       { href: "/admin/content/praktikum", icon: <FlaskConical className="w-[18px] h-[18px]" />, label: "Praktikum" },
       { href: "/admin/content/media", icon: <Image className="w-[18px] h-[18px]" />, label: "Media" },
     ],
