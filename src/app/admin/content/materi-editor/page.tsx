@@ -70,7 +70,7 @@ export default function MateriEditorPage() {
   const [loadingContent, setLoadingContent] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
 
-  // Load content when bab changes
+  // Load content when bab changes — fetch sub-bab list from DB first
   useEffect(() => {
     loadContent(selectedBab);
   }, [selectedBab]);
@@ -78,11 +78,56 @@ export default function MateriEditorPage() {
   const loadContent = async (babId: string) => {
     setLoadingContent(true);
     try {
+      // 1. Fetch sub-bab list from sub_bab table (source of truth)
+      const resSubBab = await fetch(`/api/admin/sub-bab?bab_id=${babId}`);
+      const subBabData = await resSubBab.json();
+      const subBabList: { key: string; title_id?: string; title_en?: string }[] = subBabData.sub_bab || [];
+
+      // 2. Fetch existing materi content
       const res = await fetch(`/api/admin/materi?bab_id=${babId}`);
       const data = await res.json();
 
-      if (data.materi && data.materi.length > 0) {
-        // Convert API data to editor format — KEEP DB IDs for upsert
+      // 3. Fetch quiz from sub_bab_quiz table
+      const resQuiz = await fetch(`/api/admin/quiz-v2?bab_id=${babId}`);
+      const quizData = await resQuiz.json();
+
+      if (subBabList.length > 0) {
+        // Use sub-bab list from DB as the structure
+        const subs: SubBab[] = subBabList.map((sb) => {
+          // Find matching materi content for this sub-bab key
+          const materi = (data.materi || []).find((m: Record<string, unknown>) => m.sub_bab_key === sb.key);
+          const meta = materi ? ((materi.metadata as Record<string, unknown>) || {}) : {};
+          return {
+            db_id: materi ? (materi.id as number) : null,
+            key: sb.key,
+            title_id: sb.title_id || (meta.title_id as string) || "",
+            title_en: sb.title_en || (meta.title_en as string) || "",
+            summary_id: materi ? (materi.summary_id as string) || "" : "",
+            summary_en: materi ? (materi.summary_en as string) || "" : "",
+            content_id: materi ? (materi.content_id as string) || "" : "",
+            content_en: materi ? (materi.content_en as string) || "" : "",
+            video_url: materi ? ((materi.metadata as Record<string, unknown>)?.video_url as string) || "" : "",
+          };
+        });
+
+        // Convert quiz data
+        const quiz: QuizQuestion[] = (quizData.quiz || [])
+          .filter((q: Record<string, unknown>) => !q.is_reflection)
+          .map((q: Record<string, unknown>) => ({
+            db_id: q.id as number,
+            id: String(q.id),
+            question_id: (q.question_id as string) || "",
+            question_en: (q.question_en as string) || "",
+            options_id: Array.isArray(q.options_id) ? q.options_id as string[] : ["", "", "", ""],
+            options_en: Array.isArray(q.options_en) ? q.options_en as string[] : ["", "", "", ""],
+            correct: (q.correct_answer as number) || 0,
+            explanation_id: (q.explanation_id as string) || "",
+            explanation_en: (q.explanation_en as string) || "",
+          }));
+
+        setContent({ bab_id: babId, subs, quiz });
+      } else if (data.materi && data.materi.length > 0) {
+        // Fallback: use materi data structure
         const subs: SubBab[] = [];
         const quiz: QuizQuestion[] = [];
 
@@ -103,7 +148,7 @@ export default function MateriEditorPage() {
           } else {
             const meta = (m.metadata as Record<string, unknown>) || {};
             subs.push({
-              db_id: m.id as number, // ← TRACK DB ID
+              db_id: m.id as number,
               key: (m.sub_bab_key as string) || "",
               title_id: (meta.title_id as string) || "",
               title_en: (meta.title_en as string) || "",
@@ -118,13 +163,13 @@ export default function MateriEditorPage() {
 
         setContent({ bab_id: babId, subs, quiz });
       } else {
-        // Initialize with empty structure based on BAB data
+        // Fallback: static BAB data
         const bab = BAB.find((b) => b.id === babId);
         if (bab) {
           setContent({
             bab_id: babId,
             subs: bab.subs.map((key, i) => ({
-              db_id: null, // baru, belum di DB
+              db_id: null,
               key,
               title_id: "",
               title_en: "",
@@ -284,35 +329,32 @@ export default function MateriEditorPage() {
         }
       }
 
-      // Save quiz questions
+      // Save quiz questions to sub_bab_quiz table (shared with Quiz V2)
       for (const q of content.quiz) {
         const payload = {
           bab_id: content.bab_id,
-          sub_bab_key: `quiz_${q.id}`,
-          type: "quiz",
-          content_id: q.question_id,
-          content_en: q.question_en,
-          summary_id: q.explanation_id,
-          summary_en: q.explanation_en,
-          metadata: {
-            options_id: q.options_id,
-            options_en: q.options_en,
-            correct: q.correct,
-            explanation_id: q.explanation_id,
-            explanation_en: q.explanation_en,
-          },
+          sub_bab_key: content.subs[0]?.key || null, // attach to first sub-bab if no specific key
+          is_reflection: false,
+          question_id: q.question_id,
+          question_en: q.question_en,
+          question_image_url: "",
+          options_id: q.options_id,
+          options_en: q.options_en,
+          correct_answer: q.correct,
+          explanation_id: q.explanation_id,
+          explanation_en: q.explanation_en,
         };
 
         try {
           let res;
           if (q.db_id) {
-            res = await fetch("/api/admin/materi", {
+            res = await fetch("/api/admin/quiz-v2", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...payload, id: q.db_id }),
             });
           } else {
-            res = await fetch("/api/admin/materi", {
+            res = await fetch("/api/admin/quiz-v2", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),

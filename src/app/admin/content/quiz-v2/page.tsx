@@ -18,7 +18,7 @@ interface QuizQuestion {
   is_reflection: boolean;
   question_id: string;
   question_en: string;
-  question_image: string;
+  question_image_url: string;
   options_id: string[];
   options_en: string[];
   correct_answer: number;
@@ -35,7 +35,7 @@ interface SubBabInfo {
 const EMPTY_QUESTION: Omit<QuizQuestion, 'id' | 'bab_id' | 'sub_bab_key' | 'is_reflection'> = {
   question_id: '',
   question_en: '',
-  question_image: '',
+  question_image_url: '',
   options_id: ['', '', '', ''],
   options_en: ['', '', '', ''],
   correct_answer: 0,
@@ -54,13 +54,22 @@ export default function QuizV2Page() {
   const [deletingIdx, setDeletingIdx] = useState<number | null>(null);
   const [expandedQ, setExpandedQ] = useState<number | null>(null);
 
-  // Get sub-bab list for current bab
-  const subBabList: SubBabInfo[] = filterBab
-    ? BAB.find((b) => b.id === filterBab)?.subs.map((s) => ({
-        key: s,
-        title: s.replace('sub.', '').replace(/([a-z]+)(\d+)/, '$1 $2'),
-      })) || []
-    : [];
+  // Get sub-bab list from DB (source of truth)
+  const [subBabList, setSubBabList] = useState<SubBabInfo[]>([]);
+
+  useEffect(() => {
+    if (!filterBab) { setSubBabList([]); return; }
+    fetch(`/api/admin/sub-bab?bab_id=${filterBab}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const list = (data.sub_bab || []).map((s: { key: string; title_id?: string }) => ({
+          key: s.key,
+          title: s.title_id || s.key.replace('sub.', '').replace(/([a-z]+)(\d+)/, '$1 $2'),
+        }));
+        setSubBabList(list);
+      })
+      .catch(() => setSubBabList([]));
+  }, [filterBab]);
 
   const tabs = [
     ...subBabList.map((s) => ({ key: s.key, label: s.title, isReflection: false })),
@@ -152,7 +161,7 @@ export default function QuizV2Page() {
         is_reflection: q.is_reflection,
         question_id: q.question_id,
         question_en: q.question_en,
-        question_image: q.question_image,
+        question_image_url: q.question_image_url,
         options_id: q.options_id,
         options_en: q.options_en,
         correct_answer: q.correct_answer,
@@ -393,8 +402,8 @@ export default function QuizV2Page() {
 
                       {/* Question Image */}
                       <ImageUpload
-                        value={q.question_image}
-                        onChange={(url) => updateQuestion(globalIdx, { question_image: url })}
+                        value={q.question_image_url}
+                        onChange={(url) => updateQuestion(globalIdx, { question_image_url: url })}
                         folder="quiz-v2"
                         label="🖼️ Gambar Soal (opsional)"
                         placeholder="URL gambar atau upload"

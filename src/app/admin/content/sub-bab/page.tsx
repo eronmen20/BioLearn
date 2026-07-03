@@ -66,7 +66,12 @@ export default function SubBabPage() {
       const url = filterBab ? `/api/admin/sub-bab?bab_id=${filterBab}` : '/api/admin/sub-bab';
       const res = await fetch(url);
       const data = await res.json();
-      setItems(data.sub_bab || []);
+      // Map API response: key -> sub_bab_key for form compatibility
+      const mapped = (data.sub_bab || []).map((item: Record<string, unknown>) => ({
+        ...item,
+        sub_bab_key: item.key || item.sub_bab_key || '',
+      }));
+      setItems(mapped as SubBabItem[]);
     } catch {
       showToast('Gagal memuat data sub-bab');
     } finally {
@@ -125,9 +130,12 @@ export default function SubBabPage() {
     if (!form.title_id.trim()) return showToast('Judul (ID) wajib diisi');
     setSaving(true);
     try {
+      // Map sub_bab_key -> key for API
+      const { sub_bab_key, ...rest } = form;
       const payload = {
         ...(editing ? { id: editing.id } : {}),
-        ...form,
+        ...rest,
+        key: sub_bab_key,
       };
       const res = await fetch('/api/admin/sub-bab', {
         method: editing ? 'PUT' : 'POST',
