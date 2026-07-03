@@ -1,22 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { BAB, type BabData } from "@/lib/bab-data";
-import { QUIZ } from "@/lib/quiz-data";
+import { useBabContent } from "@/lib/use-bab-content";
 import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { showToast } from "@/components/ui/toaster";
-import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw, Database } from "lucide-react";
 
 export function BabContent({ babId }: { babId: string }) {
   const { lang, t } = useLangStore();
-  const bab = BAB.find((b) => b.id === babId);
+  const content = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
   const [viewType, setViewType] = useState<"full" | "summary">("full");
 
-  if (!bab) {
+  if (!content) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
   }
+
+  const { bab, summary, full, quiz, subs, source } = content;
 
   return (
     <div className="animate-fade-in-up">
@@ -29,10 +30,21 @@ export function BabContent({ babId }: { babId: string }) {
             <p className="text-muted text-xs sm:text-sm mt-0.5">{t(`bab.${bab.id}.desc`)}</p>
           </div>
         </div>
+        {source === "supabase" && (
+          <div className="flex items-center gap-1.5 text-xs text-green">
+            <Database className="w-3 h-3" />
+            <span>Konten dari database (bisa diedit dari admin)</span>
+          </div>
+        )}
       </div>
 
       {/* Subbab Nav */}
-      <SubbabNav bab={bab} subIdx={subIdx} onSelect={setSubIdx} />
+      <SubbabNav
+        subs={subs}
+        babId={babId}
+        subIdx={subIdx}
+        onSelect={setSubIdx}
+      />
 
       {/* View Toggle */}
       <div className="flex gap-1 bg-border/40 rounded-full p-[3px] w-fit mb-5">
@@ -63,16 +75,23 @@ export function BabContent({ babId }: { babId: string }) {
                 <span className="text-lg">📝</span>
                 <h4 className="font-bold text-sm text-accent-dark">{t("summary.title")}</h4>
               </div>
-              <p className="text-sm leading-relaxed text-muted">{bab.summary[lang][subIdx]}</p>
+              <p className="text-sm leading-relaxed text-muted">
+                {summary[lang]?.[subIdx] || summary.id?.[subIdx] || ""}
+              </p>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none [&_h3]:text-accent-dark [&_h3]:font-bold [&_p]:leading-relaxed [&_strong]:text-ink [&_em]:text-accent" dangerouslySetInnerHTML={{ __html: bab.full[lang][subIdx] }} />
+            <div
+              className="prose prose-sm max-w-none [&_h3]:text-accent-dark [&_h3]:font-bold [&_p]:leading-relaxed [&_strong]:text-ink [&_em]:text-accent"
+              dangerouslySetInnerHTML={{
+                __html: full[lang]?.[subIdx] || full.id?.[subIdx] || "<p>Konten belum tersedia</p>",
+              }}
+            />
           )}
         </div>
       </div>
 
       {/* Animation */}
-      <AnimationSection bab={bab} lang={lang} />
+      <AnimationSection babId={bab.id} color={bab.color} icon={bab.icon} />
 
       {/* Video */}
       {bab.videoId && (
@@ -93,22 +112,22 @@ export function BabContent({ babId }: { babId: string }) {
       )}
 
       {/* Interactive Image */}
-      <HotspotSection bab={bab} />
+      <HotspotSection babId={bab.id} hotspotted={bab.hotspotted} />
 
       {/* Quiz */}
-      <QuizSection babId={bab.id} subIdx={subIdx} />
+      <QuizSection babId={bab.id} quiz={quiz} subIdx={subIdx} />
     </div>
   );
 }
 
-function SubbabNav({ bab, subIdx, onSelect }: { bab: BabData; subIdx: number; onSelect: (i: number) => void }) {
+function SubbabNav({ subs, babId, subIdx, onSelect }: { subs: string[]; babId: string; subIdx: number; onSelect: (i: number) => void }) {
   const { t } = useLangStore();
   const progress = useProgressStore();
-  const p = progress.getProgress(bab.id);
+  const p = progress.getProgress(babId);
 
   return (
     <div className="flex gap-1.5 sm:gap-2 flex-wrap mb-5">
-      {bab.subs.map((s, i) => {
+      {subs.map((s, i) => {
         const subP = p.subs[s] || { done: false };
         const isActive = i === subIdx;
         return (
@@ -130,10 +149,10 @@ function SubbabNav({ bab, subIdx, onSelect }: { bab: BabData; subIdx: number; on
   );
 }
 
-function AnimationSection({ bab, lang }: { bab: BabData; lang: string }) {
+function AnimationSection({ babId, color, icon }: { babId: string; color: string; icon: string }) {
   const { t } = useLangStore();
 
-  if (bab.id === "sel") {
+  if (babId === "sel") {
     return (
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
@@ -154,7 +173,7 @@ function AnimationSection({ bab, lang }: { bab: BabData; lang: string }) {
     );
   }
 
-  if (bab.id === "pencernaan") {
+  if (babId === "pencernaan") {
     return (
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
@@ -182,261 +201,168 @@ function AnimationSection({ bab, lang }: { bab: BabData; lang: string }) {
         <span className="text-lg">🎬</span>
         <h3 className="font-bold text-sm">{t("animasi")}</h3>
       </div>
-      <div className="rounded-2xl p-8 text-center min-h-[180px] flex flex-col items-center justify-center shadow-card border border-border/50" style={{ background: `linear-gradient(135deg, ${bab.color}15, ${bab.color}08)` }}>
-        <div className="text-5xl animate-glow">{bab.icon}</div>
-        <div className="text-sm font-semibold text-muted mt-3">{t(`bab.${bab.id}`)}</div>
+      <div className="rounded-2xl p-8 text-center min-h-[180px] flex flex-col items-center justify-center shadow-card border border-border/50" style={{ background: `linear-gradient(135deg, ${color}15, ${color}08)` }}>
+        <div className="text-5xl animate-glow">{icon}</div>
+        <div className="text-sm font-semibold text-muted mt-3">{t(`bab.${babId}`)}</div>
       </div>
     </div>
   );
 }
 
-function HotspotSection({ bab }: { bab: BabData }) {
+function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: string }) {
   const { t } = useLangStore();
-  if (bab.hotspotted === "sel") {
+  if (hotspotted === "sel") {
     return (
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg">🖼️</span>
           <h3 className="font-bold text-sm">{t("animasi.sel.title")}</h3>
         </div>
-        <div className="rounded-2xl overflow-hidden shadow-card border border-border/50">
-          <div className="min-h-[280px] bg-gradient-to-br from-[#e8e5ff] to-[#d4d0ff] flex items-center justify-center p-5">
-            <div className="w-[220px] h-[220px] border-[3px] border-dashed border-accent/30 rounded-full relative flex items-center justify-center bg-white/50 backdrop-blur-sm">
-              <div className="text-sm text-center text-muted font-medium">
-                🔬 {t("animasi.sel.hint")}
-              </div>
-              <HotspotDot style={{ top: "20%", left: "25%" }} label={t("hotspot.nukleus")} desc={t("hotspot.nukleus.desc")} />
-              <HotspotDot style={{ top: "50%", right: "15%" }} label={t("hotspot.mito")} desc={t("hotspot.mito.desc")} />
-              <HotspotDot style={{ bottom: "25%", left: "30%" }} label={t("hotspot.rekasar")} desc={t("hotspot.rekasar.desc")} />
-              <HotspotDot style={{ bottom: "15%", right: "30%" }} label={t("hotspot.golgi")} desc={t("hotspot.golgi.desc")} />
-            </div>
-          </div>
-          <p className="text-xs text-muted-2 text-center py-2 bg-bg-alt">{t("hotspot.click")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (bab.hotspotted === "pencernaan") {
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">🖼️</span>
-          <h3 className="font-bold text-sm">{t("animasi.pencernaan.title")}</h3>
-        </div>
-        <div className="rounded-2xl overflow-hidden shadow-card border border-border/50">
-          <div className="min-h-[320px] bg-gradient-to-b from-[#fff7ed] to-[#fef3c7] flex items-center justify-center p-5">
-            <div className="relative h-[260px] flex flex-col items-center gap-[2px]">
-              <div className="w-[60px] h-[20px] bg-red rounded-t-lg flex items-center justify-center text-[9px] text-white font-semibold">{t("hotspot.mulut")}</div>
-              <div className="w-[14px] h-[30px] bg-[#d63031] rounded-full cursor-pointer hover:scale-110 transition-transform" onClick={() => showToast(t("hotspot.esofagus"))} />
-              <div className="w-[40px] h-[35px] bg-red rounded-[50%_50%_30%_30%] flex items-center justify-center text-[8px] text-white font-semibold cursor-pointer hover:scale-110 transition-transform" onClick={() => showToast(t("hotspot.lambung.desc"))}>
-                {t("hotspot.lambung")}
-              </div>
-              <div className="w-[12px] h-[50px] bg-[#fab1a0] flex items-center justify-center flex-wrap cursor-pointer hover:scale-110 transition-transform" onClick={() => showToast(t("hotspot.usushalus"))}>
-                {[1, 2, 3].map((i) => (<div key={i} className="w-[4px] h-[8px] bg-red rounded-sm mx-px" />))}
-              </div>
-              <div className="w-[30px] h-[20px] bg-green rounded-md flex items-center justify-center text-[7px] text-white font-semibold cursor-pointer hover:scale-110 transition-transform" onClick={() => showToast(t("hotspot.ususbesar.desc"))}>
-                {t("hotspot.ususbesar")}
-              </div>
-              <p className="text-[9px] text-muted mt-1">{t("organ.click")}</p>
-            </div>
+        <div className="bg-surface rounded-2xl p-6 shadow-card border border-border/50">
+          <div className="text-center text-muted text-sm">
+            {t("animasi.sel.desc")}
           </div>
         </div>
       </div>
     );
   }
-
   return null;
 }
 
-function HotspotDot({ style, label, desc }: { style: React.CSSProperties; label: string; desc: string }) {
-  return (
-    <div className="absolute w-[24px] h-[24px] rounded-full bg-accent/70 border-[3px] border-white shadow-md cursor-pointer transition-transform hover:scale-130 animate-pulse-dot z-10" style={style} onClick={() => showToast(desc)}>
-      <div className="absolute bottom-[30px] left-1/2 -translate-x-1/2 bg-ink text-white px-2 py-0.5 rounded-md text-[10px] whitespace-nowrap opacity-0 hover:opacity-100 transition-opacity pointer-events-none z-20">{label}</div>
-    </div>
-  );
-}
-
-function QuizSection({ babId, subIdx }: { babId: string; subIdx: number }) {
+function QuizSection({ babId, quiz, subIdx }: { babId: string; quiz: import("@/lib/quiz-data").QuizQuestion[]; subIdx: number }) {
   const { lang, t } = useLangStore();
   const progress = useProgressStore();
-  const [quizIdx, setQuizIdx] = useState(0);
+  const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
 
-  const bab = BAB.find((b) => b.id === babId);
-  const qs = QUIZ[babId];
-  if (!qs || !bab) return null;
+  const questions = quiz;
+  if (questions.length === 0) return null;
 
-  const qPerSub = Math.ceil(qs.length / bab.subs.length);
-  const startIdx = subIdx * qPerSub;
-  const subQs = qs.slice(startIdx, Math.min(startIdx + qPerSub, qs.length));
-  if (subQs.length === 0) return null;
-
-  const currentQ = subQs[quizIdx % subQs.length];
-  const letters = ["A", "B", "C", "D"];
-  const subKey = `${babId}.sub${subIdx + 1}`;
-  const isCorrect = selected === currentQ.ans;
-
-  const handleSelect = (idx: number) => {
-    if (checked) return;
-    setSelected(idx);
-  };
+  const q = questions[currentQ];
+  const isCorrect = selected === q.ans;
 
   const handleCheck = () => {
-    if (selected === null) {
-      showToast(t("quiz.select"));
-      return;
-    }
+    if (selected === null) return;
     setChecked(true);
-    progress.recordAnswer(babId, subKey, isCorrect);
+    if (isCorrect) setCorrectCount((c) => c + 1);
+    progress.recordAnswer(babId, `sub.${babId}${subIdx + 1}`, isCorrect);
   };
 
   const handleNext = () => {
-    if (quizIdx + 1 >= subQs.length) {
-      setCompleted(true);
-      showToast(`${t("quiz.complete")} 🎉`);
-      setQuizIdx(0);
+    if (currentQ < questions.length - 1) {
+      setCurrentQ((c) => c + 1);
+      setSelected(null);
+      setChecked(false);
     } else {
-      setQuizIdx(quizIdx + 1);
+      setShowResult(true);
     }
-    setSelected(null);
-    setChecked(false);
   };
 
   const handleRetry = () => {
-    setQuizIdx(0);
+    setCurrentQ(0);
     setSelected(null);
     setChecked(false);
-    setCompleted(false);
+    setShowResult(false);
+    setCorrectCount(0);
   };
 
-  const p = progress.getProgress(babId);
-  const subP = p.subs[subKey] || { done: false };
+  if (showResult) {
+    const score = Math.round((correctCount / questions.length) * 100);
+    return (
+      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 text-center">
+        <h3 className="text-lg font-bold mb-2">{t("quiz.complete")}</h3>
+        <p className="text-3xl font-extrabold text-accent mb-2">{score}%</p>
+        <p className="text-sm text-muted mb-4">
+          {correctCount}/{questions.length} {t("quiz.correct")}
+        </p>
+        <button onClick={handleRetry} className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors">
+          <RotateCcw className="w-4 h-4 inline mr-2" />
+          {t("quiz.again")}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-surface rounded-2xl shadow-card border border-border/50 overflow-hidden">
-      <div className="p-4 sm:p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
-          <div>
-            <h2 className="text-lg font-bold">{t("quiz.title")}</h2>
-            <p className="text-muted text-xs sm:text-sm mt-0.5">
-              {t(`bab.${babId}`)} — {t(bab.subs[subIdx])}
-              {subP.done && <span className="ml-2">✅</span>}
-            </p>
-          </div>
-          <div className="text-sm font-bold text-accent bg-accent/5 px-3 py-1.5 rounded-full w-fit">
-            📊 {p.correct}/{p.total}
-          </div>
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-sm">{t("quiz.title")}</h3>
+          <span className="text-xs text-muted">
+            {currentQ + 1}/{questions.length}
+          </span>
         </div>
 
-        {completed ? (
-          <div className="text-center py-10">
-            <div className="text-6xl mb-4">🎉</div>
-            <h3 className="text-xl font-bold mb-2">{t("quiz.complete")}</h3>
-            <p className="text-muted mb-6">
-              {t("quiz.score")}: {p.correct}/{p.total}
-            </p>
-            <button
-              onClick={handleRetry}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-full font-semibold text-sm hover:bg-accent-dark transition-all shadow-sm hover:shadow-md"
-            >
-              <RotateCcw className="w-4 h-4" />
-              {t("quiz.again")}
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Question */}
-            <div className="flex items-start gap-3 mb-5">
-              <span className="flex-shrink-0 w-8 h-8 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-sm">
-                {quizIdx + 1}
+        <p className="text-sm font-medium mb-4">{q.q[lang] || q.q.id}</p>
+
+        <div className="space-y-2 mb-4">
+          {q.opts[lang]?.map((opt: string, i: number) => {
+            const optText = q.opts[lang]?.[i] || q.opts.id?.[i] || "";
+            return (
+              <button
+                key={i}
+                onClick={() => !checked && setSelected(i)}
+                disabled={checked}
+                className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 transition-all ${
+                  checked
+                    ? i === q.ans
+                      ? "border-green bg-green-light text-green"
+                      : i === selected && !isCorrect
+                      ? "border-red bg-red-light text-red"
+                      : "border-border text-muted"
+                    : selected === i
+                    ? "border-accent bg-accent/5 text-accent"
+                    : "border-border hover:border-accent-light text-ink"
+                }`}
+              >
+                {optText}
+              </button>
+            );
+          })}
+        </div>
+
+        {checked && (
+          <div className={`p-4 rounded-xl mb-4 ${isCorrect ? "bg-green-light" : "bg-red-light"}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {isCorrect ? (
+                <CheckCircle className="w-4 h-4 text-green" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red" />
+              )}
+              <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
+                {isCorrect ? t("quiz.correct") : t("quiz.wrong")}
               </span>
-              <p className="font-semibold leading-relaxed pt-1">{currentQ.q[lang]}</p>
             </div>
-
-            {/* Options */}
-            <div className="flex flex-col gap-2.5 mb-5">
-              {currentQ.opts[lang].map((o, i) => {
-                let bgClass = "bg-surface border-border hover:border-accent-light hover:bg-accent/[0.03]";
-                if (checked) {
-                  if (i === currentQ.ans) bgClass = "border-green bg-green-light/50 hover:bg-green-light/50";
-                  else if (i === selected) bgClass = "border-red bg-red-light/50 hover:bg-red-light/50";
-                  else bgClass = "border-border/50 opacity-60";
-                } else if (i === selected) {
-                  bgClass = "border-accent bg-accent/5";
-                }
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleSelect(i)}
-                    className={`flex items-center gap-3 p-3.5 sm:p-4 min-h-[48px] rounded-xl border-2 text-sm leading-snug transition-all touch-manipulation ${bgClass} ${checked ? "cursor-default" : "cursor-pointer active:scale-[0.98]"}`}
-                    disabled={checked}
-                  >
-                    <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                      checked
-                        ? i === currentQ.ans ? "bg-green text-white" : i === selected ? "bg-red text-white" : "bg-border text-muted"
-                        : i === selected ? "bg-accent text-white" : "bg-border text-muted"
-                    }`}>{letters[i]}</span>
-                    <span className="text-left">{o}</span>
-                    {checked && i === currentQ.ans && <CheckCircle className="w-4 h-4 text-green ml-auto flex-shrink-0" />}
-                    {checked && i === selected && i !== currentQ.ans && <XCircle className="w-4 h-4 text-red ml-auto flex-shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Explanation */}
-            {checked && currentQ.explanation && (
-              <div className={`p-4 rounded-xl mb-5 border ${isCorrect ? "bg-green-light/30 border-green/20" : "bg-red-light/30 border-red/20"}`}>
-                <div className="flex items-start gap-2">
-                  <Lightbulb className={`w-4 h-4 mt-0.5 flex-shrink-0 ${isCorrect ? "text-green" : "text-red"}`} />
-                  <div>
-                    <p className="text-xs font-semibold text-ink mb-1">
-                      {isCorrect ? t("quiz.explanation") : t("quiz.correct_answer") + " " + currentQ.opts[lang][currentQ.ans]}
-                    </p>
-                    <p className="text-sm text-muted leading-relaxed">{currentQ.explanation[lang]}</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Feedback for old questions without explanation */}
-            {checked && !currentQ.explanation && (
-              <div className={`p-4 rounded-xl mb-5 border ${isCorrect ? "bg-green-light/30 border-green/20" : "bg-red-light/30 border-red/20"}`}>
-                <p className="text-sm flex items-center gap-2">
-                  {isCorrect ? (
-                    <><CheckCircle className="w-4 h-4 text-green" /> {t("quiz.correct")} 🎉</>
-                  ) : (
-                    <><XCircle className="w-4 h-4 text-red" /> {t("quiz.wrong")} — {t("quiz.correct_answer")} {currentQ.opts[lang][currentQ.ans]}</>
-                  )}
+            {q.explanation && (
+              <div className="flex items-start gap-2 mt-2">
+                <Lightbulb className="w-4 h-4 text-yellow flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted">
+                  {q.explanation[lang] || q.explanation.id}
                 </p>
               </div>
             )}
+          </div>
+        )}
 
-            {/* Action button */}
-            <button
-              onClick={checked ? handleNext : handleCheck}
-              className="w-full py-3.5 sm:py-3 bg-accent hover:bg-accent-dark text-white rounded-full font-semibold text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md active:scale-[0.98] touch-manipulation min-h-[48px]"
-            >
-              {checked ? (
-                <>{t("quiz.next")} <ChevronRight className="w-4 h-4" /></>
-              ) : (
-                t("quiz.check")
-              )}
-            </button>
-
-            {/* Progress */}
-            <div className="flex justify-between items-center mt-5 pt-4 border-t border-border/50">
-              <span className="text-xs font-semibold text-muted">
-                {quizIdx + 1} / {subQs.length}
-              </span>
-              <div className="h-2 bg-border rounded-full flex-1 mx-4 overflow-hidden">
-                <div className="h-full rounded-full bg-gradient-to-r from-accent to-accent-2 transition-all duration-500" style={{ width: `${((quizIdx + 1) / subQs.length) * 100}%` }} />
-              </div>
-            </div>
-          </>
+        {!checked ? (
+          <button
+            onClick={handleCheck}
+            disabled={selected === null}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
+          >
+            {t("quiz.check")}
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
+          >
+            {currentQ < questions.length - 1 ? t("quiz.next") : t("quiz.result")}
+            <ChevronRight className="w-4 h-4" />
+          </button>
         )}
       </div>
     </div>
