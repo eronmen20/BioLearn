@@ -15,7 +15,21 @@ export async function POST(req: NextRequest) {
     }
 
     const user = await createUser(email, password, name);
-    return NextResponse.json({ user, needsVerification: true });
+
+    // Auto-verify for development (Resend free tier limitation)
+    // In production, use verified domain in Resend
+    try {
+      const { createClient } = require("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      await supabase.from("users").update({ email_verified: true }).eq("email", email);
+    } catch {
+      // ignore
+    }
+
+    return NextResponse.json({ user, needsVerification: false });
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

@@ -14,9 +14,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
     }
 
-    if (!user.email_verified) {
-      return NextResponse.json({ error: "Email belum diverifikasi. Silakan cek inbox kamu.", needsVerification: true }, { status: 403 });
-    }
+    // Skip verification check for now (auto-verified on register)
+    // Re-enable when Resend custom domain is configured
+    // if (!user.email_verified) {
+    //   return NextResponse.json({ error: "Email belum diverifikasi. Silakan cek inbox kamu.", needsVerification: true }, { status: 403 });
+    // }
 
     return NextResponse.json({ user });
   } catch (e) {
