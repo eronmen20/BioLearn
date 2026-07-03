@@ -24,7 +24,7 @@ const FEATURES = [
     title: "Materi Lengkap",
     desc: "8 bab biologi lengkap dari sel, pencernaan, sirkulasi, saraf, bakteri, genetika, evolusi, hingga ekosistem.",
     color: "from-purple-500 to-indigo-500",
-    bg: "bg-purple-50",
+    bgClass: "bg-purple-500/10 dark:bg-purple-500/20",
     iconColor: "text-purple-500",
   },
   {
@@ -32,7 +32,7 @@ const FEATURES = [
     title: "Kuis Interaktif",
     desc: "Uji pemahamanmu dengan kuis di setiap subbab. Langsung dapat feedback dan penjelasan!",
     color: "from-pink-500 to-rose-500",
-    bg: "bg-pink-50",
+    bgClass: "bg-pink-500/10 dark:bg-pink-500/20",
     iconColor: "text-pink-500",
   },
   {
@@ -40,7 +40,7 @@ const FEATURES = [
     title: "Animasi & Visual",
     desc: "Visualisasi interaktif struktur sel, sistem pencernaan, dan DNA double helix.",
     color: "from-cyan-500 to-teal-500",
-    bg: "bg-cyan-50",
+    bgClass: "bg-cyan-500/10 dark:bg-cyan-500/20",
     iconColor: "text-cyan-500",
   },
   {
@@ -48,7 +48,7 @@ const FEATURES = [
     title: "Track Progress",
     desc: "Pantai penguasaanmu di setiap bab. Lihat statistik kuis dan mastery score.",
     color: "from-orange-500 to-amber-500",
-    bg: "bg-orange-50",
+    bgClass: "bg-orange-500/10 dark:bg-orange-500/20",
     iconColor: "text-orange-500",
   },
 ];
@@ -116,7 +116,7 @@ export function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-bg to-[#f0fdf4] dark:from-[#0f0f1a] dark:via-bg dark:to-[#0a1a0f] overflow-hidden relative">
       {/* Floating Biology Elements */}
       {FLOATING_ITEMS.map((item, i) => (
         <motion.div
@@ -125,7 +125,7 @@ export function LandingPage() {
           style={{ left: item.x, top: item.y }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{
-            opacity: 0.2,
+            opacity: 0.15,
             scale: 1,
             y: [0, -15, 10, 0],
             rotate: [0, 5, -3, 0],
@@ -201,7 +201,7 @@ export function LandingPage() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-ink border-2 border-border rounded-full font-bold text-base sm:text-lg transition-all hover:border-accent/30"
+                className="flex items-center gap-2 px-8 py-4 bg-surface hover:bg-bg-alt text-ink border-2 border-border rounded-full font-bold text-base sm:text-lg transition-all hover:border-accent/30"
               >
                 Lihat Materi
               </Link>
@@ -275,7 +275,7 @@ export function LandingPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <motion.div
-                    className={`w-12 h-12 ${f.bg} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
+                    className={`w-12 h-12 ${f.bgClass} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
                     {f.icon}
@@ -290,7 +290,7 @@ export function LandingPage() {
       </section>
 
       {/* Subjects Preview */}
-      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff]">
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-surface/50">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
@@ -391,7 +391,7 @@ export function LandingPage() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     href="/login"
-                    className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-gray-50 transition-all shadow-xl"
+                    className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-white/90 transition-all shadow-xl"
                   >
                     Daftar Sekarang
                     <motion.div
@@ -409,7 +409,7 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-white/50">
+      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-surface/50">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <div className="flex items-center gap-2">
             <span className="font-extrabold">

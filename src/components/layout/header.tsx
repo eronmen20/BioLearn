@@ -42,7 +42,7 @@ export function Header() {
           <Menu className="w-5 h-5 text-ink" />
         </label>
 
-        <Link href="/" className="text-lg sm:text-xl font-extrabold whitespace-nowrap">
+        <Link href={mounted && isAuthenticated ? "/dashboard" : "/"} className="text-lg sm:text-xl font-extrabold whitespace-nowrap">
           <span className="gradient-text">Bio</span>
           <span className="bg-gradient-to-r from-[#fd79a8] to-[#fdcb6e] bg-clip-text text-transparent">Learn</span>
         </Link>
