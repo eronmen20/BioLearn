@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { showToast } from "@/components/ui/toaster";
-import { BAB } from "@/lib/bab-data";
 import {
   Save,
   Plus,
@@ -56,9 +55,10 @@ interface BabContent {
 }
 
 export default function MateriEditorPage() {
-  const [selectedBab, setSelectedBab] = useState<string>(BAB[0]?.id || "");
+  const [babList, setBabList] = useState<{ id: string; icon: string; color: string }[]>([]);
+  const [selectedBab, setSelectedBab] = useState<string>("");
   const [content, setContent] = useState<BabContent>({
-    bab_id: BAB[0]?.id || "",
+    bab_id: "",
     subs: [],
     quiz: [],
   });
@@ -72,7 +72,21 @@ export default function MateriEditorPage() {
 
   // Load content when bab changes — fetch sub-bab list from DB first
   useEffect(() => {
-    loadContent(selectedBab);
+    // Fetch bab list from DB on mount
+    fetch('/api/admin/bab')
+      .then(r => r.json())
+      .then(data => {
+        const list = data.bab || [];
+        setBabList(list);
+        if (!selectedBab && list.length > 0) {
+          setSelectedBab(list[0].id);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (selectedBab) loadContent(selectedBab);
   }, [selectedBab]);
 
   const loadContent = async (babId: string) => {
@@ -163,25 +177,13 @@ export default function MateriEditorPage() {
 
         setContent({ bab_id: babId, subs, quiz });
       } else {
-        // Fallback: static BAB data
-        const bab = BAB.find((b) => b.id === babId);
-        if (bab) {
-          setContent({
-            bab_id: babId,
-            subs: bab.subs.map((key, i) => ({
-              db_id: null,
-              key,
-              title_id: "",
-              title_en: "",
-              summary_id: bab.summary?.id?.[i] || "",
-              summary_en: bab.summary?.en?.[i] || "",
-              content_id: bab.full?.id?.[i] || "",
-              content_en: bab.full?.en?.[i] || "",
-              video_url: bab.videoId ? `https://youtube.com/watch?v=${bab.videoId}` : "",
-            })),
-            quiz: [],
-          });
-        }
+        // Fallback: empty structure
+        setContent({
+          bab_id: babId,
+          subs: [],
+          quiz: [],
+        });
+      }
       }
     } catch {
       showToast("Gagal memuat konten");
@@ -469,7 +471,7 @@ export default function MateriEditorPage() {
             onChange={(e) => setSelectedBab(e.target.value)}
             className="w-full sm:w-80 px-4 py-2.5 rounded-xl border border-border bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           >
-            {BAB.map((bab) => (
+            {babList.map((bab) => (
               <option key={bab.id} value={bab.id}>
                 {bab.icon} {bab.id.charAt(0).toUpperCase() + bab.id.slice(1)}
               </option>

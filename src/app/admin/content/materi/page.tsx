@@ -5,8 +5,9 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 import { DataTable, Column } from "@/components/admin/data-table";
 import { Modal, ConfirmDialog } from "@/components/admin/modal";
 import { showToast } from "@/components/ui/toaster";
-import { BAB } from "@/lib/bab-data";
 import { FileText, Eye, Edit, Trash2, Plus, Save, X } from "lucide-react";
+
+interface BabItem { id: string; icon: string; color: string; kelas_id?: string; }
 
 interface MateriItem {
   id: number;
@@ -23,6 +24,7 @@ interface MateriItem {
 
 export default function MateriPage() {
   const [materi, setMateri] = useState<MateriItem[]>([]);
+  const [babList, setBabList] = useState<BabItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterBab, setFilterBab] = useState<string>("");
   const [showEditor, setShowEditor] = useState(false);
@@ -47,6 +49,11 @@ export default function MateriPage() {
   const loadMateri = async () => {
     setLoading(true);
     try {
+      // Fetch bab list from DB
+      const resBab = await fetch('/api/admin/bab');
+      const babData = await resBab.json();
+      setBabList(babData.bab || []);
+
       const url = filterBab ? `/api/admin/materi?bab_id=${filterBab}` : "/api/admin/materi";
       const res = await fetch(url);
       const data = await res.json();
@@ -65,7 +72,7 @@ export default function MateriPage() {
   const handleAdd = () => {
     setEditing(null);
     setForm({
-      bab_id: filterBab || BAB[0]?.id || "",
+      bab_id: filterBab || babList[0]?.id || "",
       sub_bab_key: "",
       type: "html",
       content_id: "",
@@ -149,7 +156,7 @@ export default function MateriPage() {
       label: "Bab",
       sortable: true,
       render: (row) => {
-        const bab = BAB.find((b) => b.id === row.bab_id);
+        const bab = babList.find((b) => b.id === row.bab_id);
         return (
           <span className="flex items-center gap-2">
             <span>{bab?.icon || "📚"}</span>
@@ -202,7 +209,7 @@ export default function MateriPage() {
         >
           Semua
         </button>
-        {BAB.map((bab) => (
+        {babList.map((bab) => (
           <button
             key={bab.id}
             onClick={() => setFilterBab(bab.id)}
@@ -250,7 +257,7 @@ export default function MateriPage() {
                 onChange={(e) => setForm({ ...form, bab_id: e.target.value })}
                 className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
-                {BAB.map((bab) => (
+                {babList.map((bab) => (
                   <option key={bab.id} value={bab.id}>{bab.icon} {bab.id}</option>
                 ))}
               </select>
