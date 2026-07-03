@@ -145,7 +145,7 @@ export function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-bg to-[#f0fdf4] dark:from-[#0f0f1a] dark:via-bg dark:to-[#0a1a0f] overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] dark:from-[#0f0f1a] dark:via-[#0f0f1a] dark:to-[#0a1a0f] overflow-hidden relative">
       {/* Floating Biology Elements */}
       {FLOATING_ITEMS.map((item, i) => (
         <motion.div
