@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: data?.id });
   } catch (e) {
     console.error("[API Materi POST]", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Internal server error" }, { status: 500 });
   }
 }
 
