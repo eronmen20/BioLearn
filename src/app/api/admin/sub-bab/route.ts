@@ -59,9 +59,10 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ success: true, id: data?.id });
-  } catch (e) {
-    console.error("[API SubBab POST]", e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Internal server error" }, { status: 500 });
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+    console.error("[API SubBab POST]", msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
