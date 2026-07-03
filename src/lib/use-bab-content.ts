@@ -29,27 +29,33 @@ interface ContentData {
   source: "supabase" | "hardcoded";
 }
 
-export function useBabContent(babId: string): ContentData | null {
+export function useBabContent(babId: string): { data: ContentData | null; loading: boolean } {
   const [data, setData] = useState<ContentData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
 
     async function load() {
       const hardcodedBab = BAB.find((b) => b.id === babId);
       if (!hardcodedBab) {
-        setData(null);
+        if (!cancelled) {
+          setData(null);
+          setLoading(false);
+        }
         return;
       }
 
       // Try Supabase first
       try {
-        const res = await fetch(`/api/content?bab_id=${babId}`);
+        const res = await fetch(`/api/content?bab_id=${babId}`, {
+          signal: AbortSignal.timeout(3000), // 3s timeout
+        });
         if (res.ok) {
           const supaData: SupabaseContent = await res.json();
 
           if (supaData.has_content && supaData.subs.length > 0 && !cancelled) {
-            // Use Supabase data
             const summaryId = supaData.subs.map((s) => s.summary.id);
             const summaryEn = supaData.subs.map((s) => s.summary.en);
             const fullId = supaData.subs.map((s) => s.full.id);
@@ -64,6 +70,7 @@ export function useBabContent(babId: string): ContentData | null {
               subs,
               source: "supabase",
             });
+            setLoading(false);
             return;
           }
         }
@@ -81,6 +88,7 @@ export function useBabContent(babId: string): ContentData | null {
           subs: hardcodedBab.subs,
           source: "hardcoded",
         });
+        setLoading(false);
       }
     }
 
@@ -88,5 +96,5 @@ export function useBabContent(babId: string): ContentData | null {
     return () => { cancelled = true; };
   }, [babId]);
 
-  return data;
+  return { data, loading };
 }

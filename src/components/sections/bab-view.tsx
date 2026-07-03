@@ -9,9 +9,31 @@ import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw, Database } fr
 
 export function BabContent({ babId }: { babId: string }) {
   const { lang, t } = useLangStore();
-  const content = useBabContent(babId);
+  const { data: content, loading } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
   const [viewType, setViewType] = useState<"full" | "summary">("full");
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="animate-pulse space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-border-light rounded-xl" />
+          <div className="space-y-2">
+            <div className="h-5 w-40 bg-border-light rounded" />
+            <div className="h-3 w-60 bg-border-light rounded" />
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="h-8 w-20 bg-border-light rounded-full" />
+          <div className="h-8 w-24 bg-border-light rounded-full" />
+          <div className="h-8 w-22 bg-border-light rounded-full" />
+        </div>
+        <div className="h-64 bg-border-light rounded-2xl" />
+        <div className="h-48 bg-border-light rounded-2xl" />
+      </div>
+    );
+  }
 
   if (!content) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
