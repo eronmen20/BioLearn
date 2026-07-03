@@ -184,7 +184,6 @@ export default function MateriEditorPage() {
           quiz: [],
         });
       }
-      }
     } catch {
       showToast("Gagal memuat konten");
     } finally {
