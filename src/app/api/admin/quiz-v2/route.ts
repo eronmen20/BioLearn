@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const babId = searchParams.get("bab_id");
     const subBabKey = searchParams.get("sub_bab_key");
 
-    let query = supabase.from("quiz_v2").select("*").order("sort_order", { ascending: true });
+    let query = supabase.from("sub_bab_quiz").select("*").order("sort_order", { ascending: true });
     if (babId) query = query.eq("bab_id", babId);
     if (subBabKey) query = query.eq("sub_bab_key", subBabKey);
 
@@ -40,14 +40,14 @@ export async function POST(req: NextRequest) {
     }
 
     const { data, error } = await supabase
-      .from("quiz_v2")
+      .from("sub_bab_quiz")
       .insert({
         bab_id: body.bab_id,
         sub_bab_key: body.sub_bab_key || null,
         is_reflection: body.is_reflection || false,
         question_id: body.question_id || "",
         question_en: body.question_en || "",
-        question_image: body.question_image || "",
+        question_image_url: body.question_image_url || "",
         options_id: body.options_id || ["", "", "", ""],
         options_en: body.options_en || ["", "", "", ""],
         correct_answer: body.correct_answer ?? 0,
@@ -85,7 +85,7 @@ export async function PUT(req: NextRequest) {
     if (body.is_reflection !== undefined) updateData.is_reflection = body.is_reflection;
     if (body.question_id !== undefined) updateData.question_id = body.question_id;
     if (body.question_en !== undefined) updateData.question_en = body.question_en;
-    if (body.question_image !== undefined) updateData.question_image = body.question_image;
+    if (body.question_image_url !== undefined) updateData.question_image_url = body.question_image_url;
     if (body.options_id !== undefined) updateData.options_id = body.options_id;
     if (body.options_en !== undefined) updateData.options_en = body.options_en;
     if (body.correct_answer !== undefined) updateData.correct_answer = body.correct_answer;
@@ -93,7 +93,7 @@ export async function PUT(req: NextRequest) {
     if (body.explanation_en !== undefined) updateData.explanation_en = body.explanation_en;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
 
-    const { error } = await supabase.from("quiz_v2").update(updateData).eq("id", body.id);
+    const { error } = await supabase.from("sub_bab_quiz").update(updateData).eq("id", body.id);
 
     if (error) throw error;
     return NextResponse.json({ success: true });
@@ -111,7 +111,7 @@ export async function DELETE(req: NextRequest) {
 
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-    const { error } = await supabase.from("quiz_v2").delete().eq("id", id);
+    const { error } = await supabase.from("sub_bab_quiz").delete().eq("id", id);
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {

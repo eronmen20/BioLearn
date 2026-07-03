@@ -41,7 +41,6 @@ export async function POST(req: NextRequest) {
         nama: body.nama,
         nama_en: body.nama_en || "",
         deskripsi: body.deskripsi || "",
-        deskripsi_en: body.deskripsi_en || "",
         icon: body.icon || "🎓",
         color: body.color || "#6c5ce7",
         sort_order: body.sort_order || 0,
@@ -74,7 +73,6 @@ export async function PUT(req: NextRequest) {
     if (body.nama !== undefined) updateData.nama = body.nama;
     if (body.nama_en !== undefined) updateData.nama_en = body.nama_en;
     if (body.deskripsi !== undefined) updateData.deskripsi = body.deskripsi;
-    if (body.deskripsi_en !== undefined) updateData.deskripsi_en = body.deskripsi_en;
     if (body.icon !== undefined) updateData.icon = body.icon;
     if (body.color !== undefined) updateData.color = body.color;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;

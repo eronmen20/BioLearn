@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       .from("sub_bab")
       .insert({
         bab_id: body.bab_id,
-        sub_bab_key: body.sub_bab_key || "",
+        key: body.key || "",
         title_id: body.title_id || "",
         title_en: body.title_en || "",
         summary_id: body.summary_id || "",
@@ -80,7 +80,7 @@ export async function PUT(req: NextRequest) {
     };
 
     if (body.bab_id !== undefined) updateData.bab_id = body.bab_id;
-    if (body.sub_bab_key !== undefined) updateData.sub_bab_key = body.sub_bab_key;
+    if (body.key !== undefined) updateData.key = body.key;
     if (body.title_id !== undefined) updateData.title_id = body.title_id;
     if (body.title_en !== undefined) updateData.title_en = body.title_en;
     if (body.summary_id !== undefined) updateData.summary_id = body.summary_id;
