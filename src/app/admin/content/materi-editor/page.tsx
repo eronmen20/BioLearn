@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { showToast } from "@/components/ui/toaster";
-import { BAB, KELAS } from "@/lib/bab-data";
+import { BAB } from "@/lib/bab-data";
 import {
   Save,
   Plus,
@@ -20,10 +20,13 @@ import {
   FileText,
   Video,
   Sparkles,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 
-// Types
+// Types — each sub tracks its DB ID for upsert
 interface SubBab {
+  db_id: number | null; // null = baru, belum di DB
   key: string;
   title_id: string;
   title_en: string;
@@ -35,6 +38,7 @@ interface SubBab {
 }
 
 interface QuizQuestion {
+  db_id: number | null;
   id: string;
   question_id: string;
   question_en: string;
@@ -63,6 +67,8 @@ export default function MateriEditorPage() {
   const [translating, setTranslating] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [loadingContent, setLoadingContent] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
 
   // Load content when bab changes
   useEffect(() => {
@@ -70,13 +76,13 @@ export default function MateriEditorPage() {
   }, [selectedBab]);
 
   const loadContent = async (babId: string) => {
+    setLoadingContent(true);
     try {
-      // Try to load from API
       const res = await fetch(`/api/admin/materi?bab_id=${babId}`);
       const data = await res.json();
 
       if (data.materi && data.materi.length > 0) {
-        // Convert API data to editor format
+        // Convert API data to editor format — KEEP DB IDs for upsert
         const subs: SubBab[] = [];
         const quiz: QuizQuestion[] = [];
 
@@ -84,11 +90,12 @@ export default function MateriEditorPage() {
           if (m.type === "quiz") {
             const meta = (m.metadata as Record<string, unknown>) || {};
             quiz.push({
+              db_id: m.id as number,
               id: String(m.id),
               question_id: m.content_id as string,
               question_en: m.content_en as string,
-              options_id: (meta.options_id as string[]) || [],
-              options_en: (meta.options_en as string[]) || [],
+              options_id: (meta.options_id as string[]) || ["", "", "", ""],
+              options_en: (meta.options_en as string[]) || ["", "", "", ""],
               correct: (meta.correct as number) || 0,
               explanation_id: (meta.explanation_id as string) || "",
               explanation_en: (meta.explanation_en as string) || "",
@@ -96,13 +103,14 @@ export default function MateriEditorPage() {
           } else {
             const meta = (m.metadata as Record<string, unknown>) || {};
             subs.push({
-              key: m.sub_bab_key as string || "",
+              db_id: m.id as number, // ← TRACK DB ID
+              key: (m.sub_bab_key as string) || "",
               title_id: (meta.title_id as string) || "",
               title_en: (meta.title_en as string) || "",
-              summary_id: m.summary_id as string || "",
-              summary_en: m.summary_en as string || "",
-              content_id: m.content_id as string || "",
-              content_en: m.content_en as string || "",
+              summary_id: (m.summary_id as string) || "",
+              summary_en: (m.summary_en as string) || "",
+              content_id: (m.content_id as string) || "",
+              content_en: (m.content_en as string) || "",
               video_url: (meta.video_url as string) || "",
             });
           }
@@ -116,6 +124,7 @@ export default function MateriEditorPage() {
           setContent({
             bab_id: babId,
             subs: bab.subs.map((key, i) => ({
+              db_id: null, // baru, belum di DB
               key,
               title_id: "",
               title_en: "",
@@ -131,6 +140,8 @@ export default function MateriEditorPage() {
       }
     } catch {
       showToast("Gagal memuat konten");
+    } finally {
+      setLoadingContent(false);
     }
   };
 
@@ -187,17 +198,14 @@ export default function MateriEditorPage() {
 
     setTranslating(`quiz_${quizIdx}`);
 
-    // Translate question
     const qTranslated = await translate(q.question_id, `quiz_q_${quizIdx}`);
 
-    // Translate options
     const optsTranslated = [];
     for (const opt of q.options_id) {
       const t = await translate(opt, `quiz_opt_${quizIdx}`);
       optsTranslated.push(t || opt);
     }
 
-    // Translate explanation
     const expTranslated = await translate(q.explanation_id, `quiz_exp_${quizIdx}`);
 
     if (qTranslated) {
@@ -227,61 +235,119 @@ export default function MateriEditorPage() {
     showToast("Semua konten diterjemahkan!");
   };
 
-  // Save all content
+  // Save all content — UPSERT: PUT for existing, POST for new
   const saveAll = async () => {
     setSaving(true);
+    setSaveStatus("idle");
     try {
-      // Save each sub-bab as a materi entry
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Save each sub-bab
       for (const sub of content.subs) {
-        await fetch("/api/admin/materi", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bab_id: content.bab_id,
-            sub_bab_key: sub.key,
-            type: "html",
-            content_id: sub.content_id,
-            content_en: sub.content_en,
-            summary_id: sub.summary_id,
-            summary_en: sub.summary_en,
-            metadata: {
-              title_id: sub.title_id,
-              title_en: sub.title_en,
-              video_url: sub.video_url,
-            },
-          }),
-        });
+        const payload = {
+          bab_id: content.bab_id,
+          sub_bab_key: sub.key,
+          type: "html",
+          content_id: sub.content_id,
+          content_en: sub.content_en,
+          summary_id: sub.summary_id,
+          summary_en: sub.summary_en,
+          metadata: {
+            title_id: sub.title_id,
+            title_en: sub.title_en,
+            video_url: sub.video_url,
+          },
+        };
+
+        try {
+          let res;
+          if (sub.db_id) {
+            // UPDATE existing record
+            res = await fetch("/api/admin/materi", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload, id: sub.db_id }),
+            });
+          } else {
+            // INSERT new record
+            res = await fetch("/api/admin/materi", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          }
+          if (!res.ok) throw new Error("Failed");
+          successCount++;
+        } catch {
+          errorCount++;
+        }
       }
 
       // Save quiz questions
       for (const q of content.quiz) {
-        await fetch("/api/admin/quiz", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            bab_id: content.bab_id,
-            question_id: q.question_id,
-            question_en: q.question_en,
+        const payload = {
+          bab_id: content.bab_id,
+          sub_bab_key: `quiz_${q.id}`,
+          type: "quiz",
+          content_id: q.question_id,
+          content_en: q.question_en,
+          summary_id: q.explanation_id,
+          summary_en: q.explanation_en,
+          metadata: {
             options_id: q.options_id,
             options_en: q.options_en,
-            correct_answer: q.correct,
+            correct: q.correct,
             explanation_id: q.explanation_id,
             explanation_en: q.explanation_en,
-          }),
-        });
+          },
+        };
+
+        try {
+          let res;
+          if (q.db_id) {
+            res = await fetch("/api/admin/materi", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload, id: q.db_id }),
+            });
+          } else {
+            res = await fetch("/api/admin/materi", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+          }
+          if (!res.ok) throw new Error("Failed");
+          successCount++;
+        } catch {
+          errorCount++;
+        }
       }
 
-      showToast("Semua konten berhasil disimpan!");
+      if (errorCount > 0) {
+        setSaveStatus("error");
+        showToast(`${successCount} berhasil, ${errorCount} gagal disimpan`);
+      } else {
+        setSaveStatus("success");
+        showToast(`Semua konten berhasil disimpan! (${successCount} item)`);
+      }
+
+      // Reload to sync DB IDs for new records
+      await loadContent(selectedBab);
     } catch {
+      setSaveStatus("error");
       showToast("Gagal menyimpan konten");
     } finally {
       setSaving(false);
+      setTimeout(() => setSaveStatus("idle"), 3000);
     }
   };
 
   // Sub-bab operations
   const addSub = () => {
     const newSub: SubBab = {
+      db_id: null, // baru
       key: `sub.${selectedBab}${content.subs.length + 1}`,
       title_id: "",
       title_en: "",
@@ -296,6 +362,11 @@ export default function MateriEditorPage() {
   };
 
   const removeSub = (idx: number) => {
+    const sub = content.subs[idx];
+    // If it exists in DB, delete it
+    if (sub.db_id) {
+      fetch(`/api/admin/materi?id=${sub.db_id}`, { method: "DELETE" }).catch(() => {});
+    }
     const newSubs = content.subs.filter((_, i) => i !== idx);
     setContent({ ...content, subs: newSubs });
     if (activeSub >= newSubs.length) setActiveSub(Math.max(0, newSubs.length - 1));
@@ -304,6 +375,7 @@ export default function MateriEditorPage() {
   // Quiz operations
   const addQuiz = () => {
     const newQ: QuizQuestion = {
+      db_id: null,
       id: `new_${Date.now()}`,
       question_id: "",
       question_en: "",
@@ -317,6 +389,10 @@ export default function MateriEditorPage() {
   };
 
   const removeQuiz = (idx: number) => {
+    const q = content.quiz[idx];
+    if (q.db_id) {
+      fetch(`/api/admin/materi?id=${q.db_id}`, { method: "DELETE" }).catch(() => {});
+    }
     setContent({ ...content, quiz: content.quiz.filter((_, i) => i !== idx) });
   };
 
@@ -328,9 +404,17 @@ export default function MateriEditorPage() {
         title="Editor Materi"
         description="Tambah dan edit materi pembelajaran lengkap dengan terjemahan otomatis"
         action={{
-          label: saving ? "Menyimpan..." : "Simpan Semua",
+          label: saving ? "Menyimpan..." : saveStatus === "success" ? "Tersimpan ✓" : "Simpan Semua",
           onClick: saveAll,
-          icon: saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />,
+          icon: saving ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : saveStatus === "success" ? (
+            <Check className="w-4 h-4" />
+          ) : saveStatus === "error" ? (
+            <AlertCircle className="w-4 h-4" />
+          ) : (
+            <Save className="w-4 h-4" />
+          ),
         }}
       />
 
@@ -374,6 +458,21 @@ export default function MateriEditorPage() {
         </div>
       </div>
 
+      {/* Status info */}
+      <div className="flex items-center gap-4 text-xs text-muted">
+        <span>
+          📊 {content.subs.length} sub-bab · {content.quiz.length} soal quiz
+        </span>
+        <span>
+          💾 {content.subs.filter((s) => s.db_id).length} tersimpan · {content.subs.filter((s) => !s.db_id).length} baru
+        </span>
+        {loadingContent && (
+          <span className="flex items-center gap-1 text-accent">
+            <Loader2 className="w-3 h-3 animate-spin" /> Memuat...
+          </span>
+        )}
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-1 bg-border/50 rounded-xl p-[3px] w-fit">
         {[
@@ -409,6 +508,7 @@ export default function MateriEditorPage() {
                   : "bg-surface border border-border text-muted hover:text-ink"
               }`}
             >
+              {sub.db_id && <span className="w-1.5 h-1.5 rounded-full bg-green-400" title="Tersimpan di DB" />}
               {sub.title_id || sub.key || `Sub ${i + 1}`}
             </button>
           ))}
@@ -631,7 +731,10 @@ export default function MateriEditorPage() {
           {content.quiz.map((q, qi) => (
             <div key={qi} className="bg-surface rounded-xl border border-border p-6">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold text-ink">Soal {qi + 1}</h4>
+                <h4 className="text-sm font-semibold text-ink">
+                  Soal {qi + 1}
+                  {q.db_id && <span className="ml-2 text-xs text-green-500">(tersimpan)</span>}
+                </h4>
                 <div className="flex gap-2">
                   <button
                     onClick={() => translateQuiz(qi)}

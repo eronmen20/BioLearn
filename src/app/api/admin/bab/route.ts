@@ -31,14 +31,24 @@ export async function POST(req: NextRequest) {
     const supabase = getDb();
     const body = await req.json();
 
+    if (!body.id) {
+      return NextResponse.json({ error: "ID bab wajib diisi" }, { status: 400 });
+    }
+
+    // Check if already exists
+    const { data: existing } = await supabase.from("bab").select("id").eq("id", body.id).single();
+    if (existing) {
+      return NextResponse.json({ error: `Bab dengan ID "${body.id}" sudah ada` }, { status: 409 });
+    }
+
     const { error } = await supabase.from("bab").insert({
       id: body.id,
       icon: body.icon || "📚",
       color: body.color || "#6c5ce7",
-      video_id: body.video_id,
-      video_title_id: body.video_title_id,
-      video_title_en: body.video_title_en,
-      hotspotted: body.hotspotted,
+      video_id: body.video_id || null,
+      video_title_id: body.video_title_id || null,
+      video_title_en: body.video_title_en || null,
+      hotspotted: body.hotspotted || null,
     });
 
     if (error) throw error;
@@ -54,6 +64,10 @@ export async function PUT(req: NextRequest) {
   try {
     const supabase = getDb();
     const body = await req.json();
+
+    if (!body.id) {
+      return NextResponse.json({ error: "ID bab wajib diisi" }, { status: 400 });
+    }
 
     const { error } = await supabase
       .from("bab")
@@ -86,6 +100,9 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "ID required" }, { status: 400 });
     }
+
+    // Delete all materi in this bab first (cascade)
+    await supabase.from("materi").delete().eq("bab_id", id);
 
     const { error } = await supabase.from("bab").delete().eq("id", id);
     if (error) throw error;
