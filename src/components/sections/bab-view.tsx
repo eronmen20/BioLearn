@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useBabContent } from "@/lib/use-bab-content";
 import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
-import { showToast } from "@/components/ui/toaster";
 import { StrukturViewer } from "@/components/struktur-viewer";
 import {
   CheckCircle,
