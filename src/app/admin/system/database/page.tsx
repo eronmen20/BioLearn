@@ -7,23 +7,17 @@ import {
   Loader2, CheckCircle, XCircle, HardDrive, Clock,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-const TABLES = [
-  'bab', 'materi', 'users', 'progress', 'kelas',
-  'sub_bab', 'sub_bab_quiz', 'struktur_fungsi', 'site_settings',
-];
 
 interface TableInfo {
   name: string;
   rowCount: number;
   lastUpdated: string;
 }
+
+const TABLES = [
+  'bab', 'materi', 'users', 'progress', 'kelas',
+  'sub_bab', 'sub_bab_quiz', 'struktur_fungsi', 'site_settings',
+];
 
 export default function DatabaseInfoPage() {
   const [tables, setTables] = useState<TableInfo[]>([]);
@@ -41,208 +35,167 @@ export default function DatabaseInfoPage() {
     setConnectionStatus('checking');
 
     try {
-      // Test connection
-      const { error: connError } = await supabase.from('bab').select('id', { count: 'exact', head: true });
-      setConnectionStatus(connError ? 'error' : 'connected');
+      // Test connection via backup API (it fetches all tables)
+      const res = await fetch('/api/admin/backup');
+      if (!res.ok) throw new Error('Connection failed');
+      const data = await res.json();
+      setConnectionStatus('connected');
 
       const results: TableInfo[] = [];
       for (const table of TABLES) {
-        try {
-          const { count } = await supabase.from(table).select('*', { count: 'exact', head: true });
-          const { data: lastRow } = await supabase
-            .from(table)
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          results.push({
-            name: table,
-            rowCount: count ?? 0,
-            lastUpdated: lastRow?.created_at || lastRow?.updated_at || '-',
-          });
-        } catch {
-          results.push({ name: table, rowCount: 0, lastUpdated: '-' });
-        }
+        const rows = (data.tables && data.tables[table]) || [];
+        results.push({
+          name: table,
+          rowCount: rows.length,
+          lastUpdated: rows.length > 0 ? 'Active' : 'Empty',
+        });
       }
       setTables(results);
     } catch {
       setConnectionStatus('error');
+      showToast('Gagal memuat info database');
     } finally {
       setLoading(false);
     }
   }
 
-  const handleRefresh = async () => {
+  async function handleRefresh() {
     setRefreshing(true);
     await fetchAll();
     setRefreshing(false);
-  };
+    showToast('Data di-refresh!');
+  }
 
-  const handleBackup = async () => {
+  async function handleBackup() {
     setBacking(true);
     try {
       const res = await fetch('/api/admin/backup');
-      if (!res.ok) throw new Error('Backup gagal');
       const data = await res.json();
+
+      // Download as JSON
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `biolearn-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `biolearn-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Backup berhasil diunduh!');
+
+      showToast('Backup berhasil di-download!');
     } catch {
       showToast('Gagal membuat backup');
     } finally {
       setBacking(false);
     }
-  };
+  }
 
-  const totalRows = tables.reduce((s, t) => s + t.rowCount, 0);
+  const totalRows = tables.reduce((a, b) => a + b.rowCount, 0);
 
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title="Informasi Database"
-        description="Status dan statistik database Supabase"
-        action={{
-          label: refreshing ? 'Memuat...' : 'Refresh',
-          onClick: handleRefresh,
-          icon: <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />,
-        }}
+        title="Database"
+        description="Informasi dan backup database Supabase"
       />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-surface rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-            <Table2 className="w-5 h-5 text-accent" />
-          </div>
-          <div>
-            <p className="text-xs text-muted">Total Tabel</p>
-            <p className="text-lg font-bold text-ink">{tables.length}</p>
-          </div>
-        </div>
-        <div className="bg-surface rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
-            <HardDrive className="w-5 h-5 text-green-500" />
-          </div>
-          <div>
-            <p className="text-xs text-muted">Total Baris</p>
-            <p className="text-lg font-bold text-ink">{totalRows.toLocaleString()}</p>
-          </div>
-        </div>
-        <div className="bg-surface rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-            <Server className="w-5 h-5 text-blue-500" />
-          </div>
-          <div>
-            <p className="text-xs text-muted">Koneksi</p>
-            <div className="flex items-center gap-1.5">
-              {connectionStatus === 'connected' ? (
-                <CheckCircle className="w-4 h-4 text-green-500" />
-              ) : connectionStatus === 'error' ? (
-                <XCircle className="w-4 h-4 text-red-500" />
-              ) : (
-                <Loader2 className="w-4 h-4 animate-spin text-muted" />
-              )}
-              <p className="text-lg font-bold text-ink">
-                {connectionStatus === 'connected' ? 'Aktif' : connectionStatus === 'error' ? 'Error' : '...'}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-surface rounded-xl border border-border p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center">
-            <Database className="w-5 h-5 text-yellow-500" />
-          </div>
-          <div>
-            <p className="text-xs text-muted">Provider</p>
-            <p className="text-lg font-bold text-ink">Supabase</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Connection Details */}
-      <div className="bg-surface rounded-xl border border-border p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Server className="w-4 h-4 text-accent" />
-          <h3 className="text-sm font-semibold text-ink">Detail Koneksi</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[
-            { label: 'Provider', value: 'Supabase' },
-            { label: 'Status', value: connectionStatus === 'connected' ? 'Terhubung' : 'Error' },
-            { label: 'SSL', value: 'Enabled' },
-            { label: 'PostgreSQL', value: '15.x' },
-            { label: 'Pooling', value: 'PgBouncer' },
-            { label: 'URL', value: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('//')[1]?.slice(0, 30) + '...' || '-' },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between p-3 bg-bg-alt rounded-xl">
-              <span className="text-xs text-muted">{item.label}</span>
-              <span className="text-sm font-semibold text-ink">{item.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Table List */}
-      <div className="bg-surface rounded-xl border border-border p-5">
+      {/* Connection Status */}
+      <div className="bg-surface rounded-xl border border-border p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Table2 className="w-4 h-4 text-accent" />
-            <h3 className="text-sm font-semibold text-ink">Daftar Tabel</h3>
-          </div>
+          <h3 className="text-sm font-semibold text-ink">Status Koneksi</h3>
           <button
-            onClick={handleBackup}
-            disabled={backing}
-            className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl text-xs font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-bg-alt hover:bg-border transition-colors disabled:opacity-50"
           >
-            {backing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            Export JSON
+            <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+            Refresh
           </button>
         </div>
+        <div className="flex items-center gap-3">
+          {connectionStatus === 'connected' && <CheckCircle className="w-5 h-5 text-green" />}
+          {connectionStatus === 'error' && <XCircle className="w-5 h-5 text-red" />}
+          {connectionStatus === 'checking' && <Loader2 className="w-5 h-5 text-muted animate-spin" />}
+          <div>
+            <p className="text-sm font-medium text-ink">
+              {connectionStatus === 'connected' && 'Terhubung'}
+              {connectionStatus === 'error' && 'Error'}
+              {connectionStatus === 'checking' && 'Mengecek...'}
+            </p>
+            <p className="text-xs text-muted">Supabase PostgreSQL</p>
+          </div>
+        </div>
+      </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin text-accent" />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-4 text-xs font-semibold text-muted uppercase">Tabel</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-muted uppercase">Baris</th>
-                  <th className="text-right py-3 px-4 text-xs font-semibold text-muted uppercase">Terakhir Diperbarui</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tables.map((t) => (
-                  <tr key={t.name} className="border-b border-border/50 hover:bg-bg-alt/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <Database className="w-3.5 h-3.5 text-muted" />
-                        <span className="font-mono text-ink font-medium">{t.name}</span>
-                      </div>
-                    </td>
-                    <td className="text-right py-3 px-4 font-mono text-ink">
-                      {t.rowCount.toLocaleString()}
-                    </td>
-                    <td className="text-right py-3 px-4 text-muted">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Clock className="w-3 h-3" />
-                        {t.lastUpdated === '-' ? '-' : new Date(t.lastUpdated).toLocaleDateString('id-ID')}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <p className="text-2xl font-bold text-ink">{tables.length}</p>
+          <p className="text-xs text-muted mt-1">Total Tabel</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <p className="text-2xl font-bold text-ink">{totalRows}</p>
+          <p className="text-xs text-muted mt-1">Total Rows</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <p className="text-2xl font-bold text-green">
+            {connectionStatus === 'connected' ? '✓' : '✗'}
+          </p>
+          <p className="text-xs text-muted mt-1">Connection</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-4">
+          <p className="text-2xl font-bold text-accent">v2</p>
+          <p className="text-xs text-muted mt-1">Schema</p>
+        </div>
+      </div>
+
+      {/* Tables */}
+      <div className="bg-surface rounded-xl border border-border overflow-hidden">
+        <div className="p-4 border-b border-border">
+          <h3 className="text-sm font-semibold text-ink">Tabel Database</h3>
+        </div>
+        <div className="divide-y divide-border">
+          {loading ? (
+            <div className="p-8 text-center">
+              <Loader2 className="w-6 h-6 animate-spin text-accent mx-auto" />
+            </div>
+          ) : (
+            tables.map((table) => (
+              <div key={table.name} className="flex items-center justify-between px-4 py-3 hover:bg-bg-alt transition-colors">
+                <div className="flex items-center gap-3">
+                  <Table2 className="w-4 h-4 text-muted" />
+                  <div>
+                    <p className="text-sm font-medium text-ink font-mono">{table.name}</p>
+                    <p className="text-[10px] text-muted">{table.lastUpdated}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-accent/10 text-accent">
+                  {table.rowCount} rows
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Backup */}
+      <div className="bg-surface rounded-xl border border-border p-6">
+        <div className="flex items-center gap-2 mb-3">
+          <HardDrive className="w-4 h-4 text-accent" />
+          <h3 className="text-sm font-semibold text-ink">Backup</h3>
+        </div>
+        <p className="text-xs text-muted mb-4">
+          Export semua data dari semua tabel sebagai file JSON.
+        </p>
+        <button
+          onClick={handleBackup}
+          disabled={backing || connectionStatus !== 'connected'}
+          className="flex items-center gap-2 px-4 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
+        >
+          {backing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          {backing ? 'Membuat backup...' : 'Download Backup JSON'}
+        </button>
       </div>
     </div>
   );
