@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna } from "lucide-react";
+import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Sun, Moon } from "lucide-react";
+import { useThemeStore } from "@/lib/theme-store";
 
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
@@ -23,33 +24,37 @@ const FEATURES = [
     icon: <BookOpen className="w-6 h-6" />,
     title: "Materi Lengkap",
     desc: "8 bab biologi lengkap dari sel, pencernaan, sirkulasi, saraf, bakteri, genetika, evolusi, hingga ekosistem.",
-    color: "from-purple-500 to-indigo-500",
-    bgClass: "bg-purple-500/10 dark:bg-purple-500/20",
-    iconColor: "text-purple-500",
+    gradient: "from-purple-500 to-indigo-500",
+    bgLight: "bg-purple-50",
+    bgDark: "dark:bg-purple-500/15",
+    iconColor: "text-purple-500 dark:text-purple-400",
   },
   {
     icon: <Brain className="w-6 h-6" />,
     title: "Kuis Interaktif",
     desc: "Uji pemahamanmu dengan kuis di setiap subbab. Langsung dapat feedback dan penjelasan!",
-    color: "from-pink-500 to-rose-500",
-    bgClass: "bg-pink-500/10 dark:bg-pink-500/20",
-    iconColor: "text-pink-500",
+    gradient: "from-pink-500 to-rose-500",
+    bgLight: "bg-pink-50",
+    bgDark: "dark:bg-pink-500/15",
+    iconColor: "text-pink-500 dark:text-pink-400",
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
     title: "Animasi & Visual",
     desc: "Visualisasi interaktif struktur sel, sistem pencernaan, dan DNA double helix.",
-    color: "from-cyan-500 to-teal-500",
-    bgClass: "bg-cyan-500/10 dark:bg-cyan-500/20",
-    iconColor: "text-cyan-500",
+    gradient: "from-cyan-500 to-teal-500",
+    bgLight: "bg-cyan-50",
+    bgDark: "dark:bg-cyan-500/15",
+    iconColor: "text-cyan-500 dark:text-cyan-400",
   },
   {
     icon: <Heart className="w-6 h-6" />,
     title: "Track Progress",
     desc: "Pantai penguasaanmu di setiap bab. Lihat statistik kuis dan mastery score.",
-    color: "from-orange-500 to-amber-500",
-    bgClass: "bg-orange-500/10 dark:bg-orange-500/20",
-    iconColor: "text-orange-500",
+    gradient: "from-orange-500 to-amber-500",
+    bgLight: "bg-orange-50",
+    bgDark: "dark:bg-orange-500/15",
+    iconColor: "text-orange-500 dark:text-orange-400",
   },
 ];
 
@@ -106,6 +111,30 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
     >
       {children}
     </motion.div>
+  );
+}
+
+// Floating Theme Switcher
+function ThemeSwitcher() {
+  const { resolved, setTheme } = useThemeStore();
+
+  return (
+    <motion.button
+      onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
+      className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-surface border-2 border-border shadow-lg flex items-center justify-center hover:border-accent hover:shadow-xl transition-all"
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ delay: 1, type: "spring", stiffness: 200 }}
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
+      title={resolved === "dark" ? "Mode Terang" : "Mode Gelap"}
+    >
+      {resolved === "dark" ? (
+        <Sun className="w-5 h-5 text-yellow" />
+      ) : (
+        <Moon className="w-5 h-5 text-accent" />
+      )}
+    </motion.button>
   );
 }
 
@@ -275,7 +304,7 @@ export function LandingPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <motion.div
-                    className={`w-12 h-12 ${f.bgClass} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
+                    className={`w-12 h-12 ${f.bgLight} ${f.bgDark} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
                     {f.icon}
@@ -407,6 +436,9 @@ export function LandingPage() {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Floating Theme Switcher */}
+      <ThemeSwitcher />
 
       {/* Footer */}
       <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-surface/50">
