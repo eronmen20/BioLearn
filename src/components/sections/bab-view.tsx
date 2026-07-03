@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useBabContent } from "@/lib/use-bab-content";
 import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { showToast } from "@/components/ui/toaster";
-import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw, Database } from "lucide-react";
+import { StrukturViewer } from "@/components/struktur-viewer";
+import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw, Database, FlaskConical } from "lucide-react";
 
 export function BabContent({ babId }: { babId: string }) {
   const { lang, t } = useLangStore();
@@ -136,6 +137,9 @@ export function BabContent({ babId }: { babId: string }) {
       {/* Interactive Image */}
       <HotspotSection babId={bab.id} hotspotted={bab.hotspotted} />
 
+      {/* Struktur & Fungsi */}
+      <StrukturSection babId={bab.id} lang={lang} />
+
       {/* Quiz */}
       <QuizSection babId={bab.id} quiz={quiz} subIdx={subIdx} />
     </div>
@@ -249,6 +253,42 @@ function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: stri
     );
   }
   return null;
+}
+
+function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/admin/struktur?bab_id=${babId}`)
+      .then((r) => r.json())
+      .then((data) => setItems(data.struktur || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [babId]);
+
+  if (loading || items.length === 0) return null;
+
+  return (
+    <div className="mb-6 space-y-6">
+      {items.map((item) => (
+        <div key={item.id} className="bg-surface rounded-2xl shadow-card border border-border/50 p-4 sm:p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="text-lg">🔬</span>
+            <h3 className="font-bold text-sm">Struktur & Fungsi</h3>
+          </div>
+          <StrukturViewer
+            title={item.title}
+            title_en={item.title_en}
+            image_url={item.image_url}
+            image_alt={item.image_alt}
+            flashcards={item.flashcards || []}
+            lang={lang}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function QuizSection({ babId, quiz, subIdx }: { babId: string; quiz: import("@/lib/quiz-data").QuizQuestion[]; subIdx: number }) {
