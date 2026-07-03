@@ -25,32 +25,32 @@ const FEATURES = [
     title: "Materi Lengkap",
     desc: "8 bab biologi lengkap dari sel, pencernaan, sirkulasi, saraf, bakteri, genetika, evolusi, hingga ekosistem.",
     color: "from-purple-500 to-indigo-500",
-    bg: "bg-purple-50 dark:bg-purple-500/15",
-    iconColor: "text-purple-500 dark:text-purple-400",
+    bg: "bg-purple-50",
+    iconColor: "text-purple-500",
   },
   {
     icon: <Brain className="w-6 h-6" />,
     title: "Kuis Interaktif",
     desc: "Uji pemahamanmu dengan kuis di setiap subbab. Langsung dapat feedback dan penjelasan!",
     color: "from-pink-500 to-rose-500",
-    bg: "bg-pink-50 dark:bg-pink-500/15",
-    iconColor: "text-pink-500 dark:text-pink-400",
+    bg: "bg-pink-50",
+    iconColor: "text-pink-500",
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
     title: "Animasi & Visual",
     desc: "Visualisasi interaktif struktur sel, sistem pencernaan, dan DNA double helix.",
     color: "from-cyan-500 to-teal-500",
-    bg: "bg-cyan-50 dark:bg-cyan-500/15",
-    iconColor: "text-cyan-500 dark:text-cyan-400",
+    bg: "bg-cyan-50",
+    iconColor: "text-cyan-500",
   },
   {
     icon: <Heart className="w-6 h-6" />,
     title: "Track Progress",
     desc: "Pantai penguasaanmu di setiap bab. Lihat statistik kuis dan mastery score.",
     color: "from-orange-500 to-amber-500",
-    bg: "bg-orange-50 dark:bg-orange-500/15",
-    iconColor: "text-orange-500 dark:text-orange-400",
+    bg: "bg-orange-50",
+    iconColor: "text-orange-500",
   },
 ];
 
@@ -141,7 +141,7 @@ export function LandingPage() {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] dark:from-[#0f0f1a] dark:via-[#0f0f1a] dark:to-[#0a1a0f] overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] overflow-hidden relative">
       {/* Floating Biology Elements */}
       {FLOATING_ITEMS.map((item, i) => (
         <motion.div
@@ -150,7 +150,7 @@ export function LandingPage() {
           style={{ left: item.x, top: item.y }}
           initial={{ opacity: 0, scale: 0 }}
           animate={{
-            opacity: 0.15,
+            opacity: 0.2,
             scale: 1,
             y: [0, -15, 10, 0],
             rotate: [0, 5, -3, 0],
@@ -315,7 +315,7 @@ export function LandingPage() {
       </section>
 
       {/* Subjects Preview */}
-      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff] dark:to-[#16162a]">
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff]">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
@@ -437,7 +437,7 @@ export function LandingPage() {
       <ThemeSwitcher />
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-white/50 dark:bg-surface/50">
+      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-white/50">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <div className="flex items-center gap-2">
             <span className="font-extrabold">
