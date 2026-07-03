@@ -11,6 +11,7 @@ interface BabItem {
   id: string;
   icon: string;
   color: string;
+  kelas_id: string | null;
   video_id: string | null;
   video_title_id: string | null;
   video_title_en: string | null;
@@ -26,6 +27,7 @@ const DEFAULT_FORM = {
   id: '',
   icon: '📚',
   color: '#6c5ce7',
+  kelas_id: 'x',
   video_id: '',
   video_title_id: '',
   video_title_en: '',
@@ -86,6 +88,7 @@ export default function BabPage() {
       id: item.id,
       icon: item.icon || '📚',
       color: item.color || '#6c5ce7',
+      kelas_id: item.kelas_id || 'x',
       video_id: item.video_id || '',
       video_title_id: item.video_title_id || '',
       video_title_en: item.video_title_en || '',
@@ -105,6 +108,7 @@ export default function BabPage() {
         id: form.id.trim().toLowerCase().replace(/\s+/g, '-'),
         icon: form.icon,
         color: form.color,
+        kelas_id: form.kelas_id,
         video_id: form.video_id || null,
         video_title_id: form.video_title_id || null,
         video_title_en: form.video_title_en || null,
@@ -284,18 +288,33 @@ export default function BabPage() {
       {/* Editor Modal */}
       <Modal open={showEditor} onClose={() => setShowEditor(false)} title={editing ? `Edit Bab: ${editing.id}` : 'Tambah Bab'} size="lg">
         <div className="space-y-4">
-          {/* ID */}
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">ID Bab</label>
-            <input
-              type="text"
-              value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value })}
-              placeholder="contoh: sel, pencernaan, ekosistem"
-              disabled={!!editing}
-              className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-muted mt-1">ID unik untuk bab ini (tidak bisa diubah setelah dibuat)</p>
+          {/* ID + Kelas */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1">ID Bab</label>
+              <input
+                type="text"
+                value={form.id}
+                onChange={(e) => setForm({ ...form, id: e.target.value })}
+                placeholder="contoh: sel, pencernaan, ekosistem"
+                disabled={!!editing}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-muted mt-1">ID unik untuk bab ini</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-ink mb-1">Kelas</label>
+              <select
+                value={form.kelas_id}
+                onChange={(e) => setForm({ ...form, kelas_id: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
+                <option value="x">📗 Kelas X</option>
+                <option value="xi">📘 Kelas XI</option>
+                <option value="xii">📙 Kelas XII</option>
+              </select>
+              <p className="text-xs text-muted mt-1">Pilih kelas untuk bab ini</p>
+            </div>
           </div>
 
           {/* Icon + Color */}

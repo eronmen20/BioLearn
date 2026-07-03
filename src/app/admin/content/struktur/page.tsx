@@ -6,6 +6,7 @@ import { DataTable, Column } from "@/components/admin/data-table";
 import { Modal, ConfirmDialog } from "@/components/admin/modal";
 import { showToast } from "@/components/ui/toaster";
 import { BAB } from "@/lib/bab-data";
+import { ImageUpload } from "@/components/admin/image-upload";
 import {
   Plus, Trash2, Save, Edit, Eye, Loader2, FlaskConical, Image as ImageIcon,
   Move, GripVertical, X,
@@ -249,12 +250,13 @@ export default function StrukturPage() {
             <input type="text" value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} placeholder="Bacterial Cell Structure" className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
           </div>
 
-          {/* Image URL */}
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">URL Gambar Struktur</label>
-            <input type="text" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://example.com/bakteri-structure.png" className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
-            <p className="text-xs text-muted mt-1">Upload gambar ke Supabase Storage atau hosting lain, lalu paste URL-nya di sini</p>
-          </div>
+          {/* Image Upload */}
+          <ImageUpload
+            value={form.image_url}
+            onChange={(url) => setForm({ ...form, image_url: url })}
+            folder="struktur"
+            label="Gambar Struktur"
+          />
 
           {/* Image Preview with dots */}
           {form.image_url && (

@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
       id: body.id,
       icon: body.icon || "📚",
       color: body.color || "#6c5ce7",
+      kelas_id: body.kelas_id || "x",
       video_id: body.video_id || null,
       video_title_id: body.video_title_id || null,
       video_title_en: body.video_title_en || null,
@@ -74,6 +75,7 @@ export async function PUT(req: NextRequest) {
       .update({
         icon: body.icon,
         color: body.color,
+        kelas_id: body.kelas_id,
         video_id: body.video_id,
         video_title_id: body.video_title_id,
         video_title_en: body.video_title_en,
