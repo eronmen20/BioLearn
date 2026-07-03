@@ -20,6 +20,7 @@ import { useThemeStore } from "@/lib/theme-store";
 export function AdminHeader() {
   const { user, isAuthenticated, logout } = useAuthStore();
   const mounted = useIsMounted();
+  const { resolved: themeResolved, setTheme } = useThemeStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -94,14 +95,11 @@ export function AdminHeader() {
       <div className="flex items-center gap-2">
         {/* Theme toggle */}
         <button
-          onClick={() => {
-            const { resolved, setTheme } = useThemeStore.getState();
-            setTheme(resolved === "dark" ? "light" : "dark");
-          }}
+          onClick={() => setTheme(themeResolved === "dark" ? "light" : "dark")}
           className="w-9 h-9 rounded-lg hover:bg-bg-alt flex items-center justify-center transition-colors"
           title="Toggle tema"
         >
-          {useThemeStore.getState().resolved === "dark" ? (
+          {mounted && themeResolved === "dark" ? (
             <Sun className="w-4 h-4 text-yellow" />
           ) : (
             <Moon className="w-4 h-4 text-muted" />
