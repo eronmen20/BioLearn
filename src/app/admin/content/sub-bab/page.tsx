@@ -142,12 +142,15 @@ export default function SubBabPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('Failed');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed');
+      }
       showToast(editing ? 'Sub-bab berhasil diupdate!' : 'Sub-bab berhasil ditambahkan!');
       setShowEditor(false);
       loadItems();
-    } catch {
-      showToast('Gagal menyimpan sub-bab');
+    } catch (e) {
+      showToast(`Gagal menyimpan sub-bab: ${e instanceof Error ? e.message : 'Unknown'}`);
     } finally {
       setSaving(false);
     }

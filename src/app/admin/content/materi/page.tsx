@@ -117,12 +117,15 @@ export default function MateriPage() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed");
+      }
       showToast(editing ? "Materi berhasil diupdate!" : "Materi berhasil ditambahkan!");
       setShowEditor(false);
       loadMateri();
-    } catch {
-      showToast("Gagal menyimpan materi");
+    } catch (e) {
+      showToast(`Gagal menyimpan materi: ${e instanceof Error ? e.message : "Unknown"}`);
     }
   };
 
