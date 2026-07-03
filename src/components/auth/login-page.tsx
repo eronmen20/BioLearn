@@ -19,7 +19,12 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/dashboard");
+      const currentUser = useAuthStore.getState().user;
+      if (currentUser?.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [isAuthenticated, router]);
 
@@ -41,7 +46,12 @@ export function LoginPage() {
     if (mode === "login") {
       const result = await login(email, password);
       if (result.success) {
-        router.push("/dashboard");
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser?.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else if (result.needsVerification) {
         router.push(`/verify?email=${encodeURIComponent(email)}`);
       } else {

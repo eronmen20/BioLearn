@@ -14,7 +14,7 @@ export const viewport: Viewport = {
   maximumScale: 5,
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f5f3ff" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a2e" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f1a" },
   ],
 };
 
@@ -34,11 +34,25 @@ export const metadata: Metadata = {
   },
 };
 
+// Script to prevent flash of wrong theme
+const themeScript = `
+  (function() {
+    try {
+      var t = localStorage.getItem('biolearn-theme') || 'light';
+      var r = t === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+      document.documentElement.setAttribute('data-theme', r);
+    } catch(e) {}
+  })()
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
         {children}
       </body>

@@ -6,11 +6,13 @@ import { useIsMounted } from "@/lib/use-is-mounted";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, User, ChevronDown, Menu } from "lucide-react";
+import { LogOut, User, ChevronDown, Menu, Shield, Sun, Moon } from "lucide-react";
+import { useThemeStore } from "@/lib/theme-store";
 
 export function Header() {
   const { lang, setLang, t } = useLangStore();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { resolved, setTheme } = useThemeStore();
   const mounted = useIsMounted();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,7 +35,7 @@ export function Header() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-b border-border/50 z-50 flex items-center justify-between px-3 sm:px-5">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-b border-border/50 z-50 flex items-center justify-between px-3 sm:px-5">
       <div className="flex items-center gap-3">
         {/* Mobile hamburger */}
         <label htmlFor="sidebar-toggle" className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none">
@@ -47,6 +49,19 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Theme toggle */}
+        <button
+          onClick={() => setTheme(resolved === "dark" ? "light" : "dark")}
+          className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-bg-alt transition-colors"
+          title={resolved === "dark" ? "Mode Terang" : "Mode Gelap"}
+        >
+          {resolved === "dark" ? (
+            <Sun className="w-4 h-4 text-yellow" />
+          ) : (
+            <Moon className="w-4 h-4 text-muted" />
+          )}
+        </button>
+
         {/* Language toggle */}
         <div className="flex gap-1 bg-border/50 rounded-full p-[3px]">
           <button
@@ -92,6 +107,16 @@ export function Header() {
                     </span>
                   </div>
                   <div className="p-1">
+                    {user.role === "admin" && (
+                      <Link
+                        href="/admin"
+                        className="w-full flex items-center gap-3 px-3 py-3 text-sm text-accent hover:bg-accent/5 rounded-xl transition-colors font-medium"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Shield className="w-4 h-4" />
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-3 px-3 py-3 text-sm text-red hover:bg-red/5 rounded-xl transition-colors font-medium"
