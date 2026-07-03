@@ -24,36 +24,32 @@ const FEATURES = [
     icon: <BookOpen className="w-6 h-6" />,
     title: "Materi Lengkap",
     desc: "8 bab biologi lengkap dari sel, pencernaan, sirkulasi, saraf, bakteri, genetika, evolusi, hingga ekosistem.",
-    gradient: "from-purple-500 to-indigo-500",
-    bgLight: "bg-purple-50",
-    bgDark: "dark:bg-purple-500/15",
+    color: "from-purple-500 to-indigo-500",
+    bg: "bg-purple-50 dark:bg-purple-500/15",
     iconColor: "text-purple-500 dark:text-purple-400",
   },
   {
     icon: <Brain className="w-6 h-6" />,
     title: "Kuis Interaktif",
     desc: "Uji pemahamanmu dengan kuis di setiap subbab. Langsung dapat feedback dan penjelasan!",
-    gradient: "from-pink-500 to-rose-500",
-    bgLight: "bg-pink-50",
-    bgDark: "dark:bg-pink-500/15",
+    color: "from-pink-500 to-rose-500",
+    bg: "bg-pink-50 dark:bg-pink-500/15",
     iconColor: "text-pink-500 dark:text-pink-400",
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
     title: "Animasi & Visual",
     desc: "Visualisasi interaktif struktur sel, sistem pencernaan, dan DNA double helix.",
-    gradient: "from-cyan-500 to-teal-500",
-    bgLight: "bg-cyan-50",
-    bgDark: "dark:bg-cyan-500/15",
+    color: "from-cyan-500 to-teal-500",
+    bg: "bg-cyan-50 dark:bg-cyan-500/15",
     iconColor: "text-cyan-500 dark:text-cyan-400",
   },
   {
     icon: <Heart className="w-6 h-6" />,
     title: "Track Progress",
     desc: "Pantai penguasaanmu di setiap bab. Lihat statistik kuis dan mastery score.",
-    gradient: "from-orange-500 to-amber-500",
-    bgLight: "bg-orange-50",
-    bgDark: "dark:bg-orange-500/15",
+    color: "from-orange-500 to-amber-500",
+    bg: "bg-orange-50 dark:bg-orange-500/15",
     iconColor: "text-orange-500 dark:text-orange-400",
   },
 ];
@@ -230,7 +226,7 @@ export function LandingPage() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 px-8 py-4 bg-surface hover:bg-bg-alt text-ink border-2 border-border rounded-full font-bold text-base sm:text-lg transition-all hover:border-accent/30"
+                className="flex items-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-ink border-2 border-border rounded-full font-bold text-base sm:text-lg transition-all hover:border-accent/30"
               >
                 Lihat Materi
               </Link>
@@ -304,7 +300,7 @@ export function LandingPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <motion.div
-                    className={`w-12 h-12 ${f.bgLight} ${f.bgDark} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
+                    className={`w-12 h-12 ${f.bg} rounded-xl flex items-center justify-center mb-4 ${f.iconColor}`}
                     whileHover={{ scale: 1.1, rotate: 5 }}
                   >
                     {f.icon}
@@ -319,7 +315,7 @@ export function LandingPage() {
       </section>
 
       {/* Subjects Preview */}
-      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-surface/50">
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff] dark:to-[#16162a]">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
@@ -420,7 +416,7 @@ export function LandingPage() {
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     href="/login"
-                    className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-white/90 transition-all shadow-xl"
+                    className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-gray-50 transition-all shadow-xl"
                   >
                     Daftar Sekarang
                     <motion.div
@@ -441,7 +437,7 @@ export function LandingPage() {
       <ThemeSwitcher />
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-surface/50">
+      <footer className="relative z-10 py-8 px-4 border-t border-border/50 bg-white/50 dark:bg-surface/50">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted">
           <div className="flex items-center gap-2">
             <span className="font-extrabold">
