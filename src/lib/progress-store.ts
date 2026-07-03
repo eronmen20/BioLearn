@@ -3,18 +3,31 @@
 import { create } from "zustand";
 import { useEffect } from "react";
 
+export interface SubProgress {
+  done: boolean;        // quiz sub-bab lulus
+  score: number;        // 0-100
+  attempts: number;     // berapa kali coba
+}
+
 export interface BabProgress {
   quizzes: number;
   correct: number;
   total: number;
-  subs: Record<string, { done: boolean }>;
+  subs: Record<string, SubProgress>;
+  reflection_done: boolean;
+  reflection_score: number;
+  completion_pct: number; // 0-100
 }
 
 interface ProgressState {
   progress: Record<string, BabProgress>;
   _hydrated: boolean;
   getProgress: (babId: string) => BabProgress;
-  recordAnswer: (babId: string, subKey: string, correct: boolean) => void;
+  recordSubQuiz: (babId: string, subKey: string, score: number, totalQuestions: number) => void;
+  recordReflection: (babId: string, score: number, totalQuestions: number) => void;
+  isSubUnlocked: (babId: string, subKey: string, allSubKeys: string[]) => boolean;
+  isReflectionUnlocked: (babId: string, allSubKeys: string[]) => boolean;
+  getCompletionPct: (babId: string, allSubKeys: string[]) => number;
   getMastery: () => number;
   getTotalQuizzes: () => number;
   getTotalCorrect: () => number;
@@ -36,6 +49,9 @@ const defaultProgress = (): BabProgress => ({
   correct: 0,
   total: 0,
   subs: {},
+  reflection_done: false,
+  reflection_score: 0,
+  completion_pct: 0,
 });
 
 export const useProgressStore = create<ProgressState>()((set, get) => ({
@@ -46,27 +62,40 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     return get().progress[babId] || defaultProgress();
   },
 
-  recordAnswer: async (babId, subKey, correct) => {
+  recordSubQuiz: (babId, subKey, score, totalQuestions) => {
     const email = getCurrentEmail();
     if (!email) return;
 
     set((state) => {
       const p = { ...(state.progress[babId] || defaultProgress()) };
-      const newTotal = p.total + 1;
-      const newCorrect = p.correct + (correct ? 1 : 0);
-      const subDone = newTotal > 0 && newCorrect / newTotal >= 0.5;
+      const passed = score >= 70; // 70% untuk lulus
+
+      const newSubs = {
+        ...p.subs,
+        [subKey]: {
+          done: passed || (p.subs[subKey]?.done ?? false), // once done, stays done
+          score: Math.max(score, p.subs[subKey]?.score ?? 0),
+          attempts: (p.subs[subKey]?.attempts ?? 0) + 1,
+        },
+      };
+
+      // Calculate completion %
+      const totalSubs = Object.keys(newSubs).length;
+      const doneSubs = Object.values(newSubs).filter((s) => s.done).length;
+      const reflectionPct = p.reflection_done ? 1 : 0;
+      const totalItems = totalSubs + 1; // +1 for reflection
+      const doneItems = doneSubs + reflectionPct;
+      const completionPct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
 
       const newProgress = {
         ...state.progress,
         [babId]: {
           ...p,
-          total: newTotal,
-          correct: newCorrect,
-          quizzes: Math.ceil(newTotal / 4),
-          subs: {
-            ...p.subs,
-            [subKey]: { done: subDone },
-          },
+          total: p.total + totalQuestions,
+          correct: p.correct + Math.round((score / 100) * totalQuestions),
+          quizzes: p.quizzes + 1,
+          subs: newSubs,
+          completion_pct: completionPct,
         },
       };
 
@@ -74,15 +103,70 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       fetch("/api/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email,
-          babId,
-          data: newProgress[babId],
-        }),
+        body: JSON.stringify({ email, babId, data: newProgress[babId] }),
       }).catch(() => {});
 
       return { progress: newProgress };
     });
+  },
+
+  recordReflection: (babId, score, totalQuestions) => {
+    const email = getCurrentEmail();
+    if (!email) return;
+
+    set((state) => {
+      const p = { ...(state.progress[babId] || defaultProgress()) };
+      const passed = score >= 70;
+
+      const newP = {
+        ...p,
+        reflection_done: passed || p.reflection_done,
+        reflection_score: Math.max(score, p.reflection_score),
+        total: p.total + totalQuestions,
+        correct: p.correct + Math.round((score / 100) * totalQuestions),
+        quizzes: p.quizzes + 1,
+      };
+
+      // Recalculate completion
+      const totalSubs = Object.keys(newP.subs).length;
+      const doneSubs = Object.values(newP.subs).filter((s) => s.done).length;
+      const reflectionPct = newP.reflection_done ? 1 : 0;
+      newP.completion_pct = totalSubs + 1 > 0 ? Math.round(((doneSubs + reflectionPct) / (totalSubs + 1)) * 100) : 0;
+
+      const newProgress = { ...state.progress, [babId]: newP };
+
+      fetch("/api/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, babId, data: newP }),
+      }).catch(() => {});
+
+      return { progress: newProgress };
+    });
+  },
+
+  isSubUnlocked: (babId, subKey, allSubKeys) => {
+    const idx = allSubKeys.indexOf(subKey);
+    if (idx <= 0) return true; // first sub always unlocked
+    const p = get().progress[babId];
+    if (!p) return false;
+    const prevKey = allSubKeys[idx - 1];
+    return p.subs[prevKey]?.done ?? false;
+  },
+
+  isReflectionUnlocked: (babId, allSubKeys) => {
+    const p = get().progress[babId];
+    if (!p) return false;
+    return allSubKeys.every((key) => p.subs[key]?.done ?? false);
+  },
+
+  getCompletionPct: (babId, allSubKeys) => {
+    const p = get().progress[babId];
+    if (!p) return 0;
+    const totalSubs = allSubKeys.length;
+    const doneSubs = allSubKeys.filter((key) => p.subs[key]?.done ?? false).length;
+    const reflectionPct = p.reflection_done ? 1 : 0;
+    return totalSubs + 1 > 0 ? Math.round(((doneSubs + reflectionPct) / (totalSubs + 1)) * 100) : 0;
   },
 
   getMastery: () => {

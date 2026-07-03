@@ -90,14 +90,28 @@ export async function getProgress(userId: string) {
       correct: row.correct,
       total: row.total,
       subs: typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {},
+      reflection_done: row.reflection_done || false,
+      reflection_score: row.reflection_score || 0,
+      completion_pct: row.completion_pct || 0,
     };
   }
   return result;
 }
 
-export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean }> }) {
+export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number }>; reflection_done?: boolean; reflection_score?: number; completion_pct?: number }) {
   const { error } = await getDb().from("progress").upsert(
-    { user_id: userId, bab_id: babId, quizzes: data.quizzes, correct: data.correct, total: data.total, subs: data.subs, updated_at: new Date().toISOString() },
+    {
+      user_id: userId,
+      bab_id: babId,
+      quizzes: data.quizzes,
+      correct: data.correct,
+      total: data.total,
+      subs: data.subs,
+      reflection_done: data.reflection_done || false,
+      reflection_score: data.reflection_score || 0,
+      completion_pct: data.completion_pct || 0,
+      updated_at: new Date().toISOString(),
+    },
     { onConflict: "user_id,bab_id" }
   );
   if (error) throw error;

@@ -18,7 +18,11 @@ export async function GET(req: NextRequest) {
 
     let query = supabase.from("sub_bab_quiz").select("*").order("sort_order", { ascending: true });
     if (babId) query = query.eq("bab_id", babId);
-    if (subBabKey) query = query.eq("sub_bab_key", subBabKey);
+    if (subBabKey === "is_reflection") {
+      query = query.eq("is_reflection", true);
+    } else if (subBabKey) {
+      query = query.eq("sub_bab_key", subBabKey);
+    }
 
     const { data, error } = await query;
     if (error) throw error;

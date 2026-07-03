@@ -1,15 +1,47 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useBabContent } from "@/lib/use-bab-content";
 import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 import { showToast } from "@/components/ui/toaster";
 import { StrukturViewer } from "@/components/struktur-viewer";
-import { CheckCircle, XCircle, Lightbulb, ChevronRight, RotateCcw, Database, FlaskConical } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  Lightbulb,
+  ChevronRight,
+  RotateCcw,
+  Database,
+  FlaskConical,
+  Lock,
+  Check,
+  Trophy,
+  BookOpen,
+} from "lucide-react";
 
+/* ───────── Quiz-v2 API types ───────── */
+interface QuizV2Question {
+  id: number;
+  bab_id: string;
+  sub_bab_key: string;
+  is_reflection: boolean;
+  question_id: string;
+  question_en: string;
+  question_image_url: string;
+  options_id: string[];
+  options_en: string[];
+  correct_answer: number;
+  explanation_id: string;
+  explanation_en: string;
+}
+
+/* ───────── BabContent ───────── */
 export function BabContent({ babId }: { babId: string }) {
   const { lang, t } = useLangStore();
+  const progress = useProgressStore();
+  const mounted = useIsMounted();
   const { data: content, loading } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
   const [viewType, setViewType] = useState<"full" | "summary">("full");
@@ -42,6 +74,11 @@ export function BabContent({ babId }: { babId: string }) {
 
   const { bab, summary, full, quiz, subs, source } = content;
 
+  // Progress calculations (guarded by mounted for hydration safety)
+  const completionPct = mounted ? progress.getCompletionPct(babId, subs) : 0;
+  const prog = mounted ? progress.getProgress(babId) : null;
+  const doneCount = subs.filter((s) => prog?.subs[s]?.done).length;
+
   return (
     <div className="animate-fade-in-up">
       {/* Page Header */}
@@ -61,7 +98,10 @@ export function BabContent({ babId }: { babId: string }) {
         )}
       </div>
 
-      {/* Subbab Nav */}
+      {/* Progress Bar */}
+      <ProgressBar completionPct={completionPct} doneCount={doneCount} totalCount={subs.length} />
+
+      {/* Subbab Nav with lock/check */}
       <SubbabNav
         subs={subs}
         babId={babId}
@@ -140,34 +180,90 @@ export function BabContent({ babId }: { babId: string }) {
       {/* Struktur & Fungsi */}
       <StrukturSection babId={bab.id} lang={lang} />
 
-      {/* Quiz */}
-      <QuizSection babId={bab.id} quiz={quiz} subIdx={subIdx} />
+      {/* Sub-bab Quiz (quiz-v2) */}
+      <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
+
+      {/* Reflection Quiz (only visible when all sub-bab quizzes passed) */}
+      <ReflectionQuiz babId={babId} allSubKeys={subs} />
     </div>
   );
 }
 
-function SubbabNav({ subs, babId, subIdx, onSelect }: { subs: string[]; babId: string; subIdx: number; onSelect: (i: number) => void }) {
+/* ───────── ProgressBar ───────── */
+function ProgressBar({
+  completionPct,
+  doneCount,
+  totalCount,
+}: {
+  completionPct: number;
+  doneCount: number;
+  totalCount: number;
+}) {
+  return (
+    <div className="mb-5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-muted">
+          {doneCount}/{totalCount} sub-bab selesai
+        </span>
+        <span className="text-xs font-bold text-accent">{completionPct}%</span>
+      </div>
+      <div className="w-full h-2.5 bg-border/40 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-accent to-green transition-all duration-700 ease-out motion-reduce:transition-none"
+          style={{ width: `${completionPct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ───────── SubbabNav (with lock/check) ───────── */
+function SubbabNav({
+  subs,
+  babId,
+  subIdx,
+  onSelect,
+}: {
+  subs: string[];
+  babId: string;
+  subIdx: number;
+  onSelect: (i: number) => void;
+}) {
   const { t } = useLangStore();
   const progress = useProgressStore();
-  const p = progress.getProgress(babId);
+  const mounted = useIsMounted();
 
   return (
     <div className="flex gap-1.5 sm:gap-2 flex-wrap mb-5">
       {subs.map((s, i) => {
-        const subP = p.subs[s] || { done: false };
+        const isUnlocked = mounted ? progress.isSubUnlocked(babId, s, subs) : i === 0;
+        const subP = mounted ? progress.getProgress(babId).subs[s] : undefined;
         const isActive = i === subIdx;
+        const isDone = subP?.done ?? false;
+
         return (
           <button
             key={s}
-            onClick={() => onSelect(i)}
+            onClick={() => isUnlocked && onSelect(i)}
+            disabled={!isUnlocked}
             className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
-              isActive
+              !isUnlocked
+                ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
+                : isActive
                 ? "bg-accent text-white border-accent shadow-sm"
+                : isDone
+                ? "bg-green-light text-green border-green/30 hover:border-green"
                 : "bg-surface text-muted border-border hover:border-accent-light hover:text-accent"
             }`}
           >
-            {t(s)}
-            {subP.done && <span className="ml-1">✅</span>}
+            <span className="inline-flex items-center gap-1">
+              {!isUnlocked ? (
+                <Lock className="w-3 h-3" />
+              ) : isDone ? (
+                <Check className="w-3 h-3" />
+              ) : null}
+              {t(s)}
+            </span>
           </button>
         );
       })}
@@ -175,6 +271,483 @@ function SubbabNav({ subs, babId, subIdx, onSelect }: { subs: string[]; babId: s
   );
 }
 
+/* ───────── SubBabQuiz (quiz-v2 per sub-bab) ───────── */
+function SubBabQuiz({
+  babId,
+  subKey,
+  allSubKeys,
+}: {
+  babId: string;
+  subKey: string;
+  allSubKeys: string[];
+}) {
+  const { lang } = useLangStore();
+  const progress = useProgressStore();
+  const [questions, setQuestions] = useState<QuizV2Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+
+  // Fetch quiz-v2 for this sub-bab
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setShowResult(false);
+    setCurrentQ(0);
+    setSelected(null);
+    setChecked(false);
+    setCorrectCount(0);
+
+    fetch(`/api/admin/quiz-v2?bab_id=${babId}&sub_bab_key=${subKey}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) {
+          setQuestions(data.quiz || []);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setQuestions([]);
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [babId, subKey]);
+
+  if (loading) {
+    return (
+      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 mb-6 animate-pulse">
+        <div className="h-4 w-32 bg-border-light rounded mb-4" />
+        <div className="h-3 w-48 bg-border-light rounded" />
+      </div>
+    );
+  }
+
+  if (questions.length === 0) return null;
+
+  const q = questions[currentQ];
+  const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
+  const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+  const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
+  const isCorrect = selected === q.correct_answer;
+
+  const handleCheck = () => {
+    if (selected === null) return;
+    setChecked(true);
+    if (isCorrect) setCorrectCount((c) => c + 1);
+  };
+
+  const handleNext = () => {
+    if (currentQ < questions.length - 1) {
+      setCurrentQ((c) => c + 1);
+      setSelected(null);
+      setChecked(false);
+    } else {
+      setShowResult(true);
+      const score = Math.round(((correctCount + (isCorrect ? 1 : 0)) / questions.length) * 100);
+      progress.recordSubQuiz(babId, subKey, score, questions.length);
+    }
+  };
+
+  const handleRetry = () => {
+    setCurrentQ(0);
+    setSelected(null);
+    setChecked(false);
+    setShowResult(false);
+    setCorrectCount(0);
+  };
+
+  if (showResult) {
+    const score = Math.round((correctCount / questions.length) * 100);
+    const passed = score >= 70;
+
+    return (
+      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 mb-6 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          {passed ? (
+            <Trophy className="w-6 h-6 text-green" />
+          ) : (
+            <BookOpen className="w-6 h-6 text-accent" />
+          )}
+          <h3 className="text-lg font-bold">Hasil Quiz Sub-Bab</h3>
+        </div>
+        <p className={`text-4xl font-extrabold mb-2 ${passed ? "text-green" : "text-accent"}`}>
+          {score}%
+        </p>
+        <p className="text-sm text-muted mb-1">
+          {correctCount}/{questions.length} jawaban benar
+        </p>
+        {passed ? (
+          <p className="text-sm text-green font-semibold mb-4">
+            ✅ Sub-bab selesai! Lanjut ke sub-bab berikutnya.
+          </p>
+        ) : (
+          <p className="text-sm text-red font-semibold mb-4">
+            ❌ Skor minimal 70% untuk lanjut. Coba lagi ya!
+          </p>
+        )}
+        {!passed && (
+          <button
+            onClick={handleRetry}
+            className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+          >
+            <RotateCcw className="w-4 h-4 inline mr-2" />
+            Coba Lagi
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-surface rounded-2xl shadow-card border border-border/50 overflow-hidden mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-sm flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-accent" />
+            Quiz Sub-Bab
+          </h3>
+          <span className="text-xs text-muted">
+            {currentQ + 1}/{questions.length}
+          </span>
+        </div>
+
+        {/* Question */}
+        <p className="text-sm font-medium mb-4">{question}</p>
+        {q.question_image_url && (
+          <img
+            src={q.question_image_url}
+            alt="Gambar soal"
+            className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
+            loading="lazy"
+          />
+        )}
+
+        {/* Options */}
+        <div className="space-y-2 mb-4">
+          {options.map((opt: string, i: number) => (
+            <button
+              key={i}
+              onClick={() => !checked && setSelected(i)}
+              disabled={checked}
+              className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 transition-all ${
+                checked
+                  ? i === q.correct_answer
+                    ? "border-green bg-green-light text-green"
+                    : i === selected && !isCorrect
+                    ? "border-red bg-red-light text-red"
+                    : "border-border text-muted"
+                  : selected === i
+                  ? "border-accent bg-accent/5 text-accent"
+                  : "border-border hover:border-accent-light text-ink"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+
+        {/* Explanation after check */}
+        {checked && (
+          <div className={`p-4 rounded-xl mb-4 ${isCorrect ? "bg-green-light" : "bg-red-light"}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {isCorrect ? (
+                <CheckCircle className="w-4 h-4 text-green" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red" />
+              )}
+              <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
+                {isCorrect ? "Benar!" : "Salah!"}
+              </span>
+            </div>
+            {explanation && (
+              <div className="flex items-start gap-2 mt-2">
+                <Lightbulb className="w-4 h-4 text-yellow flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted">{explanation}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {!checked ? (
+          <button
+            onClick={handleCheck}
+            disabled={selected === null}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
+          >
+            Periksa Jawaban
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
+          >
+            {currentQ < questions.length - 1 ? "Soal Berikutnya" : "Lihat Hasil"}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── ReflectionQuiz ───────── */
+function ReflectionQuiz({
+  babId,
+  allSubKeys,
+}: {
+  babId: string;
+  allSubKeys: string[];
+}) {
+  const { lang } = useLangStore();
+  const progress = useProgressStore();
+  const mounted = useIsMounted();
+
+  const [questions, setQuestions] = useState<QuizV2Question[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetched, setFetched] = useState(false);
+  const [currentQ, setCurrentQ] = useState(0);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [checked, setChecked] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
+
+  const isUnlocked = mounted ? progress.isReflectionUnlocked(babId, allSubKeys) : false;
+  const prog = mounted ? progress.getProgress(babId) : null;
+  const reflectionDone = prog?.reflection_done ?? false;
+
+  // Fetch reflection quiz when unlocked
+  useEffect(() => {
+    if (!isUnlocked || fetched) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    fetch(`/api/admin/quiz-v2?bab_id=${babId}&sub_bab_key=is_reflection`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelled) {
+          setQuestions(data.quiz || []);
+          setLoading(false);
+          setFetched(true);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setQuestions([]);
+          setLoading(false);
+          setFetched(true);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [babId, isUnlocked, fetched]);
+
+  // Don't render anything if not unlocked
+  if (!mounted || !isUnlocked) return null;
+
+  if (loading) {
+    return (
+      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 mb-6 animate-pulse">
+        <div className="h-4 w-40 bg-border-light rounded mb-4" />
+        <div className="h-3 w-48 bg-border-light rounded" />
+      </div>
+    );
+  }
+
+  if (questions.length === 0) return null;
+
+  // If reflection already completed, show congrats
+  if (reflectionDone && !showResult) {
+    return (
+      <div className="bg-gradient-to-br from-green-light to-surface rounded-2xl shadow-card border border-green/20 p-6 mb-6 text-center">
+        <Trophy className="w-10 h-10 text-green mx-auto mb-3" />
+        <h3 className="text-lg font-extrabold text-green mb-1">Selamat! Bab ini selesai! 🎉</h3>
+        <p className="text-sm text-muted">
+          Kamu telah menyelesaikan semua sub-bab dan quiz refleksi.
+        </p>
+        {prog?.reflection_score !== undefined && (
+          <p className="text-xs text-muted mt-2">Skor refleksi: {prog.reflection_score}%</p>
+        )}
+      </div>
+    );
+  }
+
+  const q = questions[currentQ];
+  const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
+  const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+  const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
+  const isCorrect = selected === q.correct_answer;
+
+  const handleCheck = () => {
+    if (selected === null) return;
+    setChecked(true);
+    if (isCorrect) setCorrectCount((c) => c + 1);
+  };
+
+  const handleNext = () => {
+    if (currentQ < questions.length - 1) {
+      setCurrentQ((c) => c + 1);
+      setSelected(null);
+      setChecked(false);
+    } else {
+      setShowResult(true);
+      const score = Math.round(((correctCount + (isCorrect ? 1 : 0)) / questions.length) * 100);
+      progress.recordReflection(babId, score, questions.length);
+    }
+  };
+
+  const handleRetry = () => {
+    setCurrentQ(0);
+    setSelected(null);
+    setChecked(false);
+    setShowResult(false);
+    setCorrectCount(0);
+  };
+
+  if (showResult) {
+    const score = Math.round((correctCount / questions.length) * 100);
+    const passed = score >= 70;
+
+    return (
+      <div className="bg-gradient-to-br from-accent/[0.05] to-surface rounded-2xl shadow-card border border-accent/20 p-6 mb-6 text-center">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Trophy className={`w-6 h-6 ${passed ? "text-green" : "text-accent"}`} />
+          <h3 className="text-lg font-bold">Hasil Quiz Refleksi</h3>
+        </div>
+        <p className={`text-4xl font-extrabold mb-2 ${passed ? "text-green" : "text-accent"}`}>
+          {score}%
+        </p>
+        <p className="text-sm text-muted mb-1">
+          {correctCount}/{questions.length} jawaban benar
+        </p>
+        {passed ? (
+          <div className="mt-3">
+            <p className="text-green font-bold text-lg mb-1">🎉 Selamat! Bab ini selesai!</p>
+            <p className="text-sm text-muted">Kamu telah menyelesaikan semua materi dan quiz.</p>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <p className="text-red font-semibold text-sm mb-3">
+              ❌ Skor minimal 70%. Coba lagi ya!
+            </p>
+            <button
+              onClick={handleRetry}
+              className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+            >
+              <RotateCcw className="w-4 h-4 inline mr-2" />
+              Coba Lagi
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-br from-accent/[0.03] to-surface rounded-2xl shadow-card border border-accent/20 overflow-hidden mb-6">
+      <div className="p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-sm flex items-center gap-2">
+            <span className="text-lg">🪞</span>
+            Quiz Refleksi
+          </h3>
+          <span className="text-xs text-muted">
+            {currentQ + 1}/{questions.length}
+          </span>
+        </div>
+
+        {/* Question */}
+        <p className="text-sm font-medium mb-4">{question}</p>
+        {q.question_image_url && (
+          <img
+            src={q.question_image_url}
+            alt="Gambar soal"
+            className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
+            loading="lazy"
+          />
+        )}
+
+        {/* Options */}
+        <div className="space-y-2 mb-4">
+          {options.map((opt: string, i: number) => (
+            <button
+              key={i}
+              onClick={() => !checked && setSelected(i)}
+              disabled={checked}
+              className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 transition-all ${
+                checked
+                  ? i === q.correct_answer
+                    ? "border-green bg-green-light text-green"
+                    : i === selected && !isCorrect
+                    ? "border-red bg-red-light text-red"
+                    : "border-border text-muted"
+                  : selected === i
+                  ? "border-accent bg-accent/5 text-accent"
+                  : "border-border hover:border-accent-light text-ink"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+
+        {/* Explanation after check */}
+        {checked && (
+          <div className={`p-4 rounded-xl mb-4 ${isCorrect ? "bg-green-light" : "bg-red-light"}`}>
+            <div className="flex items-center gap-2 mb-1">
+              {isCorrect ? (
+                <CheckCircle className="w-4 h-4 text-green" />
+              ) : (
+                <XCircle className="w-4 h-4 text-red" />
+              )}
+              <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
+                {isCorrect ? "Benar!" : "Salah!"}
+              </span>
+            </div>
+            {explanation && (
+              <div className="flex items-start gap-2 mt-2">
+                <Lightbulb className="w-4 h-4 text-yellow flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted">{explanation}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        {!checked ? (
+          <button
+            onClick={handleCheck}
+            disabled={selected === null}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
+          >
+            Periksa Jawaban
+          </button>
+        ) : (
+          <button
+            onClick={handleNext}
+            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
+          >
+            {currentQ < questions.length - 1 ? "Soal Berikutnya" : "Lihat Hasil"}
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ───────── AnimationSection (unchanged) ───────── */
 function AnimationSection({ babId, color, icon }: { babId: string; color: string; icon: string }) {
   const { t } = useLangStore();
 
@@ -235,6 +808,7 @@ function AnimationSection({ babId, color, icon }: { babId: string; color: string
   );
 }
 
+/* ───────── HotspotSection (unchanged) ───────── */
 function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: string }) {
   const { t } = useLangStore();
   if (hotspotted === "sel") {
@@ -255,6 +829,7 @@ function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: stri
   return null;
 }
 
+/* ───────── StrukturSection (unchanged) ───────── */
 function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -287,146 +862,6 @@ function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) 
           />
         </div>
       ))}
-    </div>
-  );
-}
-
-function QuizSection({ babId, quiz, subIdx }: { babId: string; quiz: import("@/lib/quiz-data").QuizQuestion[]; subIdx: number }) {
-  const { lang, t } = useLangStore();
-  const progress = useProgressStore();
-  const [currentQ, setCurrentQ] = useState(0);
-  const [selected, setSelected] = useState<number | null>(null);
-  const [checked, setChecked] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-  const [correctCount, setCorrectCount] = useState(0);
-
-  const questions = quiz;
-  if (questions.length === 0) return null;
-
-  const q = questions[currentQ];
-  const isCorrect = selected === q.ans;
-
-  const handleCheck = () => {
-    if (selected === null) return;
-    setChecked(true);
-    if (isCorrect) setCorrectCount((c) => c + 1);
-    progress.recordAnswer(babId, `sub.${babId}${subIdx + 1}`, isCorrect);
-  };
-
-  const handleNext = () => {
-    if (currentQ < questions.length - 1) {
-      setCurrentQ((c) => c + 1);
-      setSelected(null);
-      setChecked(false);
-    } else {
-      setShowResult(true);
-    }
-  };
-
-  const handleRetry = () => {
-    setCurrentQ(0);
-    setSelected(null);
-    setChecked(false);
-    setShowResult(false);
-    setCorrectCount(0);
-  };
-
-  if (showResult) {
-    const score = Math.round((correctCount / questions.length) * 100);
-    return (
-      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 text-center">
-        <h3 className="text-lg font-bold mb-2">{t("quiz.complete")}</h3>
-        <p className="text-3xl font-extrabold text-accent mb-2">{score}%</p>
-        <p className="text-sm text-muted mb-4">
-          {correctCount}/{questions.length} {t("quiz.correct")}
-        </p>
-        <button onClick={handleRetry} className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors">
-          <RotateCcw className="w-4 h-4 inline mr-2" />
-          {t("quiz.again")}
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-surface rounded-2xl shadow-card border border-border/50 overflow-hidden">
-      <div className="p-4 sm:p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-sm">{t("quiz.title")}</h3>
-          <span className="text-xs text-muted">
-            {currentQ + 1}/{questions.length}
-          </span>
-        </div>
-
-        <p className="text-sm font-medium mb-4">{q.q[lang] || q.q.id}</p>
-
-        <div className="space-y-2 mb-4">
-          {q.opts[lang]?.map((opt: string, i: number) => {
-            const optText = q.opts[lang]?.[i] || q.opts.id?.[i] || "";
-            return (
-              <button
-                key={i}
-                onClick={() => !checked && setSelected(i)}
-                disabled={checked}
-                className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 transition-all ${
-                  checked
-                    ? i === q.ans
-                      ? "border-green bg-green-light text-green"
-                      : i === selected && !isCorrect
-                      ? "border-red bg-red-light text-red"
-                      : "border-border text-muted"
-                    : selected === i
-                    ? "border-accent bg-accent/5 text-accent"
-                    : "border-border hover:border-accent-light text-ink"
-                }`}
-              >
-                {optText}
-              </button>
-            );
-          })}
-        </div>
-
-        {checked && (
-          <div className={`p-4 rounded-xl mb-4 ${isCorrect ? "bg-green-light" : "bg-red-light"}`}>
-            <div className="flex items-center gap-2 mb-1">
-              {isCorrect ? (
-                <CheckCircle className="w-4 h-4 text-green" />
-              ) : (
-                <XCircle className="w-4 h-4 text-red" />
-              )}
-              <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
-                {isCorrect ? t("quiz.correct") : t("quiz.wrong")}
-              </span>
-            </div>
-            {q.explanation && (
-              <div className="flex items-start gap-2 mt-2">
-                <Lightbulb className="w-4 h-4 text-yellow flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-muted">
-                  {q.explanation[lang] || q.explanation.id}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {!checked ? (
-          <button
-            onClick={handleCheck}
-            disabled={selected === null}
-            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
-          >
-            {t("quiz.check")}
-          </button>
-        ) : (
-          <button
-            onClick={handleNext}
-            className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
-          >
-            {currentQ < questions.length - 1 ? t("quiz.next") : t("quiz.result")}
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
     </div>
   );
 }
