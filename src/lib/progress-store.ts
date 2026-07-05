@@ -190,20 +190,30 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
 }));
 
 // Load progress from API based on current user
+let _progressLoadToken = 0; // monotonically increasing — newer requests invalidate older ones
 export async function loadUserProgress(email: string) {
   if (!email) {
     useProgressStore.setState({ progress: {}, _hydrated: true });
     return;
   }
 
+  const myToken = ++_progressLoadToken; // capture THIS request's token
+
   try {
-    const res = await fetch(`/api/progress?email=${encodeURIComponent(email)}`);
+    const res = await fetch(`/api/progress?email=${encodeURIComponent(email)}`, {
+      cache: "no-store",
+    });
+    if (myToken !== _progressLoadToken) {
+      // a newer loadUserProgress call started while we were fetching — abandon this update
+      return;
+    }
     const data = await res.json();
     useProgressStore.setState({
       progress: data.progress || {},
       _hydrated: true,
     });
   } catch (e) {
+    if (myToken !== _progressLoadToken) return;
     console.warn("[BioLearn] Failed to load progress from API:", e);
     useProgressStore.setState({ progress: {}, _hydrated: true });
   }
@@ -217,8 +227,14 @@ export function resetProgress() {
 // Hydrate from localStorage AFTER mount based on current user
 export function useProgressHydration() {
   useEffect(() => {
+    let cancelled = false;
     const email = getCurrentEmail();
     loadUserProgress(email);
+    return () => {
+      cancelled = true;
+      // bump token so any in-flight loadUserProgress from this effect aborts its setState
+      _progressLoadToken++;
+    };
   }, []);
 }
 

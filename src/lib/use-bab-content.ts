@@ -68,8 +68,9 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
 
       // Try Supabase first
       try {
-        const res = await fetch(`/api/content?bab_id=${babId}`, {
+        const res = await fetch(`/api/content?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, {
           signal: AbortSignal.timeout(3000), // 3s timeout
+          cache: "no-store", // prevent browser HTTP cache from returning stale data after admin edits
         });
         if (res.ok) {
           const supaData: SupabaseContent = await res.json();
