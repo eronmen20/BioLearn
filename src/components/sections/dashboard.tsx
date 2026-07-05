@@ -13,7 +13,7 @@ export function Dashboard() {
   const hydrated = useProgressReady();
   const progress = useProgressStore();
   const ready = mounted && hydrated;
-  const mastery = ready ? progress.getMastery() : 0;
+  const mastery = ready ? Math.max(0, Math.min(100, progress.getMastery())) : 0;
   const totalQuizzes = ready ? progress.getTotalQuizzes() : 0;
   const totalCorrect = ready ? progress.getTotalCorrect() : 0;
   const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + p.total, 0) : 0;
@@ -42,7 +42,10 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {BAB.map((b) => {
           const p = progress.getProgress(b.id);
-          const pct = mounted && p.total > 0 ? Math.round((p.correct / p.total) * 100) : 0;
+          // Score-based pct (capped at 100 to prevent display going >100% if backend has
+          // double-counted correct/total in old data). True completion is in `completion_pct`.
+          const rawPct = mounted && p.total > 0 ? Math.round((p.correct / p.total) * 100) : 0;
+          const pct = Math.max(0, Math.min(100, rawPct));
           const quizzes = mounted ? p.quizzes : 0;
           return (
             <Link

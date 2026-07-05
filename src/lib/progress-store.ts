@@ -87,17 +87,40 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const doneItems = doneSubs + reflectionPct;
       const completionPct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
 
+      // FIX: correct/total was previously accumulated across attempts, which made pct
+      // exceed 100% when same quiz retaken. Now we take the BEST attempt's contribution:
+      //   - totalQuestions contributed by best score
+      //   - correct = score/100 * totalQuestions (rounded) of best attempt
+      // This ensures pct = best accuracy, not summed-up.
+      const bestCorrect = Math.round((Math.max(score, p.subs[subKey]?.score ?? 0) / 100) * totalQuestions);
       const newProgress = {
         ...state.progress,
         [babId]: {
           ...p,
-          total: p.total + totalQuestions,
-          correct: p.correct + Math.round((score / 100) * totalQuestions),
+          // total accumulates questions attempted in this bab across unique sub-babs
+          total: p.total,
+          correct: p.correct,
           quizzes: p.quizzes + 1,
           subs: newSubs,
           completion_pct: completionPct,
         },
       };
+
+      // Recompute total/correct from the actual sub-bab state (no double-count)
+      // Each sub-bab contributes its BEST attempt's score×questions to the bab total.
+      let babTotal = 0;
+      let babCorrect = 0;
+      for (const sk of Object.keys(newSubs)) {
+        const sub = newSubs[sk];
+        // We don't have totalQuestions per sub stored — but we can derive:
+        // the best score tells us the % correct; we just count attempts at the quiz level.
+        // For mastery display, use: bestScore (0-100) → "100%" = 1 question right per attempt's worth.
+        // Simpler: track per-sub correct via the score, but keep babTotal as sum of unique sub attempts.
+        babCorrect += sub.score; // accumulate best score per sub (each sub ≤ 100)
+        babTotal += 100;          // each sub worth 100% of its quiz
+      }
+      newProgress[babId].correct = babCorrect;
+      newProgress[babId].total = babTotal;
 
       // Save to API (fire and forget)
       fetch("/api/progress", {
@@ -122,8 +145,9 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         ...p,
         reflection_done: passed || p.reflection_done,
         reflection_score: Math.max(score, p.reflection_score),
-        total: p.total + totalQuestions,
-        correct: p.correct + Math.round((score / 100) * totalQuestions),
+        // total/correct will be recomputed from subs state below
+        total: p.total,
+        correct: p.correct,
         quizzes: p.quizzes + 1,
       };
 
@@ -132,6 +156,21 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const doneSubs = Object.values(newP.subs).filter((s) => s.done).length;
       const reflectionPct = newP.reflection_done ? 1 : 0;
       newP.completion_pct = totalSubs + 1 > 0 ? Math.round(((doneSubs + reflectionPct) / (totalSubs + 1)) * 100) : 0;
+
+      // Recompute correct/total from subs (best score per sub + reflection if done)
+      let babTotal = 0;
+      let babCorrect = 0;
+      for (const sk of Object.keys(newP.subs)) {
+        const sub = newP.subs[sk];
+        babCorrect += sub.score;
+        babTotal += 100;
+      }
+      if (newP.reflection_done) {
+        babCorrect += newP.reflection_score;
+        babTotal += 100;
+      }
+      newP.correct = babCorrect;
+      newP.total = babTotal;
 
       const newProgress = { ...state.progress, [babId]: newP };
 

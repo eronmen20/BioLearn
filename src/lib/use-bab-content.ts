@@ -36,6 +36,9 @@ interface ContentData {
   full: { id: string[]; en: string[] };
   quiz: QuizQuestion[];
   subs: string[];
+  // Per-sub title (parallel array to subs[] — index i corresponds to subs[i])
+  // Comes from sub_bab.title_id/title_en (source of truth)
+  subTitles: { id: string; en: string }[];
   // Per-sub media indexed by sub_bab key
   mediaBySub: Record<string, SubMedia>;
   source: "supabase" | "hardcoded";
@@ -81,6 +84,10 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
             const fullId = supaData.subs.map((s) => s.full.id);
             const fullEn = supaData.subs.map((s) => s.full.en);
             const subs = supaData.subs.map((s) => s.key);
+            const subTitles = supaData.subs.map((s) => ({
+              id: s.title?.id || "",
+              en: s.title?.en || "",
+            }));
 
             // Build per-sub media map from API response
             const mediaBySub: Record<string, SubMedia> = {};
@@ -99,6 +106,7 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
               full: { id: fullId, en: fullEn },
               quiz: supaData.quiz.length > 0 ? supaData.quiz : (QUIZ[babId] || []),
               subs,
+              subTitles,
               mediaBySub,
               source: "supabase",
             });
@@ -118,6 +126,7 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
           full: hardcodedBab.full,
           quiz: QUIZ[babId] || [],
           subs: hardcodedBab.subs,
+          subTitles: hardcodedBab.subs.map(() => ({ id: "", en: "" })),
           mediaBySub: hardcodedBab.subs.reduce<Record<string, SubMedia>>((acc, k) => {
             acc[k] = { ...EMPTY_MEDIA };
             return acc;

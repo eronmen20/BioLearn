@@ -72,7 +72,7 @@ export function BabContent({ babId }: { babId: string }) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
   }
 
-  const { bab, summary, full, quiz, subs, mediaBySub, source } = content;
+  const { bab, summary, full, quiz, subs, subTitles, mediaBySub, source } = content;
 
   // Current sub-bab's media (from DB, or empty if hardcoded fallback)
   const currentSubKey = subs[subIdx];
@@ -113,6 +113,7 @@ export function BabContent({ babId }: { babId: string }) {
       {/* Subbab Nav with lock/check */}
       <SubbabNav
         subs={subs}
+        subTitles={subTitles}
         babId={babId}
         subIdx={subIdx}
         onSelect={setSubIdx}
@@ -243,18 +244,35 @@ function ProgressBar({
 /* ───────── SubbabNav (with lock/check + hint) ───────── */
 function SubbabNav({
   subs,
+  subTitles,
   babId,
   subIdx,
   onSelect,
 }: {
   subs: string[];
+  subTitles?: { id: string; en: string }[];
   babId: string;
   subIdx: number;
   onSelect: (i: number) => void;
 }) {
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
   const progress = useProgressStore();
   const mounted = useIsMounted();
+
+  // Get display label for a sub-bab:
+  //   1. subTitles[i]?.[lang] (from sub_bab.title_id/title_en — source of truth, EDITABLE via admin)
+  //   2. fallback to t(subs[i]) translation lookup
+  //   3. fallback to raw subs[i] (key)
+  const getSubLabel = (i: number): string => {
+    const fromDb = subTitles?.[i];
+    if (fromDb) {
+      const titleForLang = lang === "en" ? fromDb.en : fromDb.id;
+      if (titleForLang && titleForLang.trim()) return titleForLang;
+    }
+    const translated = t(subs[i]);
+    if (translated && translated !== subs[i]) return translated;
+    return subs[i];
+  };
 
   // Ada subbab setelahnya yang masih locked? kalau ya, tampilkan hint
   const hasLockedAhead = mounted
@@ -292,7 +310,7 @@ function SubbabNav({
                 ) : isDone ? (
                   <Check className="w-3 h-3" />
                 ) : null}
-                {t(s)}
+                {getSubLabel(i)}
               </span>
             </button>
           );
