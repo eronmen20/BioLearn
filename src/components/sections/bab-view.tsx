@@ -343,7 +343,7 @@ function SubBabQuiz({
     setChecked(false);
     setCorrectCount(0);
 
-    fetch(`/api/quiz?bab_id=${babId}&sub_bab_key=${subKey}`)
+    fetch(`/api/quiz?bab_id=${encodeURIComponent(babId)}&sub_bab_key=${encodeURIComponent(subKey)}`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
