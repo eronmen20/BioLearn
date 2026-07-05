@@ -9,7 +9,8 @@ function getDb() {
 }
 
 // Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
-async function normalizeSortOrder(supabase: ReturnType<typeof createClient>, table: string, babId: string) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function normalizeSortOrder(supabase: any, table: string, babId: string) {
   const { data: rows } = await supabase
     .from(table)
     .select("id, sort_order")
