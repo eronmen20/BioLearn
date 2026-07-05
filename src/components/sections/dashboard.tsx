@@ -13,10 +13,13 @@ export function Dashboard() {
   const hydrated = useProgressReady();
   const progress = useProgressStore();
   const ready = mounted && hydrated;
-  const mastery = ready ? Math.max(0, Math.min(100, progress.getMastery())) : 0;
   const totalQuizzes = ready ? progress.getTotalQuizzes() : 0;
   const totalCorrect = ready ? progress.getTotalCorrect() : 0;
   const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + p.total, 0) : 0;
+  // Count of fully completed babs (completion_pct === 100)
+  const completedBabs = ready
+    ? Object.values(progress.progress).filter((p) => (p.completion_pct || 0) >= 100).length
+    : 0;
 
   return (
     <div className="animate-fade-in-up">
@@ -30,7 +33,7 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
         <StatCard icon={<BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />} num={BAB.length} label={t("stat.chapters")} sub={`${BAB.reduce((s, b) => s + b.subs.length, 0)} ${t("stat.subtopics").toLowerCase()}`} color="accent" />
         <StatCard icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />} num={totalQuizzes} label={t("stat.quiz")} sub={`${totalQs} ${t("stat.questions").toLowerCase()}`} color="green" />
-        <StatCard icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />} num={`${mastery}%`} label={t("stat.mastery")} sub={`${totalCorrect}/${totalQs} ${t("stat.correct")}`} color="amber" />
+        <StatCard icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />} num={`${completedBabs}/${BAB.length}`} label={t("stat.mastery")} sub={`${completedBabs === BAB.length && BAB.length > 0 ? t("stat.complete") || "Selesai!" : `${Math.round((completedBabs / Math.max(1, BAB.length)) * 100)}%`}`} color="amber" />
         <StatCard icon={<Library className="w-4 h-4 sm:w-5 sm:h-5" />} num="24" label={t("stat.glossary")} sub={t("stat.bilingual")} color="blue" />
       </div>
 
@@ -42,9 +45,9 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {BAB.map((b) => {
           const p = progress.getProgress(b.id);
-          // Score-based pct (capped at 100 to prevent display going >100% if backend has
-          // double-counted correct/total in old data). True completion is in `completion_pct`.
-          const rawPct = mounted && p.total > 0 ? Math.round((p.correct / p.total) * 100) : 0;
+          // Use completion_pct (bab done based) instead of quiz score.
+          // completion_pct = sub-bab done + reflection done, in 0-100.
+          const rawPct = mounted ? p.completion_pct || 0 : 0;
           const pct = Math.max(0, Math.min(100, rawPct));
           const quizzes = mounted ? p.quizzes : 0;
           return (
