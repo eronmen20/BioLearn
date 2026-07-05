@@ -153,9 +153,9 @@ export function BabContent({ babId }: { babId: string }) {
             </div>
           ) : (
             <div
-              className="max-w-none text-sm leading-relaxed text-ink
-                [&_h3]:text-accent-dark [&_h3]:font-bold [&_h3]:mt-5 [&_h3]:mb-2 [&_h3]:text-base
-                [&_h4]:text-accent [&_h4]:font-semibold [&_h4]:mt-4 [&_h4]:mb-2 [&_h4]:text-sm
+              className="max-w-none text-sm leading-relaxed text-muted
+                [&_h3]:text-accent-dark [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-sm
+                [&_h4]:text-accent [&_h4]:font-medium [&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-xs [&_h4]:uppercase [&_h4]:tracking-wide
                 [&_p]:leading-relaxed [&_p]:my-2
                 [&_strong]:text-ink [&_strong]:font-semibold
                 [&_em]:text-accent [&_em]:italic
@@ -179,13 +179,10 @@ export function BabContent({ babId }: { babId: string }) {
         </div>
       </div>
 
-      {/* Animation — per-sub override or hardcoded fallback */}
+      {/* Animation — per-sub only (no hardcoded fallback; kalau ga ada di DB, ga tampil) */}
       <InlineAnimationSection
         subKey={currentSubKey}
         subMedia={currentMedia}
-        fallbackbabId={bab.id}
-        fallbackColor={bab.color}
-        fallbackIcon={bab.icon}
       />
 
       {/* Video — per-sub override or bab-level fallback */}
@@ -243,7 +240,7 @@ function ProgressBar({
   );
 }
 
-/* ───────── SubbabNav (with lock/check) ───────── */
+/* ───────── SubbabNav (with lock/check + hint) ───────── */
 function SubbabNav({
   subs,
   babId,
@@ -259,40 +256,59 @@ function SubbabNav({
   const progress = useProgressStore();
   const mounted = useIsMounted();
 
-  return (
-    <div className="flex gap-1.5 sm:gap-2 flex-wrap mb-5">
-      {subs.map((s, i) => {
-        const isUnlocked = mounted ? progress.isSubUnlocked(babId, s, subs) : i === 0;
-        const subP = mounted ? progress.getProgress(babId).subs[s] : undefined;
-        const isActive = i === subIdx;
-        const isDone = subP?.done ?? false;
+  // Ada subbab setelahnya yang masih locked? kalau ya, tampilkan hint
+  const hasLockedAhead = mounted
+    ? subs.some((s, i) => i > 0 && !progress.isSubUnlocked(babId, s, subs))
+    : false;
 
-        return (
-          <button
-            key={s}
-            onClick={() => isUnlocked && onSelect(i)}
-            disabled={!isUnlocked}
-            className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
-              !isUnlocked
-                ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
-                : isActive
-                ? "bg-accent text-white border-accent shadow-sm"
-                : isDone
-                ? "bg-green-light text-green border-green/30 hover:border-green"
-                : "bg-surface text-muted border-border hover:border-accent-light hover:text-accent"
-            }`}
-          >
-            <span className="inline-flex items-center gap-1">
-              {!isUnlocked ? (
-                <Lock className="w-3 h-3" />
-              ) : isDone ? (
-                <Check className="w-3 h-3" />
-              ) : null}
-              {t(s)}
-            </span>
-          </button>
-        );
-      })}
+  return (
+    <div className="mb-5">
+      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+        {subs.map((s, i) => {
+          const isUnlocked = mounted ? progress.isSubUnlocked(babId, s, subs) : i === 0;
+          const subP = mounted ? progress.getProgress(babId).subs[s] : undefined;
+          const isActive = i === subIdx;
+          const isDone = subP?.done ?? false;
+
+          return (
+            <button
+              key={s}
+              onClick={() => isUnlocked && onSelect(i)}
+              disabled={!isUnlocked}
+              title={!isUnlocked ? "Selesaikan kuis subbab sebelumnya (skor ≥70%) untuk membuka" : undefined}
+              className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
+                !isUnlocked
+                  ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
+                  : isActive
+                  ? "bg-accent text-white border-accent shadow-sm"
+                  : isDone
+                  ? "bg-green-light text-green border-green/30 hover:border-green"
+                  : "bg-surface text-muted border-border hover:border-accent-light hover:text-accent"
+              }`}
+            >
+              <span className="inline-flex items-center gap-1">
+                {!isUnlocked ? (
+                  <Lock className="w-3 h-3" />
+                ) : isDone ? (
+                  <Check className="w-3 h-3" />
+                ) : null}
+                {t(s)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Petunjuk: kalau ada subbab di depan yang masih locked, kasih tau user */}
+      {mounted && hasLockedAhead && (
+        <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted">
+          <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-muted/70" />
+          <p className="leading-relaxed">
+            Selesaikan kuis di subbab sebelumnya dengan skor minimal{" "}
+            <span className="font-semibold text-accent">70%</span> untuk membuka subbab berikutnya.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -921,20 +937,16 @@ function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) 
 function InlineAnimationSection({
   subKey,
   subMedia,
-  fallbackbabId,
-  fallbackColor,
-  fallbackIcon,
 }: {
   subKey: string;
   subMedia: { video_url: string; image_url: string; animation_url: string; animation_type: string };
-  fallbackbabId: string;
-  fallbackColor: string;
-  fallbackIcon: string;
 }) {
   const { t } = useLangStore();
 
   if (!subMedia.animation_url) {
-    return <AnimationSection babId={fallbackbabId} color={fallbackColor} icon={fallbackIcon} />;
+    // Tidak ada animasi di DB → jangan tampil apa-apa (ga ada fallback hardcoded lagi).
+    // biar layout bersih, sesuai request user.
+    return null;
   }
 
   const url = subMedia.animation_url;
