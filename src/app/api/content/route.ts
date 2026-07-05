@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
 
     if (materiError) throw materiError;
 
-    // Get quiz for this bab
+    // Get legacy quiz for this bab (backward compat — tabel quiz lama)
     const { data: quiz, error: quizError } = await supabase
       .from("quiz")
       .select("*")
@@ -36,6 +36,17 @@ export async function GET(req: NextRequest) {
       .order("sort_order", { ascending: true });
 
     if (quizError) throw quizError;
+
+    // Get sub_bab_quiz (v2) — quiz per sub-bab, sumber utama quiz baru.
+    // Di-fetch di sini supaya endpoint /api/content tetap backward-compatible
+    // dengan hook useBabContent yang membaca content.quiz.
+    const { data: subBabQuiz, error: subBabQuizError } = await supabase
+      .from("sub_bab_quiz")
+      .select("*")
+      .eq("bab_id", babId)
+      .order("sort_order", { ascending: true });
+
+    if (subBabQuizError) throw subBabQuizError;
 
     // Get sub_bab for this bab (to source video_url/image_url/animation_url/animation_type)
     const { data: subBabRows } = await supabase
@@ -114,22 +125,45 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Transform quiz to match expected format
-    const quizData = (quiz || []).map((q) => ({
-      q: {
-        id: q.question_id,
-        en: q.question_en,
-      },
-      opts: {
-        id: q.options_id,
-        en: q.options_en,
-      },
-      ans: q.correct_answer,
-      explanation: {
-        id: q.explanation_id || "",
-        en: q.explanation_en || "",
-      },
-    }));
+    // Transform quiz to match expected format (legacy quiz format)
+// Include BOTH legacy quiz + new sub_bab_quiz (v2) so user-facing views
+// dapat quiz dari kedua sumber. sub_bab_quiz biasanya punya sub_bab_key,
+// legacy quiz tidak — keduanya dipake di view berbeda.
+    const quizData = [
+      ...((quiz || []).map((q) => ({
+        q: {
+          id: q.question_id,
+          en: q.question_en,
+        },
+        opts: {
+          id: q.options_id,
+          en: q.options_en,
+        },
+        ans: q.correct_answer,
+        sub_bab_key: null, // legacy quiz ga punya sub_bab_key
+        explanation: {
+          id: q.explanation_id || "",
+          en: q.explanation_en || "",
+        },
+      }))),
+      ...((subBabQuiz || []).map((q) => ({
+        q: {
+          id: q.question_id,
+          en: q.question_en,
+        },
+        opts: {
+          id: q.options_id,
+          en: q.options_en,
+        },
+        ans: q.correct_answer,
+        sub_bab_key: q.sub_bab_key,
+        is_reflection: q.is_reflection || false,
+        explanation: {
+          id: q.explanation_id || "",
+          en: q.explanation_en || "",
+        },
+      }))),
+    ];
 
     return NextResponse.json({
       bab_id: babId,

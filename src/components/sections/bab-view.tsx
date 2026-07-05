@@ -44,7 +44,7 @@ export function BabContent({ babId }: { babId: string }) {
   const mounted = useIsMounted();
   const { data: content, loading } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
-  const [viewType, setViewType] = useState<"full" | "summary">("full");
+  const [viewType, setViewType] = useState<"full" | "summary">("summary");
 
   // Loading skeleton
   if (loading) {
@@ -160,10 +160,10 @@ export function BabContent({ babId }: { babId: string }) {
                 [&_strong]:text-ink [&_strong]:font-semibold
                 [&_em]:text-accent [&_em]:italic
                 [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-accent-dark
-                [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-3 [&_ul]:space-y-1.5
-                [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-3 [&_ol]:space-y-1.5
-                [&_li]:pl-1 [&_li]:marker:text-accent
-                [&_ul_ul]:list-circle [&_ol_ol]:list-lower-alpha
+                [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!my-3 [&_ul]:!space-y-1.5
+                [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!my-3 [&_ol]:!space-y-1.5
+                [&_li]:!pl-1 [&_li]:!marker:text-accent
+                [&_ul_ul]:!list-circle [&_ol_ol]:!list-lower-alpha
                 [&_blockquote]:border-l-4 [&_blockquote]:border-accent/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted [&_blockquote]:my-3
                 [&_code]:bg-surface-2 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-accent-dark [&_code]:text-xs [&_code]:font-mono
                 [&_pre]:bg-surface-2 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-3
@@ -343,7 +343,7 @@ function SubBabQuiz({
     setChecked(false);
     setCorrectCount(0);
 
-    fetch(`/api/admin/quiz-v2?bab_id=${babId}&sub_bab_key=${subKey}`)
+    fetch(`/api/quiz?bab_id=${babId}&sub_bab_key=${subKey}`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
@@ -573,7 +573,7 @@ function ReflectionQuiz({
     let cancelled = false;
     setLoading(true);
 
-    fetch(`/api/admin/quiz-v2?bab_id=${babId}&sub_bab_key=is_reflection`)
+    fetch(`/api/quiz?bab_id=${babId}&sub_bab_key=is_reflection`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) {
