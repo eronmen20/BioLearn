@@ -77,9 +77,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "ID sub-bab wajib diisi" }, { status: 400 });
     }
 
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
-    };
+    const updateData: Record<string, unknown> = {};
 
     if (body.bab_id !== undefined) updateData.bab_id = body.bab_id;
     if (body.key !== undefined) updateData.key = body.key;
