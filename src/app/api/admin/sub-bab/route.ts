@@ -8,6 +8,17 @@ function getDb() {
   );
 }
 
+// Validate sub_bab key format — must be URL-safe identifier.
+// No spaces, no &, no special chars except . _ -
+// Examples: "sub.bakteri1", "sub.bakteri_karakteristik"
+// Rejects: "Bakteri & Karakteristiknya", "sub bakteri 1", "bakteri@x"
+function isValidSubBabKey(key: string): boolean {
+  if (!key || typeof key !== "string") return false;
+  // Allow lowercase letters, digits, dot, underscore, hyphen
+  // Max 80 chars to prevent abuse
+  return /^[a-z0-9._-]{1,80}$/.test(key);
+}
+
 // Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function normalizeSortOrder(supabase: any, table: string, babId: string) {
@@ -60,6 +71,14 @@ export async function POST(req: NextRequest) {
 
     const newSortOrder = body.sort_order || 0;
 
+    // Validate key format
+    if (body.key && !isValidSubBabKey(body.key)) {
+      return NextResponse.json(
+        { error: `Key "${body.key}" tidak valid. Gunakan hanya huruf kecil, angka, titik, underscore, atau strip (contoh: sub.bakteri_karakteristik).` },
+        { status: 400 }
+      );
+    }
+
     // Normalize first to eliminate gaps/duplicates
     await normalizeSortOrder(supabase, "sub_bab", body.bab_id);
 
@@ -111,7 +130,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT - Update sub-bab (auto-shift sort_order)
+// PUT - Update sub-bab (auto-shift sort_order + cascade key rename)
 export async function PUT(req: NextRequest) {
   try {
     const supabase = getDb();
@@ -119,6 +138,74 @@ export async function PUT(req: NextRequest) {
 
     if (!body.id) {
       return NextResponse.json({ error: "ID sub-bab wajib diisi" }, { status: 400 });
+    }
+
+    // Get current row to detect key change
+    const { data: currentRow, error: currentError } = await supabase
+      .from("sub_bab")
+      .select("key, bab_id")
+      .eq("id", body.id)
+      .single();
+
+    if (currentError) throw currentError;
+
+    const oldKey = (currentRow?.key as string) || "";
+    const newKey = body.key !== undefined ? body.key : oldKey;
+    const babIdForCascade = (currentRow?.bab_id as string) || body.bab_id || "";
+
+    // Detect key rename — needs cascade update
+    const keyChanged =
+      body.key !== undefined && body.key !== oldKey && oldKey !== "" && body.key !== "";
+
+    // Validate new key format (whether changed or not, ensure stored value is valid)
+    if (body.key !== undefined && body.key !== "" && !isValidSubBabKey(body.key)) {
+      return NextResponse.json(
+        { error: `Key "${body.key}" tidak valid. Gunakan hanya huruf kecil, angka, titik, underscore, atau strip (contoh: sub.bakteri_karakteristik).` },
+        { status: 400 }
+      );
+    }
+
+    // Cascade key rename: update sub_bab_quiz + materi rows that reference old key
+    let cascadeQuizUpdated = 0;
+    let cascadeMateriUpdated = 0;
+    if (keyChanged && babIdForCascade) {
+      // sub_bab_quiz
+      const { data: quizRows, error: quizListError } = await supabase
+        .from("sub_bab_quiz")
+        .select("id")
+        .eq("bab_id", babIdForCascade)
+        .eq("sub_bab_key", oldKey);
+      if (quizListError) throw quizListError;
+
+      if (quizRows && quizRows.length > 0) {
+        const { error: quizUpdateError, count: quizCount } = await supabase
+          .from("sub_bab_quiz")
+          .update({ sub_bab_key: newKey })
+          .eq("bab_id", babIdForCascade)
+          .eq("sub_bab_key", oldKey);
+        if (quizUpdateError) throw quizUpdateError;
+        cascadeQuizUpdated = quizRows.length;
+        if (typeof quizCount === "number") cascadeQuizUpdated = quizCount;
+      }
+
+      // materi
+      const { data: materiRows, error: materiListError } = await supabase
+        .from("materi")
+        .select("id")
+        .eq("bab_id", babIdForCascade)
+        .eq("sub_bab_key", oldKey);
+      if (materiListError) throw materiListError;
+
+      if (materiRows && materiRows.length > 0) {
+        const { error: materiUpdateError, count: materiCount } = await supabase
+          .from("materi")
+          .update({ sub_bab_key: newKey })
+          .eq("bab_id", babIdForCascade)
+          .eq("sub_bab_key", oldKey);
+        if (materiUpdateError) throw materiUpdateError;
+        cascadeMateriUpdated = materiRows.length;
+        if (typeof materiCount === "number") cascadeMateriUpdated = materiCount;
+      }
     }
 
     // Auto-shift sort_order when it changes
@@ -199,7 +286,16 @@ export async function PUT(req: NextRequest) {
     const { error } = await supabase.from("sub_bab").update(updateData).eq("id", body.id);
 
     if (error) throw error;
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      cascade: {
+        key_changed: keyChanged,
+        old_key: keyChanged ? oldKey : null,
+        new_key: keyChanged ? newKey : null,
+        quiz_rows_updated: cascadeQuizUpdated,
+        materi_rows_updated: cascadeMateriUpdated,
+      },
+    });
   } catch (e) {
     console.error("[API SubBab PUT]", e);
     const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);

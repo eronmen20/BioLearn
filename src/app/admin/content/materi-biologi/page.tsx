@@ -269,12 +269,28 @@ export default function MateriBiologiPage() {
         throw new Error(`Sub-bab: ${err.error || 'Failed'}`);
       }
 
-      // Get the sub_bab ID (for new entries)
+      // Get the sub_bab ID (for new entries) and any cascade update info
       let subBabId = editing?.sub_bab_id;
+      let cascadeInfo: {
+        key_changed?: boolean;
+        old_key?: string | null;
+        new_key?: string | null;
+        quiz_rows_updated?: number;
+        materi_rows_updated?: number;
+      } = {};
+      const subBabResult = await subBabRes.json();
       if (!subBabId) {
-        const subBabResult = await subBabRes.json();
         subBabId = subBabResult.id;
       }
+      if (subBabResult.cascade) {
+        cascadeInfo = subBabResult.cascade;
+      }
+
+      // If key was renamed, update form.sub_bab_key so materi save uses new key
+      const effectiveSubBabKey =
+        cascadeInfo.key_changed && cascadeInfo.new_key
+          ? cascadeInfo.new_key
+          : form.sub_bab_key;
 
       // 2. Save to materi table (upsert by sub_bab_key)
       // IMPORTANT: media fields are stored both in sub_bab (dedicated cols)
@@ -282,7 +298,7 @@ export default function MateriBiologiPage() {
       const materiPayload = {
         ...(editing?.materi_id ? { id: editing.materi_id } : {}),
         bab_id: form.bab_id,
-        sub_bab_key: form.sub_bab_key,
+        sub_bab_key: effectiveSubBabKey,
         type: form.type,
         content_id: form.content_id,
         content_en: form.content_en,
@@ -310,7 +326,20 @@ export default function MateriBiologiPage() {
         throw new Error(`Materi: ${err.error || 'Failed'}`);
       }
 
-      showToast(editing ? 'Materi biologi berhasil diupdate!' : 'Materi biologi berhasil ditambahkan!');
+      let toastMessage = editing ? 'Materi biologi berhasil diupdate!' : 'Materi biologi berhasil ditambahkan!';
+      if (cascadeInfo.key_changed) {
+        const q = cascadeInfo.quiz_rows_updated || 0;
+        const m = cascadeInfo.materi_rows_updated || 0;
+        const parts: string[] = [];
+        if (q > 0) parts.push(`${q} quiz`);
+        if (m > 0) parts.push(`${m} materi`);
+        if (parts.length > 0) {
+          toastMessage += ` Key ${cascadeInfo.old_key} → ${cascadeInfo.new_key} (cascade update: ${parts.join(', ')}).`;
+        } else {
+          toastMessage += ` Key ${cascadeInfo.old_key} → ${cascadeInfo.new_key}.`;
+        }
+      }
+      showToast(toastMessage);
       setShowEditor(false);
       loadData();
     } catch (e) {

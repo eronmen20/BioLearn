@@ -11,6 +11,16 @@ function getDb() {
 }
 
 // GET - Get full bab content for user-facing pages
+//
+// Source of truth priority:
+//   1. sub_bab table — defines sub-bab list, titles, media
+//   2. materi table — enriches sub-bab with content (full/summary)
+//   3. materi table — orphan entries (no matching sub_bab) still included
+//      as legacy fallback (content + media only, no sub_bab metadata)
+//
+// Sub-bab list shape returned in `subs` is driven by sub_bab table.
+// sub_bab_key in subs[i].key comes from sub_bab.key directly — NOT from materi.
+// Title comes from sub_bab.title_id/title_en — NOT from materi.metadata.
 export async function GET(req: NextRequest) {
   try {
     const supabase = getDb();
@@ -21,7 +31,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "bab_id required" }, { status: 400 });
     }
 
-    // Get materi for this bab
+    // Get all sub_bab for this bab (source of truth for sub-bab list)
+    const { data: subBabRows, error: subBabError } = await supabase
+      .from("sub_bab")
+      .select("*")
+      .eq("bab_id", babId)
+      .order("sort_order", { ascending: true });
+
+    if (subBabError) throw subBabError;
+
+    // Get materi rows (content enrichment)
     const { data: materi, error: materiError } = await supabase
       .from("materi")
       .select("*")
@@ -40,8 +59,6 @@ export async function GET(req: NextRequest) {
     if (quizError) throw quizError;
 
     // Get sub_bab_quiz (v2) — quiz per sub-bab, sumber utama quiz baru.
-    // Di-fetch di sini supaya endpoint /api/content tetap backward-compatible
-    // dengan hook useBabContent yang membaca content.quiz.
     const { data: subBabQuiz, error: subBabQuizError } = await supabase
       .from("sub_bab_quiz")
       .select("*")
@@ -50,43 +67,85 @@ export async function GET(req: NextRequest) {
 
     if (subBabQuizError) throw subBabQuizError;
 
-    // Get sub_bab for this bab (to source video_url/image_url/animation_url/animation_type)
-    const { data: subBabRows } = await supabase
-      .from("sub_bab")
-      .select("key, video_url, image_url, animation_url, animation_type")
-      .eq("bab_id", babId);
+    // Index materi by sub_bab_key for O(1) lookup
+    type MateriRow = {
+      id: number;
+      bab_id: string;
+      sub_bab_key: string | null;
+      type: string | null;
+      content_id: string | null;
+      content_en: string | null;
+      summary_id: string | null;
+      summary_en: string | null;
+      metadata: unknown;
+    };
+    const materiByKey = new Map<string, MateriRow>();
+    for (const m of materi || []) {
+      const k = (m.sub_bab_key as string | null) || "";
+      if (k) materiByKey.set(k, m as MateriRow);
+    }
 
-    // Index sub_bab media by key for O(1) lookup
-    const subBabMediaByKey: Record<string, {
+    // Build subs array from sub_bab rows (source of truth)
+    const subs: Array<{
+      key: string;
+      title: { id: string; en: string };
+      summary: { id: string; en: string };
+      full: { id: string; en: string };
       video_url: string;
       image_url: string;
       animation_url: string;
       animation_type: string;
-    }> = {};
+      type: string;
+    }> = [];
+
     for (const sb of subBabRows || []) {
-      const k = (sb.key as string) || "";
-      if (k) {
-        subBabMediaByKey[k] = {
-          video_url: (sb.video_url as string) || "",
-          image_url: (sb.image_url as string) || "",
-          animation_url: (sb.animation_url as string) || "",
-          animation_type: (sb.animation_type as string) || "",
-        };
-      }
+      const key = (sb.key as string) || "";
+      if (!key) continue;
+
+      const materiRow = materiByKey.get(key);
+      const meta = (materiRow?.metadata as Record<string, unknown>) || {};
+
+      // Title: sub_bab is source of truth, fallback to materi.metadata for legacy
+      const titleId =
+        (sb.title_id as string) || (meta.title_id as string) || "";
+      const titleEn =
+        (sb.title_en as string) || (meta.title_en as string) || "";
+
+      // Summary: prefer materi.summary_id/en, fallback to sub_bab.summary_id/en
+      const summaryId =
+        materiRow?.summary_id || (sb.summary_id as string) || "";
+      const summaryEn =
+        materiRow?.summary_en || (sb.summary_en as string) || "";
+
+      // Full content: only materi has it
+      const fullId = materiRow?.content_id || "";
+      const fullEn = materiRow?.content_en || "";
+
+      subs.push({
+        key,
+        title: { id: titleId, en: titleEn },
+        summary: { id: summaryId, en: summaryEn },
+        full: { id: fullId, en: fullEn },
+        video_url: (sb.video_url as string) || "",
+        image_url: (sb.image_url as string) || "",
+        animation_url: (sb.animation_url as string) || "",
+        animation_type: (sb.animation_type as string) || "",
+        type: materiRow?.type || "text",
+      });
+
+      // Mark this key as processed
+      materiByKey.delete(key);
     }
 
-    // Transform materi to match expected format.
-    // Media resolution: sub_bab (source of truth) → materi.metadata (legacy fallback).
-    const subs = (materi || []).map((m) => {
+    // Add orphan materi entries (materi rows without matching sub_bab)
+    // These come from legacy data or admin imports. Use materi.sub_bab_key as key.
+    for (const m of Array.from(materiByKey.values())) {
+      const key = (m.sub_bab_key as string) || "";
+      if (!key) continue;
       const meta = (m.metadata as Record<string, unknown>) || {};
-      const sbMedia = subBabMediaByKey[m.sub_bab_key as string] || {
-        video_url: "",
-        image_url: "",
-        animation_url: "",
-        animation_type: "",
-      };
-      return {
-        key: m.sub_bab_key,
+
+      subs.push({
+        key,
         title: {
           id: (meta.title_id as string) || "",
           en: (meta.title_en as string) || "",
@@ -99,38 +158,15 @@ export async function GET(req: NextRequest) {
           id: m.content_id || "",
           en: m.content_en || "",
         },
-        video_url: sbMedia.video_url || (meta.video_url as string) || "",
-        image_url: sbMedia.image_url || (meta.image_url as string) || "",
-        animation_url: sbMedia.animation_url || (meta.animation_url as string) || "",
-        animation_type: sbMedia.animation_type || (meta.animation_type as string) || "",
-        type: m.type,
-      };
-    });
-
-    // Also synthesize entries for sub_bab rows that have NO matching materi row
-    // (so direct sub_bab media shows up even if materi was never created)
-    const materiKeys = new Set((materi || []).map((m) => m.sub_bab_key));
-    for (const [key, media] of Object.entries(subBabMediaByKey)) {
-      if (materiKeys.has(key)) continue;
-      const hasAnyMedia = media.video_url || media.image_url || media.animation_url;
-      if (!hasAnyMedia) continue;
-      subs.push({
-        key,
-        title: { id: "", en: "" },
-        summary: { id: "", en: "" },
-        full: { id: "", en: "" },
-        video_url: media.video_url,
-        image_url: media.image_url,
-        animation_url: media.animation_url,
-        animation_type: media.animation_type,
-        type: "media",
+        video_url: (meta.video_url as string) || "",
+        image_url: (meta.image_url as string) || "",
+        animation_url: (meta.animation_url as string) || "",
+        animation_type: (meta.animation_type as string) || "",
+        type: m.type || "text",
       });
     }
 
-    // Transform quiz to match expected format (legacy quiz format)
-// Include BOTH legacy quiz + new sub_bab_quiz (v2) so user-facing views
-// dapat quiz dari kedua sumber. sub_bab_quiz biasanya punya sub_bab_key,
-// legacy quiz tidak — keduanya dipake di view berbeda.
+    // Transform quiz to match expected format
     const quizData = [
       ...((quiz || []).map((q) => ({
         q: {
@@ -142,7 +178,7 @@ export async function GET(req: NextRequest) {
           en: q.options_en,
         },
         ans: q.correct_answer,
-        sub_bab_key: null, // legacy quiz ga punya sub_bab_key
+        sub_bab_key: null,
         explanation: {
           id: q.explanation_id || "",
           en: q.explanation_en || "",
