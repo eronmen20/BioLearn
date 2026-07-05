@@ -37,7 +37,6 @@ import {
   ChevronRight,
   X,
   ChevronDown,
-  ListTree,
   FileQuestion,
 } from "lucide-react";
 
@@ -64,8 +63,7 @@ const MENU_GROUPS: MenuGroup[] = [
     items: [
       { href: "/admin/content/kelas", icon: <Layers className="w-[18px] h-[18px]" />, label: "Kelas" },
       { href: "/admin/content/bab", icon: <BookOpen className="w-[18px] h-[18px]" />, label: "Bab" },
-      { href: "/admin/content/materi", icon: <FileText className="w-[18px] h-[18px]" />, label: "Materi" },
-      { href: "/admin/content/sub-bab", icon: <ListTree className="w-[18px] h-[18px]" />, label: "Sub Bab" },
+      { href: "/admin/content/materi-biologi", icon: <FileText className="w-[18px] h-[18px]" />, label: "Materi Biologi" },
       { href: "/admin/content/materi-editor", icon: <Sparkles className="w-[18px] h-[18px]" />, label: "Editor Materi" },
       { href: "/admin/content/quiz-v2", icon: <FileQuestion className="w-[18px] h-[18px]" />, label: "Quiz" },
       { href: "/admin/content/flashcard", icon: <CreditCard className="w-[18px] h-[18px]" />, label: "Flashcard" },

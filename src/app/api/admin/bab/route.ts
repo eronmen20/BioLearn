@@ -21,7 +21,8 @@ export async function GET() {
     return NextResponse.json({ bab: data || [] });
   } catch (e) {
     console.error("[API Bab GET]", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -56,7 +57,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[API Bab POST]", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -88,7 +90,8 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[API Bab PUT]", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 
@@ -111,6 +114,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[API Bab DELETE]", e);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

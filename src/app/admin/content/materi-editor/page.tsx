@@ -289,38 +289,71 @@ export default function MateriEditorPage() {
       let successCount = 0;
       let errorCount = 0;
 
-      // Save each sub-bab
+      // Save each sub-bab — sync to BOTH sub_bab AND materi tables
       for (const sub of content.subs) {
-        const payload = {
-          bab_id: content.bab_id,
-          sub_bab_key: sub.key,
-          type: "html",
-          content_id: sub.content_id,
-          content_en: sub.content_en,
-          summary_id: sub.summary_id,
-          summary_en: sub.summary_en,
-          metadata: {
+        try {
+          // 1. Sync to sub_bab table (structure + media)
+          const subBabPayload = {
+            bab_id: content.bab_id,
+            key: sub.key,
             title_id: sub.title_id,
             title_en: sub.title_en,
+            summary_id: sub.summary_id,
+            summary_en: sub.summary_en,
+            content_id: sub.content_id,
+            content_en: sub.content_en,
             video_url: sub.video_url,
-          },
-        };
+            sort_order: content.subs.indexOf(sub) + 1,
+          };
 
-        try {
+          // Check if sub-bab already exists in DB
+          const existingSubBab = await fetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
+            .then(r => r.json())
+            .then(d => (d.sub_bab || []).find((s: Record<string, unknown>) => s.key === sub.key))
+            .catch(() => null);
+
+          if (existingSubBab) {
+            await fetch('/api/admin/sub-bab', {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...subBabPayload, id: existingSubBab.id }),
+            });
+          } else {
+            await fetch('/api/admin/sub-bab', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(subBabPayload),
+            });
+          }
+
+          // 2. Save to materi table (content + metadata)
+          const materiPayload = {
+            bab_id: content.bab_id,
+            sub_bab_key: sub.key,
+            type: "html",
+            content_id: sub.content_id,
+            content_en: sub.content_en,
+            summary_id: sub.summary_id,
+            summary_en: sub.summary_en,
+            metadata: {
+              title_id: sub.title_id,
+              title_en: sub.title_en,
+              video_url: sub.video_url,
+            },
+          };
+
           let res;
           if (sub.db_id) {
-            // UPDATE existing record
             res = await fetch("/api/admin/materi", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ ...payload, id: sub.db_id }),
+              body: JSON.stringify({ ...materiPayload, id: sub.db_id }),
             });
           } else {
-            // INSERT new record
             res = await fetch("/api/admin/materi", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
+              body: JSON.stringify(materiPayload),
             });
           }
           if (!res.ok) throw new Error("Failed");
@@ -406,10 +439,20 @@ export default function MateriEditorPage() {
 
   const removeSub = (idx: number) => {
     const sub = content.subs[idx];
-    // If it exists in DB, delete it
+    // Delete from materi table if exists
     if (sub.db_id) {
       fetch(`/api/admin/materi?id=${sub.db_id}`, { method: "DELETE" }).catch(() => {});
     }
+    // Also delete from sub_bab table if exists (find by key)
+    fetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
+      .then(r => r.json())
+      .then(d => {
+        const match = (d.sub_bab || []).find((s: Record<string, unknown>) => s.key === sub.key);
+        if (match?.id) {
+          fetch(`/api/admin/sub-bab?id=${match.id}`, { method: "DELETE" }).catch(() => {});
+        }
+      })
+      .catch(() => {});
     const newSubs = content.subs.filter((_, i) => i !== idx);
     setContent({ ...content, subs: newSubs });
     if (activeSub >= newSubs.length) setActiveSub(Math.max(0, newSubs.length - 1));
