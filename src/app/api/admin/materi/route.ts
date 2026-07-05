@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST - Create materi
+// POST - Create materi (auto-shift sort_order)
 export async function POST(req: NextRequest) {
   try {
     const supabase = getDb();
@@ -36,6 +36,27 @@ export async function POST(req: NextRequest) {
 
     if (!body.bab_id) {
       return NextResponse.json({ error: "bab_id wajib diisi" }, { status: 400 });
+    }
+
+    const newSortOrder = body.sort_order || 0;
+
+    // Auto-shift: increment sort_order for all existing records in same bab where sort_order >= newSortOrder
+    if (newSortOrder > 0) {
+      const { data: toShift } = await supabase
+        .from("materi")
+        .select("id, sort_order")
+        .eq("bab_id", body.bab_id)
+        .gte("sort_order", newSortOrder)
+        .order("sort_order", { ascending: false });
+
+      if (toShift && toShift.length > 0) {
+        for (const row of toShift) {
+          await supabase
+            .from("materi")
+            .update({ sort_order: (row.sort_order as number) + 1 })
+            .eq("id", row.id);
+        }
+      }
     }
 
     const { data, error } = await supabase.from("materi").insert({
@@ -46,7 +67,7 @@ export async function POST(req: NextRequest) {
       content_en: body.content_en || "",
       summary_id: body.summary_id || "",
       summary_en: body.summary_en || "",
-      sort_order: body.sort_order || 0,
+      sort_order: newSortOrder,
       metadata: body.metadata || {},
     }).select("id").single();
 
