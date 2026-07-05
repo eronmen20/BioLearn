@@ -876,6 +876,14 @@ function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) 
 
 /* ───────── InlineAnimationSection ─────────
  * Renders per-sub animation if DB has animation_url.
+ * Per-type strategy:
+ *   - iframe/h5p → <iframe> embed
+ *   - lottie     → <img> static fallback (lottie-react not installed)
+ *   - gif        → <img> (works fine)
+ *   - svg        → <object type="image/svg+xml"> — supports CSS @keyframes
+ *                  and SMIL <animate>/<animateTransform>. Falls back to
+ *                  <img> when object fails to load (some hosts block CORS).
+ *   - default    → <object> if URL looks like SVG, else <img>
  * Falls back to the hardcoded bab-level AnimationSection when no per-sub override.
  */
 function InlineAnimationSection({
@@ -892,48 +900,191 @@ function InlineAnimationSection({
   fallbackIcon: string;
 }) {
   const { t } = useLangStore();
+  const [objectFailed, setObjectFailed] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
 
-  if (subMedia.animation_url) {
-    const url = animUrlAsEmbed(subMedia.animation_url);
-    const isFullBleed = subMedia.animation_type === "iframe" || subMedia.animation_type === "h5p";
+  if (!subMedia.animation_url) {
+    // No per-sub override → use existing bab-level fallback
+    return <AnimationSection babId={fallbackbabId} color={fallbackColor} icon={fallbackIcon} />;
+  }
+
+  const url = subMedia.animation_url;
+  const type = (subMedia.animation_type || "").toLowerCase();
+  const looksLikeSvg =
+    type === "svg" ||
+    /\.svg(\?|#|$)/i.test(url) ||
+    /\/svg/i.test(url);
+
+  // Reset failure state if URL changed
+  // (cheap effect: when subKey changes the whole re-render resets state anyway)
+
+  const title = `Animasi ${subKey}`;
+
+  // iframe / h5p → full-bleed iframe embed
+  if (type === "iframe" || type === "h5p") {
+    const embedUrl = animUrlAsEmbed(url);
     return (
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">🎬</span>
-          <h3 className="font-bold text-sm">{t("animasi")}</h3>
-          {subMedia.animation_type && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 font-semibold">
-              {subMedia.animation_type.toUpperCase()}
-            </span>
-          )}
+        <AnimationHeader t={t} typeLabel={type} />
+        <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src={embedUrl}
+            title={title}
+            allowFullScreen
+            loading="lazy"
+          />
         </div>
-        {isFullBleed ? (
-          <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
-            <iframe
-              className="absolute inset-0 w-full h-full"
-              src={url}
-              title={`Animasi ${subKey}`}
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-        ) : (
-          <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center">
-            <img
-              src={subMedia.animation_url}
-              alt={`Animasi ${subKey}`}
-              className="max-h-[320px] rounded-xl object-contain"
-              loading="lazy"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-            />
-          </div>
-        )}
       </div>
     );
   }
 
-  // No per-sub override → use existing bab-level fallback
-  return <AnimationSection babId={fallbackbabId} color={fallbackColor} icon={fallbackIcon} />;
+  // gif → <img> works perfectly
+  if (type === "gif") {
+    if (imgFailed) return null;
+    return (
+      <div className="mb-6">
+        <AnimationHeader t={t} typeLabel="GIF" />
+        <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={title}
+            className="max-h-[320px] rounded-xl object-contain"
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // svg → render via <object> so internal CSS @keyframes and SMIL animate run.
+  // <img> would freeze SVG animations (renders as static bitmap).
+  if (looksLikeSvg) {
+    return (
+      <div className="mb-6">
+        <AnimationHeader t={t} typeLabel="SVG Animated" />
+        <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center min-h-[260px]">
+          {!objectFailed ? (
+            // <object> preserves SVG document context so <style>, <animate>,
+            // <animateTransform> all run. Falls back to <img> if it errors.
+            <object
+              type="image/svg+xml"
+              data={url}
+              aria-label={title}
+              className="w-full max-h-[360px] rounded-xl"
+              onError={() => setObjectFailed(true)}
+              // React doesn't bubble SVG <object> errors reliably; we also
+              // preload via Image() to detect CORS/404 and switch fallback
+              ref={(el) => {
+                if (el && !el.dataset.preloadChecked) {
+                  el.dataset.preloadChecked = "1";
+                  const probe = new Image();
+                  probe.onerror = () => setObjectFailed(true);
+                  // probe doesn't dereference CORS, but catches 404/parse errors
+                  probe.src = url;
+                }
+              }}
+            />
+          ) : imgFailed ? (
+            <AnimationErrorFallback
+              title={title}
+              url={url}
+              onRetry={() => { setObjectFailed(false); setImgFailed(false); }}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={url}
+              alt={title}
+              className="max-h-[320px] rounded-xl object-contain"
+              loading="lazy"
+              onError={() => setImgFailed(true)}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default / lottie / unknown → <object> if SVG-looking, else <img>
+  return (
+    <div className="mb-6">
+      <AnimationHeader t={t} typeLabel={type || "Media"} />
+      <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center min-h-[220px]">
+        {!looksLikeSvg ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt={title}
+            className="max-h-[320px] rounded-xl object-contain"
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        ) : null}
+      </div>
+      {imgFailed && (
+        <AnimationErrorFallback
+          title={title}
+          url={url}
+          onRetry={() => setImgFailed(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* Reusable header for animation section */
+function AnimationHeader({ t, typeLabel }: { t: (k: string) => string; typeLabel: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-lg">🎬</span>
+      <h3 className="font-bold text-sm">{t("animasi")}</h3>
+      {typeLabel && (
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 font-semibold">
+          {typeLabel.toUpperCase()}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* Shown when SVG/image both failed to load — gives user a way forward
+   instead of a silent empty box. */
+function AnimationErrorFallback({
+  title,
+  url,
+  onRetry,
+}: {
+  title: string;
+  url: string;
+  onRetry: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-2 text-center p-4">
+      <span className="text-3xl opacity-50">🎬</span>
+      <p className="text-sm text-muted">Animasi tidak bisa dimuat dari server.</p>
+      <p className="text-[11px] text-muted/70 break-all max-w-md">{url}</p>
+      <div className="flex gap-2 mt-1">
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white hover:bg-accent-dark"
+        >
+          Buka di Tab Baru
+        </a>
+        <button
+          onClick={onRetry}
+          className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-bg-alt"
+        >
+          Coba Lagi
+        </button>
+      </div>
+      <p className="text-[10px] text-muted/50 mt-1">{title}</p>
+    </div>
+  );
 }
 
 /** Convert common animation URLs into iframe-friendly URLs. */
