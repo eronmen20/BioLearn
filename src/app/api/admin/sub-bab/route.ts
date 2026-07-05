@@ -8,6 +8,25 @@ function getDb() {
   );
 }
 
+// Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
+async function normalizeSortOrder(supabase: ReturnType<typeof createClient>, table: string, babId: string) {
+  const { data: rows } = await supabase
+    .from(table)
+    .select("id, sort_order")
+    .eq("bab_id", babId)
+    .order("sort_order", { ascending: true })
+    .order("id", { ascending: true }); // tiebreak by id
+
+  if (!rows || rows.length === 0) return;
+
+  for (let i = 0; i < rows.length; i++) {
+    const expected = i + 1;
+    if ((rows[i].sort_order as number) !== expected) {
+      await supabase.from(table).update({ sort_order: expected }).eq("id", rows[i].id);
+    }
+  }
+}
+
 // GET - List sub-bab (optionally filtered by bab_id)
 export async function GET(req: NextRequest) {
   try {
@@ -40,9 +59,11 @@ export async function POST(req: NextRequest) {
 
     const newSortOrder = body.sort_order || 0;
 
+    // Normalize first to eliminate gaps/duplicates
+    await normalizeSortOrder(supabase, "sub_bab", body.bab_id);
+
     // Auto-shift: increment sort_order for all existing records in same bab where sort_order >= newSortOrder
     if (newSortOrder > 0) {
-      // First get all records that need shifting
       const { data: toShift } = await supabase
         .from("sub_bab")
         .select("id, sort_order")
@@ -50,7 +71,6 @@ export async function POST(req: NextRequest) {
         .gte("sort_order", newSortOrder)
         .order("sort_order", { ascending: false }); // descending so we shift from end
 
-      // Shift each one by +1
       if (toShift && toShift.length > 0) {
         for (const row of toShift) {
           await supabase
@@ -102,6 +122,9 @@ export async function PUT(req: NextRequest) {
 
     // Auto-shift sort_order when it changes
     if (body.sort_order !== undefined && body.bab_id) {
+      // Normalize first to eliminate gaps/duplicates
+      await normalizeSortOrder(supabase, "sub_bab", body.bab_id);
+
       // Get current record's sort_order
       const { data: current } = await supabase
         .from("sub_bab")
