@@ -37,9 +37,41 @@ export async function GET(req: NextRequest) {
 
     if (quizError) throw quizError;
 
-    // Transform materi to match expected format
+    // Get sub_bab for this bab (to source video_url/image_url/animation_url/animation_type)
+    const { data: subBabRows } = await supabase
+      .from("sub_bab")
+      .select("key, video_url, image_url, animation_url, animation_type")
+      .eq("bab_id", babId);
+
+    // Index sub_bab media by key for O(1) lookup
+    const subBabMediaByKey: Record<string, {
+      video_url: string;
+      image_url: string;
+      animation_url: string;
+      animation_type: string;
+    }> = {};
+    for (const sb of subBabRows || []) {
+      const k = (sb.key as string) || "";
+      if (k) {
+        subBabMediaByKey[k] = {
+          video_url: (sb.video_url as string) || "",
+          image_url: (sb.image_url as string) || "",
+          animation_url: (sb.animation_url as string) || "",
+          animation_type: (sb.animation_type as string) || "",
+        };
+      }
+    }
+
+    // Transform materi to match expected format.
+    // Media resolution: sub_bab (source of truth) → materi.metadata (legacy fallback).
     const subs = (materi || []).map((m) => {
       const meta = (m.metadata as Record<string, unknown>) || {};
+      const sbMedia = subBabMediaByKey[m.sub_bab_key as string] || {
+        video_url: "",
+        image_url: "",
+        animation_url: "",
+        animation_type: "",
+      };
       return {
         key: m.sub_bab_key,
         title: {
@@ -54,10 +86,33 @@ export async function GET(req: NextRequest) {
           id: m.content_id || "",
           en: m.content_en || "",
         },
-        video_url: (meta.video_url as string) || "",
+        video_url: sbMedia.video_url || (meta.video_url as string) || "",
+        image_url: sbMedia.image_url || (meta.image_url as string) || "",
+        animation_url: sbMedia.animation_url || (meta.animation_url as string) || "",
+        animation_type: sbMedia.animation_type || (meta.animation_type as string) || "",
         type: m.type,
       };
     });
+
+    // Also synthesize entries for sub_bab rows that have NO matching materi row
+    // (so direct sub_bab media shows up even if materi was never created)
+    const materiKeys = new Set((materi || []).map((m) => m.sub_bab_key));
+    for (const [key, media] of Object.entries(subBabMediaByKey)) {
+      if (materiKeys.has(key)) continue;
+      const hasAnyMedia = media.video_url || media.image_url || media.animation_url;
+      if (!hasAnyMedia) continue;
+      subs.push({
+        key,
+        title: { id: "", en: "" },
+        summary: { id: "", en: "" },
+        full: { id: "", en: "" },
+        video_url: media.video_url,
+        image_url: media.image_url,
+        animation_url: media.animation_url,
+        animation_type: media.animation_type,
+        type: "media",
+      });
+    }
 
     // Transform quiz to match expected format
     const quizData = (quiz || []).map((q) => ({

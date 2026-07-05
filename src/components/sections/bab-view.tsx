@@ -71,7 +71,16 @@ export function BabContent({ babId }: { babId: string }) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
   }
 
-  const { bab, summary, full, quiz, subs, source } = content;
+  const { bab, summary, full, quiz, subs, mediaBySub, source } = content;
+
+  // Current sub-bab's media (from DB, or empty if hardcoded fallback)
+  const currentSubKey = subs[subIdx];
+  const currentMedia = (mediaBySub && mediaBySub[currentSubKey]) || {
+    video_url: "",
+    image_url: "",
+    animation_url: "",
+    animation_type: "",
+  };
 
   // Progress calculations (guarded by mounted for hydration safety)
   const completionPct = mounted ? progress.getCompletionPct(babId, subs) : 0;
@@ -152,28 +161,28 @@ export function BabContent({ babId }: { babId: string }) {
         </div>
       </div>
 
-      {/* Animation */}
-      <AnimationSection babId={bab.id} color={bab.color} icon={bab.icon} />
+      {/* Animation — per-sub override or hardcoded fallback */}
+      <InlineAnimationSection
+        subKey={currentSubKey}
+        subMedia={currentMedia}
+        fallbackbabId={bab.id}
+        fallbackColor={bab.color}
+        fallbackIcon={bab.icon}
+      />
 
-      {/* Video */}
-      {bab.videoId && (
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">▶</span>
-            <h3 className="font-bold text-sm">{t("video")}</h3>
-          </div>
-          <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card">
-            <iframe
-              className="absolute inset-0 w-full h-full"
-              src={`https://www.youtube.com/embed/${bab.videoId}`}
-              allowFullScreen
-              loading="lazy"
-            />
-          </div>
-        </div>
-      )}
+      {/* Video — per-sub override or bab-level fallback */}
+      <InlineVideoSection
+        subVideoUrl={currentMedia.video_url}
+        babVideoId={bab.videoId || ""}
+      />
 
-      {/* Interactive Image */}
+      {/* Interactive Image — per-sub (NEW: previously no JSX rendered image_url at all) */}
+      <InlineImageSection
+        imageUrl={currentMedia.image_url}
+        altText={`${bab.id} ${currentSubKey}`}
+      />
+
+      {/* Interactive Hotspot — preserved */}
       <HotspotSection babId={bab.id} hotspotted={bab.hotspotted} />
 
       {/* Struktur & Fungsi */}
@@ -861,6 +870,173 @@ function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) 
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+/* ───────── InlineAnimationSection ─────────
+ * Renders per-sub animation if DB has animation_url.
+ * Falls back to the hardcoded bab-level AnimationSection when no per-sub override.
+ */
+function InlineAnimationSection({
+  subKey,
+  subMedia,
+  fallbackbabId,
+  fallbackColor,
+  fallbackIcon,
+}: {
+  subKey: string;
+  subMedia: { video_url: string; image_url: string; animation_url: string; animation_type: string };
+  fallbackbabId: string;
+  fallbackColor: string;
+  fallbackIcon: string;
+}) {
+  const { t } = useLangStore();
+
+  if (subMedia.animation_url) {
+    const url = animUrlAsEmbed(subMedia.animation_url);
+    const isFullBleed = subMedia.animation_type === "iframe" || subMedia.animation_type === "h5p";
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">🎬</span>
+          <h3 className="font-bold text-sm">{t("animasi")}</h3>
+          {subMedia.animation_type && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 font-semibold">
+              {subMedia.animation_type.toUpperCase()}
+            </span>
+          )}
+        </div>
+        {isFullBleed ? (
+          <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src={url}
+              title={`Animasi ${subKey}`}
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center">
+            <img
+              src={subMedia.animation_url}
+              alt={`Animasi ${subKey}`}
+              className="max-h-[320px] rounded-xl object-contain"
+              loading="lazy"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // No per-sub override → use existing bab-level fallback
+  return <AnimationSection babId={fallbackbabId} color={fallbackColor} icon={fallbackIcon} />;
+}
+
+/** Convert common animation URLs into iframe-friendly URLs. */
+function animUrlAsEmbed(url: string): string {
+  if (!url) return "";
+  // Already an embed URL
+  if (/youtube\.com\/embed|youtube\.com\/shorts\/embed|player\.vimeo\.com|h5p/.test(url)) {
+    return url;
+  }
+  // YouTube watch → embed
+  const ytWatchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/);
+  if (ytWatchMatch) return `https://www.youtube.com/embed/${ytWatchMatch[1]}`;
+  return url;
+}
+
+/* ───────── InlineVideoSection ─────────
+ * Per-sub video (admin uploads a different video per sub-bab).
+ * Falls back to bab.videoId from bab-data.ts when no per-sub override.
+ */
+function InlineVideoSection({
+  subVideoUrl,
+  babVideoId,
+}: {
+  subVideoUrl: string;
+  babVideoId: string;
+}) {
+  const { t } = useLangStore();
+
+  // Use per-sub video if present
+  if (subVideoUrl) {
+    const embedUrl = animUrlAsEmbed(subVideoUrl);
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">▶</span>
+          <h3 className="font-bold text-sm">{t("video")}</h3>
+        </div>
+        <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src={embedUrl}
+            title="Video Sub-Bab"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to bab-level video
+  if (babVideoId) {
+    return (
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg">▶</span>
+          <h3 className="font-bold text-sm">{t("video")}</h3>
+        </div>
+        <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+          <iframe
+            className="absolute inset-0 w-full h-full"
+            src={`https://www.youtube.com/embed/${babVideoId}`}
+            title="Video Bab"
+            allowFullScreen
+            loading="lazy"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+/* ───────── InlineImageSection ─────────
+ * Renders sub-bab image if admin uploaded one.
+ * CRITICAL: previously no JSX in bab-view rendered image_url at all —
+ * this section is the missing piece for "gambar gaada di layoutnya".
+ */
+function InlineImageSection({
+  imageUrl,
+  altText,
+}: {
+  imageUrl: string;
+  altText: string;
+}) {
+  const { t } = useLangStore();
+  if (!imageUrl) return null;
+  return (
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-lg">🖼️</span>
+        <h3 className="font-bold text-sm">{t("gambar") || "Gambar"}</h3>
+      </div>
+      <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-3 sm:p-4 flex items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt={altText}
+          className="max-w-full max-h-[480px] rounded-xl object-contain"
+          loading="lazy"
+        />
+      </div>
     </div>
   );
 }

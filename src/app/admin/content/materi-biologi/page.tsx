@@ -277,6 +277,8 @@ export default function MateriBiologiPage() {
       }
 
       // 2. Save to materi table (upsert by sub_bab_key)
+      // IMPORTANT: media fields are stored both in sub_bab (dedicated cols)
+      // AND metadata JSONB (backup for legacy consumers like /api/content)
       const materiPayload = {
         ...(editing?.materi_id ? { id: editing.materi_id } : {}),
         bab_id: form.bab_id,
@@ -291,6 +293,9 @@ export default function MateriBiologiPage() {
           title_id: form.title_id,
           title_en: form.title_en,
           video_url: form.video_url,
+          image_url: form.image_url,
+          animation_url: form.animation_url,
+          animation_type: form.animation_type,
         },
       };
 
