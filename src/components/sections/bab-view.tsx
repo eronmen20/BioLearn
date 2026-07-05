@@ -275,7 +275,7 @@ function SubbabNav({
               key={s}
               onClick={() => isUnlocked && onSelect(i)}
               disabled={!isUnlocked}
-              title={!isUnlocked ? "Selesaikan kuis subbab sebelumnya (skor ≥70%) untuk membuka" : undefined}
+              title={!isUnlocked ? "Selesaikan kuis subbab sebelumnya (skor ≥80%) untuk membuka" : undefined}
               className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
                 !isUnlocked
                   ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
@@ -304,8 +304,8 @@ function SubbabNav({
         <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted">
           <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-muted/70" />
           <p className="leading-relaxed">
-            Selesaikan kuis di subbab sebelumnya dengan skor minimal{" "}
-            <span className="font-semibold text-accent">70%</span> untuk membuka subbab berikutnya.
+            Selesaikan kuis di subbab ini dengan skor minimal{" "}
+            <span className="font-semibold text-accent">80%</span> untuk membuka subbab berikutnya.
           </p>
         </div>
       )}
@@ -408,7 +408,7 @@ function SubBabQuiz({
 
   if (showResult) {
     const score = Math.round((correctCount / questions.length) * 100);
-    const passed = score >= 70;
+    const passed = score >= 80;
 
     return (
       <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 mb-6 text-center">
@@ -432,7 +432,7 @@ function SubBabQuiz({
           </p>
         ) : (
           <p className="text-sm text-red font-semibold mb-4">
-            ❌ Skor minimal 70% untuk lanjut. Coba lagi ya!
+            ❌ Skor minimal 80% untuk lanjut. Coba lagi ya!
           </p>
         )}
         {!passed && (
@@ -659,7 +659,7 @@ function ReflectionQuiz({
 
   if (showResult) {
     const score = Math.round((correctCount / questions.length) * 100);
-    const passed = score >= 70;
+    const passed = score >= 80;
 
     return (
       <div className="bg-gradient-to-br from-accent/[0.05] to-surface rounded-2xl shadow-card border border-accent/20 p-6 mb-6 text-center">
@@ -681,7 +681,7 @@ function ReflectionQuiz({
         ) : (
           <div className="mt-3">
             <p className="text-red font-semibold text-sm mb-3">
-              ❌ Skor minimal 70%. Coba lagi ya!
+              ❌ Skor minimal 80%. Coba lagi ya!
             </p>
             <button
               onClick={handleRetry}

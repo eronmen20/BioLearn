@@ -68,7 +68,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
 
     set((state) => {
       const p = { ...(state.progress[babId] || defaultProgress()) };
-      const passed = score >= 70; // 70% untuk lulus
+      const passed = score >= 80; // 80% untuk lulus
 
       const newSubs = {
         ...p.subs,
@@ -116,7 +116,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
 
     set((state) => {
       const p = { ...(state.progress[babId] || defaultProgress()) };
-      const passed = score >= 70;
+      const passed = score >= 80;
 
       const newP = {
         ...p,
