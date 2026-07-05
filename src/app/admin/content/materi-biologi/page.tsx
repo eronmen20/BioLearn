@@ -5,7 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
-import { ImageUpload } from '@/components/admin/image-upload';
+import { MediaUpload } from '@/components/admin/image-upload';
 import {
   FileText, Edit, Trash2, Save, Loader2, Video, Image as ImageIcon,
   Layers, Sparkles, Plus, Languages, Eye, EyeOff,
@@ -736,6 +736,16 @@ export default function MateriBiologiPage() {
           {/* Tab: Media */}
           {activeTab === 'media' && (
             <div className="space-y-4">
+              <div className="bg-accent/[0.04] border border-accent/20 rounded-xl p-3 text-xs text-muted leading-relaxed">
+                💡{' '}
+                <span className="font-semibold text-ink">Tips animasi stabil:</span>{' '}
+                Upload file langsung (drag-drop) lebih reliable dari paste URL eksternal.
+                File disimpan di Supabase Storage dengan MIME yang benar, jadi animasi
+                selalu jalan. Kalau pakai URL eksternal, pastikan server-nya kirim
+                <code className="px-1 py-0.5 mx-0.5 rounded bg-bg-alt">Content-Type: image/svg+xml</code>
+                dan mengizinkan CORS.
+              </div>
+
               {/* Video URL */}
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">
@@ -746,51 +756,58 @@ export default function MateriBiologiPage() {
                   type="text"
                   value={form.video_url}
                   onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                  placeholder="https://youtube.com/watch?v=..."
+                  placeholder="https://youtube.com/watch?v=... atau https://...mp4"
                   className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
-                <p className="text-xs text-muted mt-1">YouTube, Vimeo, atau URL video lainnya</p>
+                <p className="text-xs text-muted mt-1">YouTube, Vimeo, atau URL langsung ke file MP4/WebM</p>
               </div>
 
               {/* Image Upload */}
-              <ImageUpload
+              <MediaUpload
                 value={form.image_url}
                 onChange={(url) => setForm({ ...form, image_url: url })}
                 folder="materi-biologi"
+                kind="image"
                 label="🖼️ Gambar Sub Bab"
                 placeholder="URL gambar atau upload file"
               />
 
-              {/* Animation */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">
+              {/* Animation — drag-drop upload (most reliable) */}
+              <MediaUpload
+                value={form.animation_url}
+                onChange={(url) => setForm({ ...form, animation_url: url })}
+                folder="materi-biologi-animations"
+                kind="animation"
+                label={
+                  <span>
                     <Sparkles className="w-4 h-4 inline mr-1" />
-                    URL Animasi
-                  </label>
-                  <input
-                    type="text"
-                    value={form.animation_url}
-                    onChange={(e) => setForm({ ...form, animation_url: e.target.value })}
-                    placeholder="https://... (H5P, Lottie, dll)"
-                    className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Tipe Animasi</label>
-                  <select
-                    value={form.animation_type}
-                    onChange={(e) => setForm({ ...form, animation_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-                  >
-                    <option value="">Pilih tipe...</option>
-                    <option value="h5p">H5P Interactive</option>
-                    <option value="lottie">Lottie Animation</option>
-                    <option value="iframe">Iframe Embed</option>
-                    <option value="gif">GIF</option>
-                    <option value="svg">SVG Animation</option>
-                  </select>
-                </div>
+                    File Animasi (SVG/GIF)
+                  </span> as unknown as string
+                }
+                placeholder="URL animasi eksternal ATAU klik tab Upload di atas"
+              />
+
+              {/* Animation type — only meaningful if user pasted URL, SVG is auto-detected */}
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">
+                  Tipe Animasi
+                </label>
+                <select
+                  value={form.animation_type}
+                  onChange={(e) => setForm({ ...form, animation_type: e.target.value })}
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+                >
+                  <option value="">Auto-detect (dari ekstensi file)</option>
+                  <option value="svg">SVG Animated (Smil/CSS)</option>
+                  <option value="gif">GIF</option>
+                  <option value="h5p">H5P Interactive</option>
+                  <option value="iframe">Iframe Embed</option>
+                  <option value="lottie">Lottie Animation</option>
+                </select>
+                <p className="text-xs text-muted mt-1">
+                  File hasil upload .svg/.gif otomatis terdeteksi.
+                  Set manual hanya kalau pakai URL eksternal atau format lain.
+                </p>
               </div>
 
               {/* Media Preview */}
@@ -820,7 +837,7 @@ export default function MateriBiologiPage() {
                     {form.animation_url && (
                       <div className="p-3 bg-surface rounded-lg border border-border">
                         <Sparkles className="w-5 h-5 text-purple-500 mb-1" />
-                        <p className="text-xs text-ink font-medium">Animasi ({form.animation_type || 'N/A'})</p>
+                        <p className="text-xs text-ink font-medium">Animasi ({form.animation_type || 'auto'})</p>
                         <p className="text-[10px] text-muted truncate">{form.animation_url}</p>
                       </div>
                     )}
