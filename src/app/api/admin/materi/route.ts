@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// PUT - Update materi (by id)
+// PUT - Update materi (auto-shift sort_order)
 export async function PUT(req: NextRequest) {
   try {
     const supabase = getDb();
@@ -87,6 +87,61 @@ export async function PUT(req: NextRequest) {
 
     if (!body.id) {
       return NextResponse.json({ error: "ID materi wajib diisi untuk update" }, { status: 400 });
+    }
+
+    // Auto-shift sort_order when it changes
+    if (body.sort_order !== undefined && body.bab_id) {
+      const { data: current } = await supabase
+        .from("materi")
+        .select("sort_order, bab_id")
+        .eq("id", body.id)
+        .single();
+
+      const oldSort = (current?.sort_order as number) || 0;
+      const newSort = body.sort_order as number;
+      const babId = (current?.bab_id as string) || body.bab_id;
+
+      if (oldSort !== newSort && oldSort > 0 && newSort > 0) {
+        if (newSort < oldSort) {
+          // Moving UP: shift items between [newSort, oldSort-1] DOWN by +1
+          const { data: toShift } = await supabase
+            .from("materi")
+            .select("id, sort_order")
+            .eq("bab_id", babId)
+            .gte("sort_order", newSort)
+            .lt("sort_order", oldSort)
+            .neq("id", body.id)
+            .order("sort_order", { ascending: false });
+
+          if (toShift) {
+            for (const row of toShift) {
+              await supabase
+                .from("materi")
+                .update({ sort_order: (row.sort_order as number) + 1 })
+                .eq("id", row.id);
+            }
+          }
+        } else {
+          // Moving DOWN: shift items between [oldSort+1, newSort] UP by -1
+          const { data: toShift } = await supabase
+            .from("materi")
+            .select("id, sort_order")
+            .eq("bab_id", babId)
+            .gt("sort_order", oldSort)
+            .lte("sort_order", newSort)
+            .neq("id", body.id)
+            .order("sort_order", { ascending: true });
+
+          if (toShift) {
+            for (const row of toShift) {
+              await supabase
+                .from("materi")
+                .update({ sort_order: (row.sort_order as number) - 1 })
+                .eq("id", row.id);
+            }
+          }
+        }
+      }
     }
 
     const updateData: Record<string, unknown> = {
