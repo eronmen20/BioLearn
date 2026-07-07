@@ -212,14 +212,25 @@ export async function GET(req: NextRequest) {
       }))),
     ];
 
-    return NextResponse.json({
-      bab_id: babId,
-      is_archived: babRow?.is_archived || false,
-      archived_at: babRow?.archived_at || null,
-      subs,
-      quiz: quizData,
-      has_content: subs.length > 0,
-    });
+    return NextResponse.json(
+      {
+        bab_id: babId,
+        is_archived: babRow?.is_archived || false,
+        archived_at: babRow?.archived_at || null,
+        subs,
+        quiz: quizData,
+        has_content: subs.length > 0,
+      },
+      {
+        // Kill CDN/browser cache so admin edits show immediately on refresh
+        // (previously: Vercel CDN cached for 60s default → had to refresh 2x)
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+          "Pragma": "no-cache",
+          "Expires": "0",
+        },
+      }
+    );
   } catch (e) {
     console.error("[API Bab Content GET]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

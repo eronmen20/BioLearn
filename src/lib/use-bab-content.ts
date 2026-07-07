@@ -51,9 +51,10 @@ const EMPTY_MEDIA: SubMedia = {
   animation_type: "",
 };
 
-export function useBabContent(babId: string): { data: ContentData | null; loading: boolean } {
+export function useBabContent(babId: string): { data: ContentData | null; loading: boolean; source: "supabase" | "hardcoded" } {
   const [data, setData] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<"supabase" | "hardcoded">("supabase");
 
   useEffect(() => {
     let cancelled = false;
@@ -69,16 +70,29 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
         return;
       }
 
-      // Try Supabase first
+      // Try Supabase first — strict "ALL-or-nothing" policy
       try {
         const res = await fetch(`/api/content?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, {
-          signal: AbortSignal.timeout(3000), // 3s timeout
-          cache: "no-store", // prevent browser HTTP cache from returning stale data after admin edits
+          signal: AbortSignal.timeout(3000),
+          cache: "no-store",
         });
         if (res.ok) {
           const supaData: SupabaseContent = await res.json();
 
-          if (supaData.has_content && supaData.subs.length > 0 && !cancelled) {
+          // STRICT: treat any of the following as "no real content" and prefer empty notice
+          // (don't silently fall back to bab-data.ts hardcoded text — that's the revert bug!)
+          const hasAnyRealContent =
+            supaData.has_content &&
+            supaData.subs.length > 0 &&
+            // Must have at least one entry with text inside summary/full
+            supaData.subs.some(
+              (s) =>
+                (s.summary?.id && s.summary.id.trim()) ||
+                (s.full?.id && s.full.id.trim()) ||
+                (s.title?.id && s.title.id.trim())
+            );
+
+          if (hasAnyRealContent && !cancelled) {
             const summaryId = supaData.subs.map((s) => s.summary.id);
             const summaryEn = supaData.subs.map((s) => s.summary.en);
             const fullId = supaData.subs.map((s) => s.full.id);
@@ -89,7 +103,6 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
               en: s.title?.en || "",
             }));
 
-            // Build per-sub media map from API response
             const mediaBySub: Record<string, SubMedia> = {};
             for (const s of supaData.subs) {
               mediaBySub[s.key] = {
@@ -110,15 +123,39 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
               mediaBySub,
               source: "supabase",
             });
+            setSource("supabase");
             setLoading(false);
+            console.info(`[bab-content:${babId}] source=supabase, ${subs.length} sub-bab loaded`);
+            return;
+          } else {
+            // Has a row in DB but EVERY row is empty → admin hasn't filled yet
+            console.warn(`[bab-content:${babId}] source=null (Supabase returned but all rows empty — showing empty notice, NOT hardcoded fallback)`);
+            if (!cancelled) {
+              setData({
+                bab: hardcodedBab,
+                summary: { id: [], en: [] },
+                full: { id: [], en: [] },
+                quiz: [],
+                subs: supaData.subs.map((s) => s.key), // even if empty text, use the keys
+                subTitles: supaData.subs.map((s) => ({ id: s.title?.id || "", en: s.title?.en || "" })),
+                mediaBySub: {},
+                source: "supabase",
+              });
+              setSource("supabase");
+              setLoading(false);
+            }
             return;
           }
         }
-      } catch {
-        // Fall through to hardcoded
+      } catch (e) {
+        console.error(`[bab-content:${babId}] Supabase fetch failed:`, e instanceof Error ? e.message : e);
       }
 
-      // Fallback to hardcoded data
+      // Hard fallback ONLY when API totally unreachable (network failure / 5xx)
+      // The earlier revert bug was: silent fallback to bab-data.ts even when API returned
+      // an empty/malformed row. That branch now correctly logs + still falls back so the
+      // page doesn't show a blank white screen, BUT a UI banner alerts the user.
+      console.warn(`[bab-content:${babId}] source=hardcoded (FALLBACK via bab-data.ts) — UI banner will warn admin`);
       if (!cancelled) {
         setData({
           bab: hardcodedBab,
@@ -133,6 +170,7 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
           }, {}),
           source: "hardcoded",
         });
+        setSource("hardcoded");
         setLoading(false);
       }
     }
@@ -141,5 +179,5 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
     return () => { cancelled = true; };
   }, [babId]);
 
-  return { data, loading };
+  return { data, loading, source };
 }
