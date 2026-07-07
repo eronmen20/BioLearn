@@ -2,8 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from "react";
 import {
-  Bell, X, Pin, Clock, ChevronRight, Sparkles, CheckCheck,
-  Filter, Inbox, PinOff,
+  Bell, X, Pin, Clock, ChevronRight, Sparkles, CheckCheck, Megaphone,
 } from "lucide-react";
 import { useIsMounted } from "@/lib/use-is-mounted";
 
@@ -22,36 +21,26 @@ interface Announcement {
   created_at: string;
 }
 
-type FilterMode = "all" | "pinned" | string;
-
-const FILTER_OPTIONS: Array<{ key: FilterMode; label: string; icon: React.ReactNode; match?: (a: Announcement) => boolean }> = [
-  { key: "all", label: "Semua", icon: <Inbox className="w-3.5 h-3.5" /> },
-  { key: "pinned", label: "Dipin", icon: <Pin className="w-3.5 h-3.5" />, match: (a) => a.pinned },
-  { key: "new_feature", label: "Fitur Baru", icon: <Sparkles className="w-3.5 h-3.5" />, match: (a) => a.category === "new_feature" },
-  { key: "new_content", label: "Materi Baru", icon: <Sparkles className="w-3.5 h-3.5" />, match: (a) => a.category === "new_content" },
-  { key: "maintenance", label: "Maintenance", icon: <Clock className="w-3.5 h-3.5" />, match: (a) => a.category === "maintenance" },
-  { key: "urgent", label: "Penting", icon: <Sparkles className="w-3.5 h-3.5" />, match: (a) => a.category === "urgent" },
-  { key: "info", label: "Info", icon: <Bell className="w-3.5 h-3.5" />, match: (a) => a.category === "info" },
-];
-
 const DISMISSED_KEY = "biolearn-announcement-dismissed";
+const MAX_HEIGHT = "max-h-[420px]";
 
 export function AnnouncementBell() {
   const mounted = useIsMounted();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [dismissed, setDismissed] = useState<Set<number>>(new Set());
-  const [filter, setFilter] = useState<FilterMode>("all");
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
-  const drawerRef = useRef<HTMLDivElement>(null);
-  const firstFocusRef = useRef<HTMLButtonElement>(null);
+  const [lang, setLang] = useState<"id" | "en">("id");
+  const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Load dismissed IDs from localStorage
+  // Read language preference + dismissed list from localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = localStorage.getItem(DISMISSED_KEY);
+      const stored = window.localStorage.getItem("biolearn-lang") as "id" | "en" | null;
+      if (stored === "id" || stored === "en") setLang(stored);
+    } catch {}
+    try {
+      const raw = window.localStorage.getItem(DISMISSED_KEY);
       if (raw) {
         const arr = JSON.parse(raw) as number[];
         if (Array.isArray(arr)) setDismissed(new Set(arr));
@@ -59,7 +48,8 @@ export function AnnouncementBell() {
     } catch {}
   }, []);
 
-  // Fetch + re-poll every 60s
+  // Lightweight polling every 60s — only re-fetch if bell is mounted (won't reach SPA
+  // tabs the user isn't using, so it's fine)
   useEffect(() => {
     if (!mounted) return;
     let alive = true;
@@ -72,7 +62,7 @@ export function AnnouncementBell() {
         const json = await res.json();
         if (alive && json.announcements) setAnnouncements(json.announcements);
       } catch {
-        // keep stale
+        // keep stale data on transient errors
       }
     };
     load();
@@ -80,20 +70,18 @@ export function AnnouncementBell() {
     return () => { alive = false; clearInterval(interval); };
   }, [mounted]);
 
-  // Lock body scroll while drawer open
+  // Click outside to close
   useEffect(() => {
     if (!open) return;
-    document.body.style.overflow = "hidden";
-    // ESC to close
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("keydown", handler);
-    // Focus first interactive inside drawer
-    setTimeout(() => firstFocusRef.current?.focus(), 50);
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("keydown", esc);
     return () => {
-      document.body.style.overflow = "";
-      document.removeEventListener("keydown", handler);
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("keydown", esc);
     };
   }, [open]);
 
@@ -101,36 +89,33 @@ export function AnnouncementBell() {
     setDismissed((prev) => {
       const next = new Set(prev);
       next.add(id);
-      if (typeof window !== "undefined") localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next]));
+      try { window.localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next])); } catch {}
       return next;
     });
   };
 
   const markAllRead = () => {
-    const filtered = filteredAnnouncements;
-    const allIds = filtered.map((a) => a.id);
+    const allIds = announcements.map((a) => a.id);
     setDismissed((prev) => {
       const next = new Set(prev);
       allIds.forEach((id) => next.add(id));
-      if (typeof window !== "undefined") localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  };
-
-  const toggleExpand = (id: number) => {
-    setExpandedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      try { window.localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next])); } catch {}
       return next;
     });
   };
 
   const formatDate = (iso: string | null) => {
     if (!iso) return null;
-    return new Date(iso).toLocaleString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
-    });
+    return new Date(iso).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  };
+
+  // Bilingual text helper
+  const pick = (a: Announcement, key: "title" | "body"): string => {
+    if (lang === "en") {
+      const en = a[`${key}_en` as const];
+      if (en && en.trim()) return en;
+    }
+    return a[key];
   };
 
   const unreadCount = mounted
@@ -146,30 +131,19 @@ export function AnnouncementBell() {
     [announcements]
   );
 
-  const filteredAnnouncements = useMemo(() => {
-    if (filter === "all") return sorted;
-    const opt = FILTER_OPTIONS.find((o) => o.key === filter);
-    if (!opt?.match) return sorted;
-    return sorted.filter(opt.match);
-  }, [sorted, filter]);
-
-  const visibleCount = filteredAnnouncements.length;
-  const visibleUnread = filteredAnnouncements.filter((a) => !dismissed.has(a.id)).length;
-
   return (
-    <>
-      {/* Bell trigger — animated wrapper */}
+    <div ref={wrapRef} className="relative">
+      {/* Bell trigger */}
       <button
-        onClick={() => setOpen(true)}
-        className="relative p-2 rounded-full hover:bg-bg-alt transition-all"
-        title={unreadCount > 0 ? `${unreadCount} pengumuman baru` : "Pengumuman"}
+        onClick={() => setOpen(!open)}
         aria-label="Pengumuman"
+        title={unreadCount > 0 ? `${unreadCount} pengumuman belum dibaca` : "Pengumuman"}
+        className="relative p-2 rounded-full hover:bg-bg-alt transition-all"
       >
         <div className="relative">
           <Bell className={`w-5 h-5 transition-colors ${unreadCount > 0 ? "text-accent" : "text-ink"}`} />
           {unreadCount > 0 && (
             <>
-              {/* subtle pulse ring */}
               <span className="absolute inset-0 -m-1 rounded-full bg-accent/30 animate-ping pointer-events-none" />
               <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-gradient-to-br from-red-500 to-rose-600 rounded-full px-1 ring-2 ring-surface">
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -179,247 +153,127 @@ export function AnnouncementBell() {
         </div>
       </button>
 
-      {/* Backdrop + Side Drawer (more responsive than centred modal — body text
-          no longer truncates, mobile has more room because drawer takes 90vw) */}
+      {/* ▼ Dropdown anchored bawah icon bell. No filter, just sorted list + scroll. */}
       {open && (
-        <div className="fixed inset-0 z-[100] animate-fade-in">
-          <div
-            className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
-            aria-hidden="true"
-          />
-          <div
-            ref={drawerRef}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Pengumuman"
-            className="absolute top-0 right-0 h-full w-full sm:w-[420px] md:w-[460px] lg:w-[520px] bg-surface shadow-2xl border-l border-border flex flex-col animate-slide-in-right"
-          >
-            {/* Header — pinning with gradient */}
-            <div className="relative p-4 sm:p-5 border-b border-border overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-purple-500/5 to-transparent pointer-events-none" />
-              <div className="relative flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                  <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-accent to-purple-500 flex items-center justify-center shadow-md flex-shrink-0">
-                    <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white bg-red-500 rounded-full px-1 ring-2 ring-surface animate-pop-in">
-                        {unreadCount}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-base sm:text-lg font-extrabold text-ink">Pengumuman</h2>
-                    <p className="text-xs text-muted truncate">
-                      {unreadCount > 0
-                        ? <>
-                            <span className="font-bold text-accent">{unreadCount}</span> belum dibaca
-                            <span className="mx-1">·</span>
-                            total {announcements.length}
-                          </>
-                        : "✨ Semua sudah dibaca"
-                      }
-                    </p>
-                  </div>
+        <div className="absolute top-full right-0 mt-2 z-50 animate-slide-down origin-top-right">
+          <div className="w-[340px] sm:w-[380px] bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
+            {/* Header — gradient accent biar menarik */}
+            <div className="relative px-4 py-3.5 bg-gradient-to-br from-accent via-purple-500 to-pink-500 text-white">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Megaphone className="w-5 h-5 flex-shrink-0" />
+                  <h3 className="font-bold text-sm">Pengumuman</h3>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-extrabold bg-white/25 px-1.5 py-0.5 rounded-full">
+                      {unreadCount} baru
+                    </span>
+                  )}
                 </div>
                 <button
-                  ref={firstFocusRef}
                   onClick={() => setOpen(false)}
-                  className="p-2 rounded-xl hover:bg-bg-alt text-muted hover:text-ink transition-colors flex-shrink-0"
-                  title="Tutup"
+                  className="p-1 rounded-lg hover:bg-white/20 transition-colors"
                   aria-label="Tutup"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllRead}
+                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-lg transition-colors"
+                >
+                  <CheckCheck className="w-3 h-3" />
+                  Tandai semua sudah dibaca
+                </button>
+              )}
             </div>
 
-            {/* Filter Tabs (chips, sticky) */}
-            <div className="px-3 sm:px-4 py-2.5 border-b border-border bg-bg-alt/30 sticky top-0 z-[1] backdrop-blur-sm">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Filter className="w-3.5 h-3.5 text-muted flex-shrink-0" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted">Filter</span>
-                <span className="text-[10px] text-muted-2 ml-auto">
-                  {visibleCount === 0 ? "tidak ada" : `${visibleCount} hasil · ${visibleUnread} belum dibaca`}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {FILTER_OPTIONS.map((opt) => {
-                  const active = filter === opt.key;
-                  const count =
-                    opt.key === "all"
-                      ? announcements.length
-                      : announcements.filter(opt.match || (() => false)).length;
-                  return (
-                    <button
-                      key={opt.key}
-                      onClick={() => setFilter(opt.key)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium transition-all ${
-                        active
-                          ? "bg-gradient-to-br from-accent to-purple-500 text-white shadow-sm"
-                          : "bg-surface border border-border text-muted hover:text-ink hover:border-accent/40"
-                      }`}
-                    >
-                      {opt.icon}
-                      <span>{opt.label}</span>
-                      <span className={`text-[9px] font-bold px-1 rounded-full ${
-                        active ? "bg-white/25 text-white" : "bg-bg-alt text-muted-2"
-                      }`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Body — staggered fade-in cards */}
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
-              {loading && announcements.length === 0 && (
-                <div className="space-y-3">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-28 bg-bg-alt rounded-xl animate-pulse" />
-                  ))}
+            {/* Body — scroll, NO truncation di body text */}
+            <div className={`${MAX_HEIGHT} overflow-y-auto`}>
+              {sorted.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Bell className="w-8 h-8 mx-auto text-muted opacity-40 mb-2" />
+                  <p className="text-sm text-muted font-medium">Belum ada pengumuman</p>
+                  <p className="text-xs text-muted mt-1">Stay tuned — kami akan kabari kamu kalau ada materi baru.</p>
                 </div>
-              )}
-              {!loading && announcements.length === 0 && (
-                <div className="text-center py-16 px-4">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-bg-alt flex items-center justify-center">
-                    <Inbox className="w-8 h-8 text-muted opacity-50" />
-                  </div>
-                  <p className="text-sm font-medium text-muted">Belum ada pengumuman.</p>
-                  <p className="text-xs text-muted-2 mt-1">Pantau terus ya — kami akan kabari kamu kalau ada materi baru.</p>
-                </div>
-              )}
-              {!loading && filteredAnnouncements.length === 0 && announcements.length > 0 && (
-                <div className="text-center py-12 px-4">
-                  <Filter className="w-10 h-10 mx-auto mb-1 text-muted opacity-50" />
-                  <p className="text-sm text-muted">Tidak ada pengumuman di filter ini.</p>
-                  <button
-                    onClick={() => setFilter("all")}
-                    className="mt-2 text-xs text-accent hover:underline"
-                  >
-                    Reset filter →
-                  </button>
-                </div>
-              )}
-              {filteredAnnouncements.length > 0 && (
-                <ul className="space-y-3">
-                  {filteredAnnouncements.map((a, idx) => {
+              ) : (
+                <ul className="divide-y divide-border">
+                  {sorted.map((a, idx) => {
                     const isRead = dismissed.has(a.id);
-                    const isExpanded = expandedIds.has(a.id);
-                    // Detect if the body is long → show expand toggle
-                    const bodyIsLong = (a.body || "").length > 250;
                     return (
                       <li
                         key={a.id}
                         className="animate-fade-in-up"
                         style={{ animationDelay: `${idx * 50}ms`, animationFillMode: "both" }}
                       >
-                        <article
-                          className={`relative rounded-xl border transition-all overflow-hidden group ${
-                            a.pinned
-                              ? "border-amber-500/30 bg-gradient-to-br from-amber-50/50 to-orange-50/50"
-                              : isRead
-                              ? "border-border/80 bg-surface"
-                              : "border-accent/30 bg-gradient-to-br from-accent/[0.04] via-accent/[0.02] to-purple-500/[0.02]"
-                          }`}
+                        <div
+                          className={`relative px-4 py-3.5 transition-colors ${
+                            a.pinned ? "bg-gradient-to-r from-amber-50/60 to-orange-50/60 dark:from-amber-950/30 dark:to-orange-950/30" : ""
+                          } ${isRead ? "" : "bg-accent/[0.03]"}`}
                         >
+                          {/* Pinned top strip */}
                           {a.pinned && (
-                            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
+                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
                           )}
-                          <div className="p-4">
-                            {/* Top row */}
-                            <div className="flex items-start gap-3 mb-2">
-                              <div className={`relative flex-shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-2xl shadow-sm ${
-                                a.pinned ? "bg-gradient-to-br from-amber-100 to-orange-100" : "bg-gradient-to-br from-accent/10 to-purple-500/10"
-                              }`}>
-                                <span>{a.icon}</span>
-                                {a.pinned && (
-                                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow">
-                                    <Pin className="w-2.5 h-2.5 text-white" strokeWidth={3} />
-                                  </span>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                  {a.pinned && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white text-[9px] font-extrabold uppercase shadow-sm">
-                                      <Pin className="w-2.5 h-2.5" />
-                                      Pin
-                                    </span>
-                                  )}
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-bg-alt text-muted font-semibold uppercase tracking-wider">
-                                    {a.category}
-                                  </span>
-                                  {!isRead && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-accent text-white font-bold uppercase tracking-wider animate-pulse-slow">
-                                      Baru
-                                    </span>
-                                  )}
-                                </div>
-                                <h3 className={`font-bold text-sm sm:text-base leading-snug ${isRead ? "text-muted" : "text-ink"}`}>
-                                  {a.title}
-                                </h3>
-                                {a.title_en && (
-                                  <p className="text-[11px] text-muted italic mt-0.5 leading-snug">
-                                    {a.title_en}
-                                  </p>
-                                )}
-                                <div className="flex items-center gap-1.5 text-[10px] text-muted mt-1">
-                                  <Clock className="w-3 h-3" />
-                                  <span>{formatDate(a.created_at)}</span>
-                                </div>
-                              </div>
+                          <div className="flex items-start gap-2.5">
+                            <div className={`relative flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-sm ${
+                              a.pinned ? "bg-gradient-to-br from-amber-100 to-orange-100" : "bg-gradient-to-br from-accent/15 to-purple-500/15"
+                            }`}>
+                              <span>{a.icon}</span>
+                              {a.pinned && (
+                                <Pin className="absolute -top-1 -right-1 w-3 h-3 text-amber-600 bg-white rounded-full p-0.5" />
+                              )}
                             </div>
-                            {/* Body — full text, NO truncation. Expand for very long ones via "Show more" */}
-                            <div className="relative">
-                              <p
-                                className={`text-sm whitespace-pre-line leading-relaxed ${
-                                  isRead ? "text-muted" : "text-ink"
-                                } ${bodyIsLong && !isExpanded ? "max-h-[7.5rem] overflow-hidden" : ""}`}
-                              >
-                                {a.body}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                                {!isRead && (
+                                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-accent text-white rounded-full">
+                                    Baru
+                                  </span>
+                                )}
+                                <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-bg-alt text-muted">
+                                  {a.category}
+                                </span>
+                                {a.created_at && (
+                                  <span className="text-[10px] text-muted inline-flex items-center gap-0.5">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {formatDate(a.created_at)}
+                                  </span>
+                                )}
+                              </div>
+                              {/* Title — NO truncation, allow multi-line */}
+                              <h4 className={`font-bold text-sm leading-snug ${isRead ? "text-muted" : "text-ink"}`}>
+                                {pick(a, "title")}
+                              </h4>
+                              {/* Body — NO truncation, full text */}
+                              <p className={`mt-1.5 text-[13px] leading-relaxed whitespace-pre-line break-words ${isRead ? "text-muted" : "text-muted"}`}>
+                                {pick(a, "body")}
                               </p>
-                              {bodyIsLong && !isExpanded && (
-                                <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface to-transparent pointer-events-none" />
-                              )}
-                              {bodyIsLong && (
+                              {/* Actions */}
+                              <div className="flex items-center justify-between mt-2.5 gap-2">
+                                {a.bab_id ? (
+                                  <a
+                                    href={`/bab/${a.bab_id}`}
+                                    onClick={() => setOpen(false)}
+                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:text-accent-dark transition-colors"
+                                  >
+                                    Buka BAB <ChevronRight className="w-3 h-3" />
+                                  </a>
+                                ) : <span />}
                                 <button
-                                  onClick={() => toggleExpand(a.id)}
-                                  className="text-[11px] font-semibold text-accent hover:text-accent-dark mt-1 inline-flex items-center gap-1"
+                                  onClick={() => markRead(a.id)}
+                                  className={`text-[11px] font-semibold px-2 py-1 rounded-lg transition-all ${
+                                    isRead
+                                      ? "bg-bg-alt text-muted"
+                                      : "bg-accent/10 text-accent hover:bg-accent hover:text-white"
+                                  }`}
                                 >
-                                  {isExpanded ? "← Ringkas" : "Lihat selengkapnya →"}
+                                  {isRead ? "✓ Sudah dibaca" : "Tandai dibaca"}
                                 </button>
-                              )}
-                            </div>
-                            {/* Actions footer */}
-                            <div className="flex items-center justify-between gap-2 pt-3 mt-3 border-t border-border/50">
-                              {a.bab_id ? (
-                                <a
-                                  href={`/bab/${a.bab_id}`}
-                                  onClick={() => setOpen(false)}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-br from-accent to-purple-500 text-white text-xs font-bold hover:shadow-lg hover:shadow-accent/25 transition-all"
-                                >
-                                  Buka BAB
-                                  <ChevronRight className="w-3 h-3" />
-                                </a>
-                              ) : (
-                                <span className="text-[10px] text-muted opacity-50">— Tanpa BAB terkait —</span>
-                              )}
-                              <button
-                                onClick={() => markRead(a.id)}
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                                  isRead
-                                    ? "border border-border text-muted hover:text-ink"
-                                    : "border border-accent/40 bg-accent/10 text-accent hover:bg-accent hover:text-white"
-                                }`}
-                              >
-                                {isRead ? "✓ Sudah dibaca" : "Tandai dibaca"}
-                              </button>
+                              </div>
                             </div>
                           </div>
-                        </article>
+                        </div>
                       </li>
                     );
                   })}
@@ -427,40 +281,28 @@ export function AnnouncementBell() {
               )}
             </div>
 
-            {/* Footer (sticky) */}
-            <div className="p-3 sm:p-4 border-t border-border bg-bg-alt/30 flex flex-wrap items-center justify-between gap-2 sticky bottom-0">
-              <span className="text-xs text-muted">
-                {visibleUnread > 0 ? (
+            {/* Footer */}
+            <div className="px-4 py-2.5 border-t border-border bg-bg-alt/40 flex items-center justify-between">
+              <span className="text-[11px] text-muted">
+                {unreadCount > 0 ? (
                   <>
-                    <span className="font-bold text-accent">{visibleUnread}</span> belum dibaca
-                    {filter !== "all" && (
-                      <span className="text-muted-2 ml-1">di filter ini</span>
-                    )}
+                    <Sparkles className="w-3 h-3 inline text-amber-500" />{" "}
+                    <span className="font-bold text-accent">{unreadCount}</span> belum dibaca
                   </>
                 ) : (
-                  <span className="font-medium text-green-600">✨ Bersih!</span>
+                  <span className="font-medium text-green-600">✨ Semua bersih</span>
                 )}
               </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={markAllRead}
-                  disabled={visibleUnread === 0}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-ink hover:bg-bg-alt disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >
-                  <CheckCheck className="w-3.5 h-3.5" />
-                  Tandai dibaca
-                </button>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-br from-accent to-purple-500 text-white hover:shadow-lg hover:shadow-accent/25 transition-all"
-                >
-                  Selesai
-                </button>
-              </div>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-[11px] font-bold text-muted hover:text-ink"
+              >
+                Selesai
+              </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

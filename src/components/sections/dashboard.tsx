@@ -6,7 +6,7 @@ import { useProgressStore, useProgressReady } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import Link from "next/link";
-import { BookOpen, CheckCircle, TrendingUp, Library, Loader2 } from "lucide-react";
+import { BookOpen, CheckCircle, TrendingUp, Library, Loader2, Sparkles, Megaphone } from "lucide-react";
 
 export function Dashboard() {
   const { t } = useLangStore();
@@ -43,6 +43,32 @@ export function Dashboard() {
       <div className="mb-6 sm:mb-8">
         <h1 className="text-2xl sm:text-3xl font-extrabold mb-2" dangerouslySetInnerHTML={{ __html: t("welcome.title") }} />
         <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">{t("welcome.desc")}</p>
+
+        {/* Stay-tuned banner — Materi baru akan di-update berkala */}
+        <div className="mt-4 sm:mt-5 relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-200/60 shadow-sm animate-fade-in-up">
+          {/* Pulse ring glow di pojok */}
+          <span className="absolute -top-1 -right-1 w-20 h-20 rounded-full bg-amber-300/30 blur-2xl animate-pulse-slow pointer-events-none" />
+          <div className="relative flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+            <Megaphone className="w-5 h-5 text-white" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+          </div>
+          <div className="relative flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+                Stay Tuned
+              </span>
+              <span className="text-[10px] font-semibold text-amber-700">
+                Materi baru segera hadir
+              </span>
+            </div>
+            <p className="text-sm text-ink leading-snug">
+              Kami akan menambahkan <span className="font-bold text-amber-700">materi bab baru secara berkala</span>. Sementara ini, BAB Bakteri sudah lengkap untuk kamu pelajari.
+              <span className="inline-flex items-center gap-0.5 ml-1 text-amber-600 font-semibold">
+                <Sparkles className="w-3 h-3" /> Nantikan update selanjutnya!
+              </span>
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Stat Cards */}
