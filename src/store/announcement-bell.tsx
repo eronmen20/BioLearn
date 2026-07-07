@@ -153,122 +153,121 @@ export function AnnouncementBell() {
         </div>
       </button>
 
-      {/* ▼ Dropdown anchored bawah icon bell. No filter, just sorted list + scroll. */}
+      {/* ▼ Dropdown anchored bawah icon bell. No filter, simple + minimalist. */}
       {open && (
         <div className="absolute top-full right-0 mt-2 z-50 animate-slide-down origin-top-right">
-          <div className="w-[340px] sm:w-[380px] bg-surface rounded-2xl shadow-2xl border border-border overflow-hidden flex flex-col">
-            {/* Header — gradient accent biar menarik */}
-            <div className="relative px-4 py-3.5 bg-gradient-to-br from-accent via-purple-500 to-pink-500 text-white">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <Megaphone className="w-5 h-5 flex-shrink-0" />
-                  <h3 className="font-bold text-sm">Pengumuman</h3>
-                  {unreadCount > 0 && (
-                    <span className="text-[10px] font-extrabold bg-white/25 px-1.5 py-0.5 rounded-full">
-                      {unreadCount} baru
-                    </span>
-                  )}
+          <div className="w-[300px] sm:w-[340px] bg-surface rounded-xl shadow-lg border border-border overflow-hidden flex flex-col">
+            {/* Header — minimalist: solid surface + small accent dot */}
+            <div className="px-4 py-3 border-b border-border bg-surface flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-7 h-7 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                  <Megaphone className="w-3.5 h-3.5 text-accent" />
                 </div>
-                <button
-                  onClick={() => setOpen(false)}
-                  className="p-1 rounded-lg hover:bg-white/20 transition-colors"
-                  aria-label="Tutup"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <h3 className="font-semibold text-sm text-ink">Pengumuman</h3>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded-full">
+                    {unreadCount} baru
+                  </span>
+                )}
               </div>
-              {unreadCount > 0 && (
+              <button
+                onClick={() => setOpen(false)}
+                className="p-1 rounded-md hover:bg-bg-alt text-muted hover:text-ink transition-colors flex-shrink-0"
+                aria-label="Tutup"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mark-all-read inline (subtle, bukan bagian header biar gak noisy) */}
+            {unreadCount > 0 && sorted.length > 0 && (
+              <div className="px-4 py-1.5 border-b border-border bg-bg-alt/40">
                 <button
                   onClick={markAllRead}
-                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold bg-white/20 hover:bg-white/30 px-2.5 py-1 rounded-lg transition-colors"
+                  className="text-[11px] font-semibold text-muted hover:text-accent inline-flex items-center gap-1 transition-colors"
                 >
-                  <CheckCheck className="w-3 h-3" />
-                  Tandai semua sudah dibaca
+                  <CheckCheck className="w-3 h-3" /> Tandai semua sudah dibaca
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Body — scroll, NO truncation di body text */}
             <div className={`${MAX_HEIGHT} overflow-y-auto`}>
               {sorted.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Bell className="w-8 h-8 mx-auto text-muted opacity-40 mb-2" />
+                  <Bell className="w-7 h-7 mx-auto text-muted opacity-40 mb-2" />
                   <p className="text-sm text-muted font-medium">Belum ada pengumuman</p>
                   <p className="text-xs text-muted mt-1">Stay tuned — kami akan kabari kamu kalau ada materi baru.</p>
                 </div>
               ) : (
-                <ul className="divide-y divide-border">
+                <ul className="divide-y divide-border/70">
                   {sorted.map((a, idx) => {
                     const isRead = dismissed.has(a.id);
                     return (
                       <li
                         key={a.id}
                         className="animate-fade-in-up"
-                        style={{ animationDelay: `${idx * 50}ms`, animationFillMode: "both" }}
+                        style={{ animationDelay: `${idx * 40}ms`, animationFillMode: "both" }}
                       >
                         <div
-                          className={`relative px-4 py-3.5 transition-colors ${
-                            a.pinned ? "bg-gradient-to-r from-amber-50/60 to-orange-50/60 dark:from-amber-950/30 dark:to-orange-950/30" : ""
-                          } ${isRead ? "" : "bg-accent/[0.03]"}`}
+                          className={`relative px-4 py-3 transition-colors hover:bg-bg-alt/40 ${
+                            isRead ? "" : "bg-accent/[0.04]"
+                          }`}
                         >
-                          {/* Pinned top strip */}
-                          {a.pinned && (
-                            <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
-                          )}
+                          {/* Pinned marker — small dot, bukan full strip */}
                           <div className="flex items-start gap-2.5">
-                            <div className={`relative flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-sm ${
-                              a.pinned ? "bg-gradient-to-br from-amber-100 to-orange-100" : "bg-gradient-to-br from-accent/15 to-purple-500/15"
-                            }`}>
+                            <div className="relative flex-shrink-0 w-8 h-8 rounded-lg bg-bg-alt flex items-center justify-center text-lg">
                               <span>{a.icon}</span>
                               {a.pinned && (
-                                <Pin className="absolute -top-1 -right-1 w-3 h-3 text-amber-600 bg-white rounded-full p-0.5" />
+                                <Pin className="absolute -top-1 -right-1 w-3 h-3 text-amber-600 bg-white rounded-full p-0.5 ring-1 ring-amber-200" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                              <div className="flex items-center gap-1 mb-1 flex-wrap">
                                 {!isRead && (
-                                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 bg-accent text-white rounded-full">
-                                    Baru
-                                  </span>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-accent" />
                                 )}
-                                <span className="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-bg-alt text-muted">
+                                <span className="text-[9.5px] font-medium uppercase tracking-wider text-muted">
                                   {a.category}
                                 </span>
                                 {a.created_at && (
-                                  <span className="text-[10px] text-muted inline-flex items-center gap-0.5">
-                                    <Clock className="w-2.5 h-2.5" />
-                                    {formatDate(a.created_at)}
-                                  </span>
+                                  <>
+                                    <span className="text-muted">·</span>
+                                    <span className="text-[10px] text-muted inline-flex items-center gap-0.5">
+                                      <Clock className="w-2.5 h-2.5" />
+                                      {formatDate(a.created_at)}
+                                    </span>
+                                  </>
                                 )}
                               </div>
-                              {/* Title — NO truncation, allow multi-line */}
-                              <h4 className={`font-bold text-sm leading-snug ${isRead ? "text-muted" : "text-ink"}`}>
+                              {/* Title */}
+                              <h4 className={`font-semibold text-[13px] leading-snug ${isRead ? "text-muted" : "text-ink"}`}>
                                 {pick(a, "title")}
                               </h4>
                               {/* Body — NO truncation, full text */}
-                              <p className={`mt-1.5 text-[13px] leading-relaxed whitespace-pre-line break-words ${isRead ? "text-muted" : "text-muted"}`}>
+                              <p className={`mt-1 text-[12.5px] leading-relaxed whitespace-pre-line break-words ${isRead ? "text-muted" : "text-ink"}`}>
                                 {pick(a, "body")}
                               </p>
                               {/* Actions */}
-                              <div className="flex items-center justify-between mt-2.5 gap-2">
+                              <div className="flex items-center justify-between mt-2 gap-2">
                                 {a.bab_id ? (
                                   <a
                                     href={`/bab/${a.bab_id}`}
                                     onClick={() => setOpen(false)}
-                                    className="inline-flex items-center gap-1 text-[11px] font-bold text-accent hover:text-accent-dark transition-colors"
+                                    className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-accent hover:text-accent-dark transition-colors"
                                   >
                                     Buka BAB <ChevronRight className="w-3 h-3" />
                                   </a>
                                 ) : <span />}
                                 <button
                                   onClick={() => markRead(a.id)}
-                                  className={`text-[11px] font-semibold px-2 py-1 rounded-lg transition-all ${
+                                  className={`text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors ${
                                     isRead
-                                      ? "bg-bg-alt text-muted"
-                                      : "bg-accent/10 text-accent hover:bg-accent hover:text-white"
+                                      ? "text-muted"
+                                      : "text-accent hover:bg-accent hover:text-white"
                                   }`}
                                 >
-                                  {isRead ? "✓ Sudah dibaca" : "Tandai dibaca"}
+                                  {isRead ? "✓ Dibaca" : "Tandai dibaca"}
                                 </button>
                               </div>
                             </div>
@@ -281,21 +280,20 @@ export function AnnouncementBell() {
               )}
             </div>
 
-            {/* Footer */}
-            <div className="px-4 py-2.5 border-t border-border bg-bg-alt/40 flex items-center justify-between">
+            {/* Footer — tipis, calm */}
+            <div className="px-4 py-2 border-t border-border bg-bg-alt/40 flex items-center justify-between">
               <span className="text-[11px] text-muted">
                 {unreadCount > 0 ? (
                   <>
-                    <Sparkles className="w-3 h-3 inline text-amber-500" />{" "}
                     <span className="font-bold text-accent">{unreadCount}</span> belum dibaca
                   </>
                 ) : (
-                  <span className="font-medium text-green-600">✨ Semua bersih</span>
+                  <span className="font-medium text-green-600">✓ Semua bersih</span>
                 )}
               </span>
               <button
                 onClick={() => setOpen(false)}
-                className="text-[11px] font-bold text-muted hover:text-ink"
+                className="text-[11px] font-semibold text-muted hover:text-ink transition-colors"
               >
                 Selesai
               </button>
