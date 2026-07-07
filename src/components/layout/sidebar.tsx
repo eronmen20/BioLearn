@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLangStore } from "@/lib/lang-store";
 import { BAB, KELAS } from "@/lib/bab-data";
+import { useBabArchiveIds } from "@/store/use-bab-archive";
 import {
   Home,
   BookOpen,
@@ -18,6 +19,7 @@ export function Sidebar() {
   const { t } = useLangStore();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { archivedIds } = useBabArchiveIds();
 
   // buka kelas sesuai halaman aktif
   const getInitialOpenClass = () => {
@@ -160,6 +162,8 @@ export function Sidebar() {
                     );
 
                     if (!bab) return null;
+                    // Hide archived bab from sidebar (after mount)
+                    if (archivedIds.has(bab.id)) return null;
 
                     return (
                       <NavItem

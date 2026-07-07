@@ -5,7 +5,14 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
-import { BookOpen, Edit, Trash2, Plus, Video, FileText, Save, Loader2 } from 'lucide-react';
+import { BookOpen, Edit, Trash2, Plus, Video, FileText, Save, Loader2, Archive, ArchiveRestore } from 'lucide-react';
+
+function ArchivedToggleOffIcon() {
+  return <Archive className="w-4 h-4" />;
+}
+function ArchivedToggleOnIcon() {
+  return <ArchiveRestore className="w-4 h-4" />;
+}
 
 interface BabItem {
   id: string;
@@ -16,6 +23,8 @@ interface BabItem {
   video_title_id: string | null;
   video_title_en: string | null;
   hotspotted: string | null;
+  is_archived: boolean;
+  archived_at: string | null;
   created_at: string;
   updated_at: string;
   // computed
@@ -32,6 +41,7 @@ const DEFAULT_FORM = {
   video_title_id: '',
   video_title_en: '',
   hotspotted: '',
+  is_archived: false,
 };
 
 export default function BabPage() {
@@ -93,6 +103,7 @@ export default function BabPage() {
       video_title_id: item.video_title_id || '',
       video_title_en: item.video_title_en || '',
       hotspotted: item.hotspotted || '',
+      is_archived: item.is_archived || false,
     });
     setShowEditor(true);
   };
@@ -104,7 +115,7 @@ export default function BabPage() {
     }
     setSaving(true);
     try {
-      const payload = {
+      const payload: Record<string, unknown> = {
         id: form.id.trim().toLowerCase().replace(/\s+/g, '-'),
         icon: form.icon,
         color: form.color,
@@ -114,6 +125,11 @@ export default function BabPage() {
         video_title_en: form.video_title_en || null,
         hotspotted: form.hotspotted || null,
       };
+
+      // Archive flag handled here too (for editing); POST sets default archived=false
+      if (editing) {
+        payload.is_archived = form.is_archived;
+      }
 
       const res = await fetch('/api/admin/bab', {
         method: editing ? 'PUT' : 'POST',
@@ -126,7 +142,14 @@ export default function BabPage() {
         throw new Error(err.error || 'Failed');
       }
 
-      showToast(editing ? 'Bab berhasil diupdate!' : 'Bab berhasil ditambahkan!');
+      const result = await res.json().catch(() => ({}));
+      let msg = editing ? 'Bab berhasil diupdate!' : 'Bab berhasil ditambahkan!';
+      if (editing && (form.is_archived !== editing.is_archived)) {
+        msg = form.is_archived
+          ? 'Bab diarsipkan. Materi BAB ini disembunyikan dari user sampai diaktifkan kembali.'
+          : 'Bab diaktifkan kembali dan tampil ke user.';
+      }
+      showToast(`${msg}${result.is_archived !== undefined ? ` (is_archived=${result.is_archived})` : ''}`);
       setShowEditor(false);
       loadBab();
     } catch (e) {
@@ -141,12 +164,33 @@ export default function BabPage() {
     try {
       const res = await fetch(`/api/admin/bab?id=${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
-      showToast('Bab berhasil dihapus!');
+      const wasArchived = deleting.is_archived;
+      showToast(wasArchived ? 'Bab arsip berhasil dihapus permanen!' : 'Bab berhasil dihapus!');
       setShowDelete(false);
       setDeleting(null);
       loadBab();
     } catch {
       showToast('Gagal menghapus bab');
+    }
+  };
+
+  // Quick archive/unarchive toggle from the row
+  const handleToggleArchive = async (item: BabItem) => {
+    try {
+      const res = await fetch('/api/admin/bab', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: item.id, is_archived: !item.is_archived }),
+      });
+      if (!res.ok) throw new Error('Failed');
+      showToast(
+        !item.is_archived
+          ? `📦 "${item.id}" diarsipkan. User tidak akan melihat bab ini sampai diaktifkan kembali.`
+          : `✅ "${item.id}" diaktifkan kembali. User sekarang bisa akses bab ini.`
+      );
+      loadBab();
+    } catch (e) {
+      showToast(`Gagal: ${e instanceof Error ? e.message : 'Unknown error'}`);
     }
   };
 
@@ -168,6 +212,11 @@ export default function BabPage() {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-full" style={{ backgroundColor: row.color }} />
           <span className="font-medium text-ink capitalize">{row.id}</span>
+          {row.is_archived && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600 text-[10px] font-semibold" title={row.archived_at ? `Archived: ${new Date(row.archived_at).toLocaleString('id-ID')}` : 'Archived'}>
+              📦 Arsip
+            </span>
+          )}
         </div>
       ),
     },
@@ -267,6 +316,17 @@ export default function BabPage() {
         emptyMessage="Belum ada bab. Klik 'Tambah Bab' untuk menambahkan."
         actions={(row) => (
           <div className="flex items-center gap-1">
+            <button
+              onClick={() => handleToggleArchive(row as BabItem)}
+              className={`p-1.5 rounded-lg transition-colors ${
+                row.is_archived
+                  ? 'hover:bg-green-500/10 text-green-600'
+                  : 'hover:bg-yellow-500/10 text-yellow-600'
+              }`}
+              title={row.is_archived ? 'Aktifkan kembali bab ini (keluar dari arsip)' : 'Arsipkan bab ini (disembunyikan dari user)'}
+            >
+              {row.is_archived ? <ArchivedToggleOnIcon /> : <ArchivedToggleOffIcon />}
+            </button>
             <button
               onClick={() => handleEdit(row)}
               className="p-1.5 rounded-lg hover:bg-blue-500/10 text-muted hover:text-blue-500 transition-colors"
@@ -410,6 +470,9 @@ export default function BabPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: form.color }} />
                   <span className="font-semibold text-ink capitalize">{form.id || '...'}</span>
+                  {form.is_archived && (
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-200 text-gray-600">📦 Arsip</span>
+                  )}
                 </div>
                 {form.video_title_id && (
                   <p className="text-xs text-muted mt-0.5">🎬 {form.video_title_id}</p>
@@ -417,6 +480,31 @@ export default function BabPage() {
               </div>
             </div>
           </div>
+
+          {/* Archive toggle */}
+          {editing && (
+            <div className="border border-border rounded-xl p-4 bg-bg-alt/50">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.is_archived}
+                  onChange={(e) => setForm({ ...form, is_archived: e.target.checked })}
+                  className="mt-1 w-4 h-4 accent-accent"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <Archive className="w-4 h-4 text-muted" />
+                    <span className="text-sm font-semibold text-ink">Arsipkan bab ini</span>
+                  </div>
+                  <p className="text-xs text-muted mt-1">
+                    {form.is_archived
+                      ? '📦 User tidak akan melihat bab ini di landing page atau dashboard. Bisa diaktifkan kembali kapan saja tanpa hapus data.'
+                      : '✅ Bab aktif dan tampil ke semua user. Default untuk bab baru.'}
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border">
             <button

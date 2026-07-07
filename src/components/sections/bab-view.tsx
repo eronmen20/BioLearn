@@ -7,6 +7,7 @@ import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { StrukturViewer } from "@/components/struktur-viewer";
+import { FlashcardStack } from "@/store/flashcard-stack";
 import {
   CheckCircle,
   XCircle,
@@ -206,6 +207,11 @@ export function BabContent({ babId }: { babId: string }) {
 
       {/* Sub-bab Quiz (quiz-v2) */}
       <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
+
+      {/* Flashcard stack (per sub-bab, rendered if bab data has it) */}
+      {subs[subIdx] && (
+        <FlashcardStack babId={babId} subBabKey={subs[subIdx]} />
+      )}
 
       {/* Reflection Quiz (only visible when all sub-bab quizzes passed) */}
       <ReflectionQuiz babId={babId} allSubKeys={subs} />

@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna } from "lucide-react";
+import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell } from "lucide-react";
+import { useBabArchiveIds } from "@/store/use-bab-archive";
 
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
@@ -54,12 +55,12 @@ const FEATURES = [
 ];
 
 const SUBJECTS = [
-  { icon: "🧫", name: "Bakteri", kelas: "X", color: "from-emerald-400 to-green-500" },
-  { icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500" },
-  { icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500" },
-  { icon: "🧬", name: "Genetika", kelas: "XII", color: "from-amber-400 to-orange-500" },
-  { icon: "🦕", name: "Evolusi", kelas: "XII", color: "from-lime-400 to-green-500" },
-  { icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500" },
+  { id: "bakteri", icon: "🧫", name: "Bakteri", kelas: "X", color: "from-emerald-400 to-green-500" },
+  { id: "sirkulasi", icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500" },
+  { id: "sistem_saraf", icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500" },
+  { id: "genetika", icon: "🧬", name: "Genetika", kelas: "XII", color: "from-amber-400 to-orange-500" },
+  { id: "evolusi", icon: "🦕", name: "Evolusi", kelas: "XII", color: "from-lime-400 to-green-500" },
+  { id: "ekologi", icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500" },
 ];
 
 // AnimatedTitle - slide-up reveal animation
@@ -115,6 +116,13 @@ export function LandingPage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
+  const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
+  // Until hydration completes (mounted), we don't know which babs are archived.
+  // Render full SUBJECTS list — once loaded, we filter.
+  const visibleSubjects = archiveLoaded
+    ? SUBJECTS.filter((s) => !archivedIds.has(s.id))
+    : SUBJECTS;
+  const archivedCount = SUBJECTS.length - visibleSubjects.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] overflow-hidden relative">
@@ -290,6 +298,38 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Stay-tuned banner — only when some babs are archived */}
+      {archiveLoaded && archivedCount > 0 && (
+        <section className="relative z-10 px-4 sm:px-6 mb-6 sm:mb-8">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="rounded-2xl bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-900/20 dark:via-orange-900/20 dark:to-rose-900/20 border-2 border-dashed border-amber-500/40 p-4 sm:p-5"
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Bell className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-base sm:text-lg text-ink mb-1">
+                    📡 Materi akan kami perbarui secara berkala — stay tuned!
+                  </h3>
+                  <p className="text-xs sm:text-sm text-muted leading-relaxed">
+                    Saat ini fokus kami adalah BAB <span className="font-bold text-accent">🦠 Bakteri</span> yang sudah lengkap dengan sub-bab, ringkasan, video, animasi, flashcard, dan kuis. {archivedCount > 0 && <span>{archivedCount} materi BAB lainnya sedang dalam tahap pengembangan dan akan diaktifkan setelah siap.</span>}
+                  </p>
+                  <p className="text-[10px] text-muted mt-2 inline-flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    Pantau terus <span className="font-bold">🔔 ikon pengumuman</span> di header — kami akan beri tahu setiap BAB baru rilis.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* Subjects Preview */}
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff]">
         <div className="max-w-6xl mx-auto">
@@ -303,8 +343,8 @@ export function LandingPage() {
           </AnimatedSection>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {SUBJECTS.map((s, i) => (
-              <AnimatedSection key={i} delay={i * 0.08}>
+            {visibleSubjects.map((s, i) => (
+              <AnimatedSection key={s.id} delay={i * 0.08}>
                 <motion.div
                   className="group relative p-4 sm:p-5 rounded-2xl bg-surface border border-border/50 shadow-card text-center cursor-pointer h-full"
                   whileHover={{ y: -8, boxShadow: "0 20px 60px rgba(108,92,231,0.12)" }}
@@ -324,6 +364,17 @@ export function LandingPage() {
                 </motion.div>
               </AnimatedSection>
             ))}
+            {/* Placeholder slot for archived subjects */}
+            {archiveLoaded && archivedCount > 0 && (
+              <AnimatedSection className="col-span-full" delay={(visibleSubjects.length + 1) * 0.08}>
+                <div className="rounded-2xl border-2 border-dashed border-border bg-bg-alt/40 p-4 sm:p-5 text-center">
+                  <div className="text-xs sm:text-sm text-muted inline-flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Lebih banyak BAB akan hadir di pembaruan berikutnya.
+                  </div>
+                </div>
+              </AnimatedSection>
+            )}
           </div>
         </div>
       </section>
@@ -333,10 +384,10 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
             {[
-              { num: "8", label: "Bab Lengkap", icon: "📚" },
+              { num: archiveLoaded ? String(visibleSubjects.length) : "…", label: "Bab Aktif", icon: "📚" },
+              { num: archiveLoaded && archivedCount > 0 ? `+${archivedCount}` : "—", label: "Coming Soon", icon: "🚀" },
               { num: "32+", label: "Subbab", icon: "📑" },
               { num: "100+", label: "Soal Kuis", icon: "❓" },
-              { num: "2", label: "Bahasa", icon: "🌐" },
             ].map((s, i) => (
               <AnimatedSection key={i} delay={i * 0.1}>
                 <motion.div

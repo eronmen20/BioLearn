@@ -3,6 +3,7 @@
 import { useLangStore } from "@/lib/lang-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
+import { AnnouncementBell } from "@/store/announcement-bell";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
@@ -47,6 +48,9 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Announcement Bell — visible to all visitors, shows latest published */}
+        <AnnouncementBell />
+
         {/* Language toggle */}
         <div className="flex gap-1 bg-border/50 rounded-full p-[3px]">
           <button

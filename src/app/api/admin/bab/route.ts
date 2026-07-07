@@ -72,22 +72,26 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "ID bab wajib diisi" }, { status: 400 });
     }
 
-    const { error } = await supabase
-      .from("bab")
-      .update({
-        icon: body.icon,
-        color: body.color,
-        kelas_id: body.kelas_id,
-        video_id: body.video_id,
-        video_title_id: body.video_title_id,
-        video_title_en: body.video_title_en,
-        hotspotted: body.hotspotted,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", body.id);
+    // Build update payload only from fields actually provided (so existing rows
+    // don't get nulled out when admin only wants to flip is_archived)
+    const updateFields: Record<string, unknown> = {};
+    if (body.icon !== undefined) updateFields.icon = body.icon;
+    if (body.color !== undefined) updateFields.color = body.color;
+    if (body.kelas_id !== undefined) updateFields.kelas_id = body.kelas_id;
+    if (body.video_id !== undefined) updateFields.video_id = body.video_id;
+    if (body.video_title_id !== undefined) updateFields.video_title_id = body.video_title_id;
+    if (body.video_title_en !== undefined) updateFields.video_title_en = body.video_title_en;
+    if (body.hotspotted !== undefined) updateFields.hotspotted = body.hotspotted;
+    if (body.is_archived !== undefined) {
+      updateFields.is_archived = body.is_archived;
+      updateFields.archived_at = body.is_archived ? new Date().toISOString() : null;
+    }
+    updateFields.updated_at = new Date().toISOString();
+
+    const { error } = await supabase.from("bab").update(updateFields).eq("id", body.id);
 
     if (error) throw error;
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, is_archived: updateFields.is_archived ?? null });
   } catch (e) {
     console.error("[API Bab PUT]", e);
     const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);

@@ -32,6 +32,15 @@ export async function GET(req: NextRequest) {
     }
 
     // Get all sub_bab for this bab (source of truth for sub-bab list)
+    const { data: babRow, error: babError } = await supabase
+      .from("bab")
+      .select("is_archived, archived_at")
+      .eq("id", babId)
+      .maybeSingle();
+
+    if (babError) throw babError;
+
+    // Get all sub_bab for this bab (source of truth for sub-bab list)
     const { data: subBabRows, error: subBabError } = await supabase
       .from("sub_bab")
       .select("*")
@@ -205,6 +214,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       bab_id: babId,
+      is_archived: babRow?.is_archived || false,
+      archived_at: babRow?.archived_at || null,
       subs,
       quiz: quizData,
       has_content: subs.length > 0,
