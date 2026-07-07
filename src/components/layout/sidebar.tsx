@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLangStore } from "@/lib/lang-store";
 import { BAB, KELAS } from "@/lib/bab-data";
-import { useBabArchiveIds } from "@/store/use-bab-archive";
+import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import {
   Home,
   BookOpen,
@@ -19,7 +19,19 @@ export function Sidebar() {
   const { t } = useLangStore();
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
-  const { archivedIds } = useBabArchiveIds();
+  const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
+  // Conservative visible set:
+  //   - Before mounted: only ALWAYS_VISIBLE_BABS (whitelist, default = ["bakteri"])
+  //   - After mounted: only babs in ALL_VISIBLE that are NOT in archivedIds
+  // This prevents FOUC and is safe even if SQL migration hasn't been run.
+  const visibleBabIds: Set<string> = (() => {
+    if (!archiveLoaded) return new Set(ALWAYS_VISIBLE_BABS);
+    const out = new Set<string>();
+    for (const id of ALWAYS_VISIBLE_BABS) {
+      if (!archivedIds.has(id)) out.add(id);
+    }
+    return out;
+  })();
 
   // buka kelas sesuai halaman aktif
   const getInitialOpenClass = () => {
@@ -162,8 +174,8 @@ export function Sidebar() {
                     );
 
                     if (!bab) return null;
-                    // Hide archived bab from sidebar (after mount)
-                    if (archivedIds.has(bab.id)) return null;
+                    // Hide bab outside permanent visible whitelist
+                    if (!visibleBabIds.has(bab.id)) return null;
 
                     return (
                       <NavItem

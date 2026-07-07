@@ -7,7 +7,6 @@ import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { StrukturViewer } from "@/components/struktur-viewer";
-import { FlashcardStack } from "@/store/flashcard-stack";
 import {
   CheckCircle,
   XCircle,
@@ -203,15 +202,10 @@ export function BabContent({ babId }: { babId: string }) {
       <HotspotSection babId={bab.id} hotspotted={bab.hotspotted} />
 
       {/* Struktur & Fungsi */}
-      <StrukturSection babId={bab.id} lang={lang} />
+      <StrukturSection babId={babId} subBabKey={currentSubKey} lang={lang} />
 
       {/* Sub-bab Quiz (quiz-v2) */}
       <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
-
-      {/* Flashcard stack (per sub-bab, rendered if bab data has it) */}
-      {subs[subIdx] && (
-        <FlashcardStack babId={babId} subBabKey={subs[subIdx]} />
-      )}
 
       {/* Reflection Quiz (only visible when all sub-bab quizzes passed) */}
       <ReflectionQuiz babId={babId} allSubKeys={subs} />
@@ -896,17 +890,23 @@ function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: stri
 }
 
 /* ───────── StrukturSection (unchanged) ───────── */
-function StrukturSection({ babId, lang }: { babId: string; lang: "id" | "en" }) {
+function StrukturSection({ babId, subBabKey, lang }: { babId: string; subBabKey: string | null; lang: "id" | "en" }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/admin/struktur?bab_id=${babId}`)
+    let alive = true;
+    const url = subBabKey
+      ? `/api/struktur?bab_id=${encodeURIComponent(babId)}&sub_bab_key=${encodeURIComponent(subBabKey)}&_t=${Date.now()}`
+      : `/api/struktur?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`;
+    setLoading(true);
+    fetch(url, { cache: "no-store" })
       .then((r) => r.json())
-      .then((data) => setItems(data.struktur || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [babId]);
+      .then((data) => { if (alive) setItems(data.struktur || []); })
+      .catch(() => { if (alive) setItems([]); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [babId, subBabKey]);
 
   if (loading || items.length === 0) return null;
 

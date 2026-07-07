@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell } from "lucide-react";
-import { useBabArchiveIds } from "@/store/use-bab-archive";
+import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
@@ -117,11 +117,14 @@ export function LandingPage() {
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
-  // Until hydration completes (mounted), we don't know which babs are archived.
-  // Render full SUBJECTS list — once loaded, we filter.
-  const visibleSubjects = archiveLoaded
-    ? SUBJECTS.filter((s) => !archivedIds.has(s.id))
-    : SUBJECTS;
+  // Whitelist-first filter: only babs in ALWAYS_VISIBLE_BABS show by default.
+  // After archiveLoaded, also exclude explicitly archived ones.
+  // This avoids FOUC and is safe even before SQL migration runs.
+  const visibleSubjects = SUBJECTS.filter((s) => {
+    if (!ALWAYS_VISIBLE_BABS.includes(s.id)) return false;
+    if (archiveLoaded && archivedIds.has(s.id)) return false;
+    return true;
+  });
   const archivedCount = SUBJECTS.length - visibleSubjects.length;
 
   return (

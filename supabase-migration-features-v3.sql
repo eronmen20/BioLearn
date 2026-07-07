@@ -1,7 +1,7 @@
 -- BioLearn v3 Features Migration
 -- 1. Archive flag on bab (hide non-bakteri chapters, keep toggleable from admin)
 -- 2. announcements table (system announcements shown to all users)
--- 3. flashcard.sub_bab_key (place flashcard per sub-bab)
+-- 3. struktur_fungsi.sub_bab_key (place struktur per sub-bab in Struktur & Fungsi view)
 
 -- ── 1. bab.is_archived ──
 ALTER TABLE bab ADD COLUMN IF NOT EXISTS is_archived BOOLEAN DEFAULT FALSE;
@@ -54,12 +54,12 @@ VALUES (
   '🎉'
 ) ON CONFLICT DO NOTHING;
 
--- ── 3. flashcard.sub_bab_key ──
-ALTER TABLE flashcard ADD COLUMN IF NOT EXISTS sub_bab_key TEXT;
+-- ── 3. struktur_fungsi.sub_bab_key ──
+-- null/empty → applies to all sub-babs in this bab (fallback)
+-- string → only renders when user is viewing this specific sub-bab
+ALTER TABLE struktur_fungsi ADD COLUMN IF NOT EXISTS sub_bab_key TEXT;
 
--- Index for per-sub-bab card lookup
-CREATE INDEX IF NOT EXISTS idx_flashcard_sub_bab_key ON flashcard(sub_bab_key);
-CREATE INDEX IF NOT EXISTS idx_flashcard_bab_sub ON flashcard(bab_id, sub_bab_key);
+CREATE INDEX IF NOT EXISTS idx_struktur_bab_sub ON struktur_fungsi(bab_id, sub_bab_key);
 
 -- ── Ensure updated_at triggers exist for announcements ──
 CREATE OR REPLACE FUNCTION set_updated_at() RETURNS TRIGGER AS $$

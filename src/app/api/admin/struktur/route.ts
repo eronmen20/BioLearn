@@ -15,7 +15,10 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
 
-    let query = supabase.from("struktur_fungsi").select("*").order("sort_order", { ascending: true });
+    let query = supabase
+      .from("struktur_fungsi")
+      .select("id, bab_id, sub_bab_key, title, title_en, image_url, image_alt, flashcards, sort_order")
+      .order("sort_order", { ascending: true });
     if (babId) query = query.eq("bab_id", babId);
 
     const { data, error } = await query;
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase.from("struktur_fungsi").insert({
       bab_id: body.bab_id,
+      sub_bab_key: body.sub_bab_key || null,
       title: body.title,
       title_en: body.title_en || null,
       image_url: body.image_url || null,
@@ -73,6 +77,7 @@ export async function PUT(req: NextRequest) {
     if (body.title_en !== undefined) updateData.title_en = body.title_en;
     if (body.image_url !== undefined) updateData.image_url = body.image_url;
     if (body.image_alt !== undefined) updateData.image_alt = body.image_alt;
+    if (body.sub_bab_key !== undefined) updateData.sub_bab_key = body.sub_bab_key;
     if (body.flashcards !== undefined) updateData.flashcards = body.flashcards;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
 

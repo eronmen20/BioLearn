@@ -24,6 +24,7 @@ interface Flashcard {
 interface StrukturItem {
   id: number;
   bab_id: string;
+  sub_bab_key: string | null;
   title: string;
   title_en: string | null;
   image_url: string | null;
@@ -49,9 +50,13 @@ export default function StrukturPage() {
   const [saving, setSaving] = useState(false);
   const [activeFlashcard, setActiveFlashcard] = useState(0);
 
+  // Sub-bab data loaded dynamically when bab changes
+  const [subBabList, setSubBabList] = useState<Array<{ key: string; title_id: string | null }>>([]);
+
   // Form state
   const [form, setForm] = useState({
     bab_id: "",
+    sub_bab_key: "",
     title: "",
     title_en: "",
     image_url: "",
@@ -75,14 +80,28 @@ export default function StrukturPage() {
 
   useEffect(() => { loadItems(); }, [loadItems]);
 
+  const loadSubBabs = useCallback(async (babId: string) => {
+    if (!babId) { setSubBabList([]); return; }
+    try {
+      const res = await fetch(`/api/sub-bab?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, { cache: "no-store" });
+      const json = await res.json();
+      setSubBabList(json.subBab || []);
+    } catch {
+      setSubBabList([]);
+    }
+  }, []);
+
   const handleAdd = () => {
     setEditing(null);
+    const initialBab = filterBab || BAB[0]?.id || "";
     setForm({
-      bab_id: filterBab || BAB[0]?.id || "",
+      bab_id: initialBab,
+      sub_bab_key: "",
       title: "", title_en: "", image_url: "", image_alt: "",
       flashcards: [{ ...EMPTY_FLASHCARD }],
     });
     setActiveFlashcard(0);
+    loadSubBabs(initialBab);
     setShowEditor(true);
   };
 
@@ -90,6 +109,7 @@ export default function StrukturPage() {
     setEditing(item);
     setForm({
       bab_id: item.bab_id,
+      sub_bab_key: item.sub_bab_key || "",
       title: item.title,
       title_en: item.title_en || "",
       image_url: item.image_url || "",
@@ -99,6 +119,7 @@ export default function StrukturPage() {
         : [{ ...EMPTY_FLASHCARD }],
     });
     setActiveFlashcard(0);
+    loadSubBabs(item.bab_id);
     setShowEditor(true);
   };
 
@@ -109,6 +130,7 @@ export default function StrukturPage() {
       const payload = {
         ...(editing ? { id: editing.id } : {}),
         bab_id: form.bab_id,
+        sub_bab_key: form.sub_bab_key || null,
         title: form.title,
         title_en: form.title_en,
         image_url: form.image_url,
@@ -122,12 +144,22 @@ export default function StrukturPage() {
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("Failed");
-      showToast(editing ? "Struktur berhasil diupdate!" : "Struktur berhasil ditambahkan!");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed");
+      }
+      const targetLabel = form.sub_bab_key
+        ? `sub-bab "${form.sub_bab_key}"`
+        : "BAB (semua sub-bab)";
+      showToast(
+        editing
+          ? `Struktur berhasil diupdate untuk ${targetLabel}!`
+          : `📇 Struktur "${form.title}" ditambahkan untuk ${targetLabel}.`
+      );
       setShowEditor(false);
       loadItems();
-    } catch {
-      showToast("Gagal menyimpan struktur");
+    } catch (e) {
+      showToast(`Gagal menyimpan struktur: ${e instanceof Error ? e.message : "Unknown error"}`);
     } finally {
       setSaving(false);
     }
@@ -235,14 +267,38 @@ export default function StrukturPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Bab</label>
-              <select value={form.bab_id} onChange={(e) => setForm({ ...form, bab_id: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
+              <select
+                value={form.bab_id}
+                onChange={(e) => {
+                  const newBab = e.target.value;
+                  setForm({ ...form, bab_id: newBab, sub_bab_key: "" });
+                  loadSubBabs(newBab);
+                }}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
                 {BAB.map((bab) => <option key={bab.id} value={bab.id}>{bab.icon} {bab.id}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1">Judul (ID)</label>
-              <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Struktur Sel Bakteri" className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
+              <label className="block text-sm font-medium text-ink mb-1">Sub-BAB (lokasi struktur)</label>
+              <select
+                value={form.sub_bab_key}
+                onChange={(e) => setForm({ ...form, sub_bab_key: e.target.value })}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              >
+                <option value="">— Berlaku untuk semua sub-bab BAB —</option>
+                {subBabList.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.key} {s.title_id ? ` — ${s.title_id}` : ""}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-muted mt-1">Pilih sub-bab spesifik atau kosongkan untuk tampilkan di semua sub-bab BAB.</p>
             </div>
+          </div>
+          <div className="mt-3">
+            <label className="block text-sm font-medium text-ink mb-1">Judul (ID)</label>
+            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Struktur Sel Bakteri" className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
           </div>
 
           <div>

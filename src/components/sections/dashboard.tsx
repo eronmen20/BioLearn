@@ -4,7 +4,7 @@ import { BAB } from "@/lib/bab-data";
 import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore, useProgressReady } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
-import { useBabArchiveIds } from "@/store/use-bab-archive";
+import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import Link from "next/link";
 import { BookOpen, CheckCircle, TrendingUp, Library, Loader2 } from "lucide-react";
 
@@ -13,11 +13,15 @@ export function Dashboard() {
   const mounted = useIsMounted();
   const hydrated = useProgressReady();
   const progress = useProgressStore();
-  const { archivedIds } = useBabArchiveIds();
+  const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
   const ready = mounted && hydrated;
-
-  // Filter out archived bab from dashboard (after hydration)
-  const visibleBabs = mounted ? BAB.filter((b) => !archivedIds.has(b.id)) : BAB;
+  // Apply whitelist filter: only ALWAYS_VISIBLE babs by default; after
+  // archiveLoaded, also exclude babs explicitly archived in DB.
+  const visibleBabs = (mounted ? BAB.filter((b) => {
+    if (!ALWAYS_VISIBLE_BABS.includes(b.id)) return false;
+    if (archiveLoaded && archivedIds.has(b.id)) return false;
+    return true;
+  }) : BAB.filter((b) => ALWAYS_VISIBLE_BABS.includes(b.id)));
   const visibleSubCount = visibleBabs.reduce((s, b) => s + b.subs.length, 0);
   const visibleBabCount = visibleBabs.length;
 
