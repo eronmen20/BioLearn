@@ -5,12 +5,15 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
-import { Megaphone, Plus, Edit3, Trash2, Pin, PinOff, Bell, Calendar, Clock, Loader2 } from 'lucide-react';
+import { TranslateButton } from '@/components/admin/translate-button';
+import { Megaphone, Plus, Edit3, Trash2, Pin, PinOff, Bell, Calendar, Clock, Loader2, Languages } from 'lucide-react';
 
 interface Announcement {
   id: number;
   title: string;
+  title_en: string | null;
   body: string;
+  body_en: string | null;
   pinned: boolean;
   status: 'draft' | 'published';
   category: string;
@@ -39,7 +42,9 @@ const BAB_OPTIONS = [
 
 const DEFAULT_FORM = {
   title: '',
+  title_en: '',
   body: '',
+  body_en: '',
   status: 'published' as 'draft' | 'published',
   pinned: false,
   category: 'info',
@@ -56,10 +61,10 @@ export default function PengumumanPage() {
   const [showDelete, setShowDelete] = useState(false);
   const [selected, setSelected] = useState<Announcement | null>(null);
   const [form, setForm] = useState(DEFAULT_FORM);
+  const [showEn, setShowEn] = useState(false);
   const [saving, setSaving] = useState(false);
   const [babList, setBabList] = useState<Array<{ id: string; icon?: string }>>([]);
 
-  // Load BAB list for the BAB picker (admin includes archived so we can target any)
   const loadBabList = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/bab');
@@ -91,6 +96,7 @@ export default function PengumumanPage() {
   const handleAdd = () => {
     setSelected(null);
     setForm(DEFAULT_FORM);
+    setShowEn(false);
     setShowModal(true);
   };
 
@@ -98,7 +104,9 @@ export default function PengumumanPage() {
     setSelected(item);
     setForm({
       title: item.title || '',
+      title_en: item.title_en || '',
       body: item.body || '',
+      body_en: item.body_en || '',
       status: item.status || 'published',
       pinned: !!item.pinned,
       category: item.category || 'info',
@@ -107,6 +115,7 @@ export default function PengumumanPage() {
       starts_at: item.starts_at ? item.starts_at.slice(0, 16) : '',
       ends_at: item.ends_at ? item.ends_at.slice(0, 16) : '',
     });
+    setShowEn(!!item.title_en || !!item.body_en);
     setShowModal(true);
   };
 
@@ -119,7 +128,9 @@ export default function PengumumanPage() {
     try {
       const payload: Record<string, unknown> = {
         title: form.title.trim(),
+        title_en: form.title_en.trim() || null,
         body: form.body.trim(),
+        body_en: form.body_en.trim() || null,
         status: form.status,
         pinned: form.pinned,
         category: form.category,
@@ -150,10 +161,11 @@ export default function PengumumanPage() {
         throw new Error(err.error || 'Failed');
       }
 
+      const enFlag = form.title_en || form.body_en ? ' 🌐 + EN' : '';
       showToast(
         selected
-          ? `Pengumuman "${form.title}" berhasil diupdate!`
-          : `📢 Pengumuman "${form.title}" dibuat${form.pinned ? ' & dipin' : ''}. User akan melihat ${form.status === 'published' ? 'langsung' : 'setelah dipublikasi'} via bell icon.`
+          ? `📢 Pengumuman "${form.title}" berhasil diupdate!${enFlag}`
+          : `📢 Pengumuman "${form.title}" dibuat${enFlag}. User akan melihat ${form.status === 'published' ? 'langsung' : 'setelah dipublikasi'} via bell icon.`
       );
       setShowModal(false);
       loadData();
@@ -210,6 +222,9 @@ export default function PengumumanPage() {
             {row.pinned && <Pin className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
             <span className={`font-medium text-ink ${row.status === 'draft' ? 'opacity-60' : ''}`}>{row.title}</span>
           </div>
+          {row.title_en && (
+            <p className="text-[11px] text-muted italic mt-0.5 truncate max-w-[280px]">🌐 {row.title_en}</p>
+          )}
           <span className={`inline-block mt-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
             CATEGORY_OPTIONS.find((c) => c.value === row.category)?.color || 'bg-gray-500/10 text-gray-500'
           }`}>
@@ -277,6 +292,7 @@ export default function PengumumanPage() {
     published: data.filter((a) => a.status === 'published').length,
     draft: data.filter((a) => a.status === 'draft').length,
     pinned: data.filter((a) => a.pinned && a.status === 'published').length,
+    bilingual: data.filter((a) => a.status === 'published' && ((a.title_en ?? '') || (a.body_en ?? ''))).length,
   };
 
   return (
@@ -288,7 +304,7 @@ export default function PengumumanPage() {
       />
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="bg-surface rounded-xl border border-border p-4">
           <p className="text-2xl font-bold text-ink">{stats.total}</p>
           <p className="text-xs text-muted mt-1">Total</p>
@@ -302,6 +318,10 @@ export default function PengumumanPage() {
           <p className="text-xs text-muted mt-1">📌 Dipin</p>
         </div>
         <div className="bg-surface rounded-xl border border-border p-4">
+          <p className="text-2xl font-bold text-purple-600">{stats.bilingual}</p>
+          <p className="text-xs text-muted mt-1">🌐 Bilingual</p>
+        </div>
+        <div className="bg-surface rounded-xl border border-border p-4">
           <p className="text-2xl font-bold text-muted">{stats.draft}</p>
           <p className="text-xs text-muted mt-1">Draft</p>
         </div>
@@ -313,7 +333,7 @@ export default function PengumumanPage() {
           data={data}
           loading={loading}
           searchPlaceholder="Cari pengumuman..."
-          searchKeys={['title', 'body', 'category']}
+          searchKeys={['title', 'title_en', 'body', 'category']}
           emptyMessage="Belum ada pengumuman. Klik 'Buat Pengumuman' untuk menambahkan."
           actions={(row) => (
             <div className="flex items-center gap-1">
@@ -331,6 +351,25 @@ export default function PengumumanPage() {
       {/* ── Editor Modal ─────────────────────────────────── */}
       <Modal open={showModal} onClose={() => setShowModal(false)} title={selected ? `Edit: ${selected.title}` : 'Buat Pengumuman Baru'} size="lg">
         <div className="space-y-4">
+          {/* Bilingual toggle banner */}
+          <div className="flex items-center justify-between gap-2 p-3 rounded-xl bg-accent/5 border border-accent/30">
+            <div className="flex items-center gap-2">
+              <Languages className="w-4 h-4 text-accent" />
+              <div>
+                <p className="text-xs font-semibold text-ink">Konten Bilingual (ID/EN)</p>
+                <p className="text-[11px] text-muted">Opt-in: tambah terjemahan EN biar user English juga lihat versi entsprech.</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowEn(v => !v)}
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${showEn ? 'bg-accent text-white' : 'bg-surface border border-border text-muted hover:text-ink'}`}
+            >
+              {showEn ? 'ON' : 'OFF'}
+            </button>
+          </div>
+
+          {/* ID Title + Body */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Judul <span className="text-red">*</span></label>
             <input
@@ -353,6 +392,53 @@ export default function PengumumanPage() {
             />
             <p className="text-xs text-muted mt-1">Plain text. Bisa multiple baris.</p>
           </div>
+
+          {/* EN Title + Body (toggle-gated) */}
+          {showEn && (
+            <div className="rounded-xl border border-purple-500/30 bg-purple-50/30 p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <Languages className="w-4 h-4 text-purple-600" />
+                <span className="text-xs font-bold text-purple-700">English Version</span>
+                <span className="text-[10px] text-muted">(user dengan language=en akan lihat ini)</span>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-purple-900">Title (EN)</label>
+                  <TranslateButton
+                    source="id"
+                    target="en"
+                    text={form.title}
+                    onTranslated={(t) => setForm({ ...form, title_en: t })}
+                  />
+                </div>
+                <input
+                  type="text"
+                  value={form.title_en}
+                  onChange={(e) => setForm({ ...form, title_en: e.target.value })}
+                  placeholder="e.g. Bacteria chapter materials are live!"
+                  className="w-full px-3 py-2 border border-purple-300 rounded-xl bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-purple-900">Body (EN)</label>
+                  <TranslateButton
+                    source="id"
+                    target="en"
+                    text={form.body}
+                    onTranslated={(t) => setForm({ ...form, body_en: t })}
+                  />
+                </div>
+                <textarea
+                  value={form.body_en}
+                  onChange={(e) => setForm({ ...form, body_en: e.target.value })}
+                  placeholder="Write the announcement in English…"
+                  rows={5}
+                  className="w-full px-3 py-2 border border-purple-300 rounded-xl bg-white text-ink text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/30 resize-y"
+                />
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-ink mb-2">Ikon</label>
@@ -460,7 +546,7 @@ export default function PengumumanPage() {
           <div className="bg-bg-alt/60 rounded-xl p-3 border border-border/60">
             <div className="flex items-center gap-2 mb-2">
               <Bell className="w-4 h-4 text-muted" />
-              <span className="text-xs font-semibold text-muted">Preview di bell user:</span>
+              <span className="text-xs font-semibold text-muted">Preview di bell user (ID):</span>
             </div>
             <div className="flex items-start gap-3 p-3 bg-surface rounded-xl border border-border">
               <span className="text-2xl flex-shrink-0">{form.icon}</span>
@@ -472,6 +558,24 @@ export default function PengumumanPage() {
                 <p className="text-xs text-muted line-clamp-2">{form.body || 'Isi pengumuman...'}</p>
               </div>
             </div>
+            {showEn && (form.title_en || form.body_en) && (
+              <>
+                <div className="flex items-center gap-2 mb-2 mt-3">
+                  <Bell className="w-4 h-4 text-purple-600" />
+                  <span className="text-xs font-semibold text-purple-700">Preview di bell user (EN):</span>
+                </div>
+                <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-xl border border-purple-300">
+                  <span className="text-2xl flex-shrink-0">{form.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm text-purple-900 truncate">{form.title_en || 'Title (EN)'}</span>
+                      {form.pinned && <Pin className="w-3 h-3 text-amber-500 flex-shrink-0" />}
+                    </div>
+                    <p className="text-xs text-purple-700 line-clamp-2">{form.body_en || 'Body (EN)...'}</p>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-2 border-t border-border">

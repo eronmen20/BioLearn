@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
+import { TranslateButton } from '@/components/admin/translate-button';
 import { BookOpen, Edit, Trash2, Plus, Video, FileText, Save, Loader2, Archive, ArchiveRestore } from 'lucide-react';
 
 function ArchivedToggleOffIcon() {
@@ -450,7 +451,15 @@ export default function BabPage() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-ink mb-1">Judul Video (EN)</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-ink">Judul Video (EN)</label>
+                <TranslateButton
+                  source="id"
+                  target="en"
+                  text={form.video_title_id}
+                  onTranslated={(t) => setForm({ ...form, video_title_en: t })}
+                />
+              </div>
               <input
                 type="text"
                 value={form.video_title_en}

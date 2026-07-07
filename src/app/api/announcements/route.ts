@@ -69,7 +69,9 @@ export async function POST(req: NextRequest) {
       .from("announcements")
       .insert({
         title: body.title,
+        title_en: body.title_en || null,
         body: body.body,
+        body_en: body.body_en || null,
         pinned: body.pinned || false,
         status: body.status || "published",
         category: body.category || "info",
@@ -102,7 +104,9 @@ export async function PUT(req: NextRequest) {
 
     const updateFields: Record<string, unknown> = {};
     if (body.title !== undefined) updateFields.title = body.title;
+    if (body.title_en !== undefined) updateFields.title_en = body.title_en;
     if (body.body !== undefined) updateFields.body = body.body;
+    if (body.body_en !== undefined) updateFields.body_en = body.body_en;
     if (body.pinned !== undefined) updateFields.pinned = body.pinned;
     if (body.status !== undefined) updateFields.status = body.status;
     if (body.category !== undefined) updateFields.category = body.category;

@@ -7,6 +7,7 @@ import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { StrukturViewer } from "@/components/struktur-viewer";
+import { PraktikumViewer } from "@/components/praktikum-viewer";
 import {
   CheckCircle,
   XCircle,
@@ -203,6 +204,9 @@ export function BabContent({ babId }: { babId: string }) {
 
       {/* Struktur & Fungsi */}
       <StrukturSection babId={babId} subBabKey={currentSubKey} lang={lang} />
+
+      {/* Praktikum */}
+      <PraktikumSection babId={babId} subBabKey={currentSubKey} lang={lang} />
 
       {/* Sub-bab Quiz (quiz-v2) */}
       <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
@@ -887,6 +891,49 @@ function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: stri
     );
   }
   return null;
+}
+
+/* ───────── PraktikumSection ───────── */
+function PraktikumSection({ babId, subBabKey, lang }: { babId: string; subBabKey: string | null; lang: "id" | "en" }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    const url = subBabKey
+      ? `/api/praktikum?bab_id=${encodeURIComponent(babId)}&sub_bab_key=${encodeURIComponent(subBabKey)}&_t=${Date.now()}`
+      : `/api/praktikum?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`;
+    setLoading(true);
+    fetch(url, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data) => { if (alive) setItems(data.praktikum || []); })
+      .catch(() => { if (alive) setItems([]); })
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, [babId, subBabKey]);
+
+  if (loading || items.length === 0) return null;
+
+  return (
+    <div className="mb-6 space-y-6">
+      {items.map((item) => (
+        <div key={item.id} className="bg-surface rounded-2xl shadow-card border border-border/50 p-4 sm:p-6">
+          <PraktikumViewer
+            title={item.title_id}
+            title_en={item.title_en}
+            description={item.description_id}
+            description_en={item.description_en}
+            steps={item.steps || []}
+            image_url={item.image_url}
+            image_alt={item.image_alt}
+            flashcards={item.flashcards || []}
+            difficulty={item.difficulty}
+            lang={lang}
+          />
+        </div>
+      ))}
+    </div>
+  );
 }
 
 /* ───────── StrukturSection (unchanged) ───────── */

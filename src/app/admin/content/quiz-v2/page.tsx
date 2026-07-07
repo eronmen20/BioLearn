@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { showToast } from '@/components/ui/toaster';
+import { TranslateButton } from '@/components/admin/translate-button';
 import { ImageUpload } from '@/components/admin/image-upload';
 import { ConfirmDialog } from '@/components/admin/modal';
 import { BAB } from '@/lib/bab-data';
@@ -389,7 +390,15 @@ export default function QuizV2Page() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-ink mb-1">🇬🇧 Teks Soal (EN)</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-medium text-ink">🇬🇧 Teks Soal (EN)</label>
+                            <TranslateButton
+                              source="id"
+                              target="en"
+                              text={q.question_id}
+                              onTranslated={(t) => updateQuestion(globalIdx, { question_en: t })}
+                            />
+                          </div>
                           <textarea
                             value={q.question_en}
                             onChange={(e) => updateQuestion(globalIdx, { question_en: e.target.value })}
@@ -411,7 +420,24 @@ export default function QuizV2Page() {
 
                       {/* Options */}
                       <div>
-                        <label className="block text-xs font-medium text-ink mb-2">Pilihan Jawaban</label>
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="block text-xs font-medium text-ink">Pilihan Jawaban</label>
+                          <TranslateButton
+                            source="id"
+                            target="en"
+                            text={q.options_id.filter(Boolean).join(" ||| ")}
+                            onTranslated={(t) => {
+                              // Comes back as "A ||| B ||| C ||| D" — split back into options
+                              if (!t) return;
+                              const parts = t.split(/\s*\|\|\|\s*/).slice(0, q.options_en.length);
+                              const opts = [...q.options_en];
+                              for (let i = 0; i < parts.length; i++) {
+                                if (parts[i]) opts[i] = parts[i];
+                              }
+                              updateQuestion(globalIdx, { options_en: opts });
+                            }}
+                          />
+                        </div>
                         <div className="space-y-3">
                           {optionLabels.map((label, optIdx) => (
                             <div key={optIdx} className="flex items-start gap-2">
@@ -445,25 +471,39 @@ export default function QuizV2Page() {
                                     q.correct_answer === optIdx ? 'border-green/50 bg-green/5' : 'border-border'
                                   }`}
                                 />
-                                <input
-                                  type="text"
-                                  value={q.options_en[optIdx]}
-                                  onChange={(e) => {
-                                    const opts = [...q.options_en];
-                                    opts[optIdx] = e.target.value;
-                                    updateQuestion(globalIdx, { options_en: opts });
-                                  }}
-                                  placeholder={`Option ${label} (EN)`}
-                                  className={`px-3 py-2 border rounded-xl bg-bg-alt text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 ${
-                                    q.correct_answer === optIdx ? 'border-green/50 bg-green/5' : 'border-border'
-                                  }`}
-                                />
+                                <div className="relative">
+                                  <input
+                                    type="text"
+                                    value={q.options_en[optIdx]}
+                                    onChange={(e) => {
+                                      const opts = [...q.options_en];
+                                      opts[optIdx] = e.target.value;
+                                      updateQuestion(globalIdx, { options_en: opts });
+                                    }}
+                                    placeholder={`Option ${label} (EN)`}
+                                    className={`w-full px-3 py-2 pr-12 border rounded-xl bg-bg-alt text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 ${
+                                      q.correct_answer === optIdx ? 'border-green/50 bg-green/5' : 'border-border'
+                                    }`}
+                                  />
+                                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
+                                    <TranslateButton
+                                      source="id"
+                                      target="en"
+                                      text={q.options_id[optIdx]}
+                                      onTranslated={(t) => {
+                                        const opts = [...q.options_en];
+                                        opts[optIdx] = t;
+                                        updateQuestion(globalIdx, { options_en: opts });
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           ))}
                         </div>
                         <p className="text-xs text-muted mt-2">
-                          Klik tombol huruf untuk memilih jawaban yang benar. Hijau = jawaban benar.
+                          Klik tombol huruf untuk memilih jawaban yang benar. Hijau = jawaban benar. Tombol Translate (🌐) di kanan untuk auto-translate 1 per-1 atau klik tombol Auto di atas untuk translate semua sekaligus.
                         </p>
                       </div>
 
@@ -480,7 +520,15 @@ export default function QuizV2Page() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-ink mb-1">🇬🇧 Explanation (EN)</label>
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-xs font-medium text-ink">🇬🇧 Explanation (EN)</label>
+                            <TranslateButton
+                              source="id"
+                              target="en"
+                              text={q.explanation_id}
+                              onTranslated={(t) => updateQuestion(globalIdx, { explanation_en: t })}
+                            />
+                          </div>
                           <textarea
                             value={q.explanation_en}
                             onChange={(e) => updateQuestion(globalIdx, { explanation_en: e.target.value })}

@@ -6,6 +6,7 @@ import { DataTable, Column } from "@/components/admin/data-table";
 import { Modal, ConfirmDialog } from "@/components/admin/modal";
 import { showToast } from "@/components/ui/toaster";
 import { BAB } from "@/lib/bab-data";
+import { TranslateButton } from "@/components/admin/translate-button";
 import { ImageUpload } from "@/components/admin/image-upload";
 import {
   Plus, Trash2, Save, Edit, Eye, Loader2, FlaskConical, Image as ImageIcon,
@@ -302,7 +303,15 @@ export default function StrukturPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Judul (EN)</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-ink">Judul (EN)</label>
+              <TranslateButton
+                source="id"
+                target="en"
+                text={form.title}
+                onTranslated={(t) => setForm({ ...form, title_en: t })}
+              />
+            </div>
             <input type="text" value={form.title_en} onChange={(e) => setForm({ ...form, title_en: e.target.value })} placeholder="Bacterial Cell Structure" className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
           </div>
 
@@ -365,7 +374,15 @@ export default function StrukturPage() {
                     <input type="text" value={currentCard.name} onChange={(e) => updateFlashcard(activeFlashcard, "name", e.target.value)} placeholder="Dinding Sel" className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-bg-alt text-ink text-xs focus:outline-none focus:ring-2 focus:ring-accent/30" />
                   </div>
                   <div>
-                    <label className="block text-xs text-muted mb-1">🇬🇧 Name (EN)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs text-muted">🇬🇧 Name (EN)</label>
+                      <TranslateButton
+                        source="id"
+                        target="en"
+                        text={currentCard.name}
+                        onTranslated={(t) => updateFlashcard(activeFlashcard, "name_en", t)}
+                      />
+                    </div>
                     <input type="text" value={currentCard.name_en} onChange={(e) => updateFlashcard(activeFlashcard, "name_en", e.target.value)} placeholder="Cell Wall" className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-bg-alt text-ink text-xs focus:outline-none focus:ring-2 focus:ring-accent/30" />
                   </div>
                 </div>
@@ -376,7 +393,15 @@ export default function StrukturPage() {
                     <textarea value={currentCard.description} onChange={(e) => updateFlashcard(activeFlashcard, "description", e.target.value)} rows={2} placeholder="Melindungi sel dari lingkungan luar..." className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-bg-alt text-ink text-xs focus:outline-none focus:ring-2 focus:ring-accent/30 resize-y" />
                   </div>
                   <div>
-                    <label className="block text-xs text-muted mb-1">🇬🇧 Function (EN)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs text-muted">🇬🇧 Function (EN)</label>
+                      <TranslateButton
+                        source="id"
+                        target="en"
+                        text={currentCard.description}
+                        onTranslated={(t) => updateFlashcard(activeFlashcard, "description_en", t)}
+                      />
+                    </div>
                     <textarea value={currentCard.description_en} onChange={(e) => updateFlashcard(activeFlashcard, "description_en", e.target.value)} rows={2} placeholder="Protects cell from external environment..." className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-bg-alt text-ink text-xs focus:outline-none focus:ring-2 focus:ring-accent/30 resize-y" />
                   </div>
                 </div>
