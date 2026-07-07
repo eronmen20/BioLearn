@@ -74,7 +74,6 @@ export function BabContent({ babId }: { babId: string }) {
   }
 
   const { bab, summary, full, quiz, subs, subTitles, mediaBySub, source } = content;
-  const contentSource = source; // "supabase" | "hardcoded"
 
   // Current sub-bab's media (from DB, or empty if hardcoded fallback)
   const currentSubKey = subs[subIdx];
