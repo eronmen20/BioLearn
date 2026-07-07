@@ -157,8 +157,8 @@ export function AnnouncementBell() {
       {open && (
         <div className="absolute top-full right-0 mt-2 z-50 animate-slide-down origin-top-right">
           <div className="w-[300px] sm:w-[340px] bg-surface rounded-xl shadow-lg border border-border overflow-hidden flex flex-col">
-            {/* Header — iconic: gradient accent + ikon megaphone besar */}
-            <div className="relative px-4 py-3.5 bg-gradient-to-r from-accent to-blue-500 text-white overflow-hidden">
+            {/* Header — icon: gradient accent → purple → pink + megaphone besar */}
+            <div className="relative px-4 py-3.5 bg-gradient-to-r from-accent via-purple-500 to-pink-500 text-white overflow-hidden">
               <span className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10 blur-xl pointer-events-none" />
               <div className="relative flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -301,8 +301,8 @@ export function AnnouncementBell() {
               )}
             </div>
 
-            {/* Footer — iconic: bg-accent dark gradient + text-light */}
-            <div className="px-4 py-2 border-t border-border bg-gradient-to-r from-accent/15 to-blue-500/15 flex items-center justify-between">
+            {/* Footer — iconic: pink-to-purple gradient + sparkles */}
+            <div className="px-4 py-2 border-t border-border bg-gradient-to-r from-pink-500/15 to-purple-500/15 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-accent-dark inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 {unreadCount > 0 ? (
