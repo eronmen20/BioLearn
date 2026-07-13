@@ -51,6 +51,31 @@ const EMPTY_MEDIA: SubMedia = {
   animation_type: "",
 };
 
+/** Helper: fetch with retry — handles Supabase cold-start where first request fails */
+async function fetchWithRetry(url: string, maxRetries = 1, timeoutMs = 8000): Promise<Response> {
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      // Fresh timestamp per attempt (busts any cached DNS/connection)
+      const urlWithFreshTs = url.includes("_t=")
+        ? url.replace(/_t=\d+/, `_t=${Date.now()}`)
+        : `${url}&_t=${Date.now()}`;
+      const res = await fetch(urlWithFreshTs, {
+        signal: AbortSignal.timeout(timeoutMs),
+        cache: "no-store",
+      });
+      return res;
+    } catch (e) {
+      lastError = e instanceof Error ? e : new Error(String(e));
+      if (attempt < maxRetries) {
+        // Small delay before retry (Supabase cold-start warmup)
+        await new Promise((r) => setTimeout(r, 500));
+      }
+    }
+  }
+  throw lastError;
+}
+
 export function useBabContent(babId: string): { data: ContentData | null; loading: boolean } {
   const [data, setData] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -70,16 +95,18 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
       }
 
       // Try Supabase first.
+      // - fetchWithRetry: 1 retry + 8s timeout per attempt → handles cold-start
       // - cache: "no-store" + timestamp bust prevent browser/Next.js caching
       //   stale response after admin edits.
       // - If the API responds 200 AND returns valid sub-bab structure
       //   (has_content: true, subs.length > 0), trust it.
-      // - On any error or empty structure → use hardcoded fallback.
+      // - On all retries exhausted or empty structure → use hardcoded fallback.
       try {
-        const res = await fetch(`/api/content?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, {
-          signal: AbortSignal.timeout(3000),
-          cache: "no-store",
-        });
+        const res = await fetchWithRetry(
+          `/api/content?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`,
+          1,  // maxRetries
+          8000  // timeoutMs
+        );
         if (res.ok) {
           const supaData: SupabaseContent = await res.json();
           if (supaData.has_content && supaData.subs.length > 0 && !cancelled) {
@@ -121,7 +148,7 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
         }
       } catch (e) {
         if (typeof window !== "undefined" && (window as Window & { console?: Console }).console) {
-          console.warn(`[bab-content:${babId}] Supabase fetch failed, falling back to hardcoded:`, e instanceof Error ? e.message : e);
+          console.warn(`[bab-content:${babId}] Supabase fetch failed after retries, falling back to hardcoded:`, e instanceof Error ? e.message : e);
         }
       }
 
