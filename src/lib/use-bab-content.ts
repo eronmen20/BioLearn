@@ -36,23 +36,13 @@ interface ContentData {
   full: { id: string[]; en: string[] };
   quiz: QuizQuestion[];
   subs: string[];
-  // Per-sub title (parallel array to subs[] — index i corresponds to subs[i])
-  // Comes from sub_bab.title_id/title_en (source of truth)
   subTitles: { id: string; en: string }[];
-  // Per-sub media indexed by sub_bab key
   mediaBySub: Record<string, SubMedia>;
-  source: "supabase" | "hardcoded";
+  source: "supabase";
 }
 
-const EMPTY_MEDIA: SubMedia = {
-  video_url: "",
-  image_url: "",
-  animation_url: "",
-  animation_type: "",
-};
-
 /** Helper: fetch with retry — handles Supabase cold-start where first request fails */
-async function fetchWithRetry(url: string, maxRetries = 1, timeoutMs = 8000): Promise<Response> {
+async function fetchWithRetry(url: string, maxRetries = 1, timeoutMs = 5000): Promise<Response> {
   let lastError: Error | null = null;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -76,13 +66,15 @@ async function fetchWithRetry(url: string, maxRetries = 1, timeoutMs = 8000): Pr
   throw lastError;
 }
 
-export function useBabContent(babId: string): { data: ContentData | null; loading: boolean } {
+export function useBabContent(babId: string): { data: ContentData | null; loading: boolean; error: string | null } {
   const [data, setData] = useState<ContentData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setError(null);
 
     async function load() {
       const hardcodedBab = BAB.find((b) => b.id === babId);
@@ -94,18 +86,12 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
         return;
       }
 
-      // Try Supabase first.
-      // - fetchWithRetry: 1 retry + 8s timeout per attempt → handles cold-start
-      // - cache: "no-store" + timestamp bust prevent browser/Next.js caching
-      //   stale response after admin edits.
-      // - If the API responds 200 AND returns valid sub-bab structure
-      //   (has_content: true, subs.length > 0), trust it.
-      // - On all retries exhausted or empty structure → use hardcoded fallback.
+      // Try Supabase. On failure → show error state (no hardcoded fallback).
       try {
         const res = await fetchWithRetry(
           `/api/content?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`,
           1,  // maxRetries
-          8000  // timeoutMs
+          5000  // timeoutMs
         );
         if (res.ok) {
           const supaData: SupabaseContent = await res.json();
@@ -146,28 +132,17 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
             return;
           }
         }
-      } catch (e) {
-        if (typeof window !== "undefined" && (window as Window & { console?: Console }).console) {
-          console.warn(`[bab-content:${babId}] Supabase fetch failed after retries, falling back to hardcoded:`, e instanceof Error ? e.message : e);
+        // API returned but no valid content → treat as error
+        if (!cancelled) {
+          setError("Konten belum tersedia untuk bab ini.");
+          setLoading(false);
         }
-      }
-
-      // Fallback: hardcoded bab-data.ts (offline-safe default)
-      if (!cancelled) {
-        setData({
-          bab: hardcodedBab,
-          summary: hardcodedBab.summary,
-          full: hardcodedBab.full,
-          quiz: QUIZ[babId] || [],
-          subs: hardcodedBab.subs,
-          subTitles: hardcodedBab.subs.map(() => ({ id: "", en: "" })),
-          mediaBySub: hardcodedBab.subs.reduce<Record<string, SubMedia>>((acc, k) => {
-            acc[k] = { ...EMPTY_MEDIA };
-            return acc;
-          }, {}),
-          source: "hardcoded",
-        });
-        setLoading(false);
+      } catch (e) {
+        if (!cancelled) {
+          const msg = e instanceof Error ? e.message : "Gagal menghubungi server";
+          setError(msg);
+          setLoading(false);
+        }
       }
     }
 
@@ -175,5 +150,5 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
     return () => { cancelled = true; };
   }, [babId]);
 
-  return { data, loading };
+  return { data, loading, error };
 }

@@ -55,12 +55,14 @@ const FEATURES = [
 ];
 
 const SUBJECTS = [
-  { id: "bakteri", icon: "🧫", name: "Bakteri", kelas: "X", color: "from-emerald-400 to-green-500" },
-  { id: "sirkulasi", icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500" },
-  { id: "sistem_saraf", icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500" },
-  { id: "genetika", icon: "🧬", name: "Genetika", kelas: "XII", color: "from-amber-400 to-orange-500" },
-  { id: "evolusi", icon: "🦕", name: "Evolusi", kelas: "XII", color: "from-lime-400 to-green-500" },
-  { id: "ekologi", icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500" },
+  { id: "bakteri", icon: "🧫", name: "Bakteri", kelas: "X", color: "from-emerald-400 to-green-500", subs: 4 },
+  { id: "sel", icon: "🔬", name: "Sel", kelas: "XI", color: "from-blue-400 to-cyan-500", subs: 4 },
+  { id: "pencernaan", icon: "🍽️", name: "Pencernaan", kelas: "XI", color: "from-orange-400 to-amber-500", subs: 4 },
+  { id: "sirkulasi", icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500", subs: 4 },
+  { id: "sistem_saraf", icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500", subs: 4 },
+  { id: "genetika", icon: "🧬", name: "Genetika", kelas: "XII", color: "from-amber-400 to-orange-500", subs: 4 },
+  { id: "evolusi", icon: "🦕", name: "Evolusi", kelas: "XII", color: "from-lime-400 to-green-500", subs: 4 },
+  { id: "ekologi", icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500", subs: 4 },
 ];
 
 // AnimatedTitle - slide-up reveal animation
@@ -345,26 +347,46 @@ export function LandingPage() {
             </p>
           </AnimatedSection>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+          <div className={`grid gap-3 sm:gap-4 ${
+              visibleSubjects.length <= 2
+                ? "grid-cols-1 sm:grid-cols-2 max-w-lg mx-auto"
+                : visibleSubjects.length <= 4
+                ? "grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 max-w-3xl mx-auto"
+                : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+            }`}>
             {visibleSubjects.map((s, i) => (
               <AnimatedSection key={s.id} delay={i * 0.08}>
-                <motion.div
-                  className="group relative p-4 sm:p-5 rounded-2xl bg-surface border border-border/50 shadow-card text-center cursor-pointer h-full"
-                  whileHover={{ y: -8, boxShadow: "0 20px 60px rgba(108,92,231,0.12)" }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-2xl bg-gradient-to-r ${s.color}`} />
+                <Link href={`/bab/${s.id}`}>
                   <motion.div
-                    className="text-3xl sm:text-4xl mb-2"
-                    whileHover={{ scale: 1.2, rotate: 10 }}
+                    className="group relative p-4 sm:p-5 rounded-2xl bg-surface border border-border/50 shadow-card text-center cursor-pointer h-full overflow-hidden"
+                    whileHover={{ y: -6, boxShadow: "0 20px 60px rgba(108,92,231,0.15)" }}
+                    transition={{ duration: 0.3 }}
                   >
-                    {s.icon}
+                    {/* Top gradient bar */}
+                    <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${s.color}`} />
+                    {/* Hover glow */}
+                    <div className={`absolute inset-0 bg-gradient-to-b ${s.color} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300`} />
+                    
+                    <motion.div
+                      className="text-3xl sm:text-4xl mb-2 relative z-10"
+                      whileHover={{ scale: 1.15, rotate: 8 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      {s.icon}
+                    </motion.div>
+                    <div className="font-bold text-sm text-ink mb-1 relative z-10">{s.name}</div>
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="text-[10px] font-semibold text-muted bg-border/50 px-2 py-0.5 rounded-full">
+                        Kelas {s.kelas}
+                      </span>
+                      <span className="text-[10px] text-muted-2">{s.subs} sub-bab</span>
+                    </div>
+                    {/* Arrow indicator on hover */}
+                    <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ChevronRight className="w-4 h-4 text-accent" />
+                    </div>
                   </motion.div>
-                  <div className="font-bold text-sm text-ink mb-1">{s.name}</div>
-                  <div className="text-[10px] font-semibold text-muted-2 bg-border/50 px-2 py-0.5 rounded-full inline-block">
-                    Kelas {s.kelas}
-                  </div>
-                </motion.div>
+                </Link>
               </AnimatedSection>
             ))}
             {/* Placeholder slot for archived subjects */}

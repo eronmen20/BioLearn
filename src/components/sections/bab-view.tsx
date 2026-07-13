@@ -20,6 +20,8 @@ import {
   Check,
   Trophy,
   BookOpen,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 
 /* ───────── Quiz-v2 API types ───────── */
@@ -43,7 +45,7 @@ export function BabContent({ babId }: { babId: string }) {
   const { lang, t } = useLangStore();
   const progress = useProgressStore();
   const mounted = useIsMounted();
-  const { data: content, loading } = useBabContent(babId);
+  const { data: content, loading, error } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
   const [viewType, setViewType] = useState<"full" | "summary">("summary");
 
@@ -65,6 +67,26 @@ export function BabContent({ babId }: { babId: string }) {
         </div>
         <div className="h-64 bg-border-light rounded-2xl" />
         <div className="h-48 bg-border-light rounded-2xl" />
+      </div>
+    );
+  }
+
+  // Error state — Supabase fetch failed, no hardcoded fallback
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-red/10 flex items-center justify-center mb-4">
+          <AlertTriangle className="w-8 h-8 text-red" />
+        </div>
+        <h3 className="text-lg font-bold text-ink mb-2">Gagal Memuat Konten</h3>
+        <p className="text-sm text-muted max-w-sm mb-6">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Coba Lagi
+        </button>
       </div>
     );
   }
