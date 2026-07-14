@@ -26,10 +26,10 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await supabase
       .from("praktikum")
-      .select("id, bab_id, sub_bab_key, title_id, title_en, description_id, description_en, image_url, image_alt, steps, flashcards, difficulty, sort_order")
+      .select("id, bab_id, sub_bab_key, title_id, title_en, description_id, description_en, image_url, image_alt, steps, flashcards, difficulty")
       .eq("bab_id", babId)
       .eq("status", "published")
-      .order("sort_order", { ascending: true });
+      .order("id", { ascending: true });
 
     if (error) throw error;
 
