@@ -8,6 +8,7 @@ import { useProgressStore } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { StrukturViewer } from "@/components/struktur-viewer";
 import { PraktikumViewer } from "@/components/praktikum-viewer";
+import { RichContentRenderer } from "@/components/rich-content-renderer";
 import {
   CheckCircle,
   XCircle,
@@ -176,28 +177,9 @@ export function BabContent({ babId }: { babId: string }) {
               </p>
             </div>
           ) : (
-            <div
-              className="max-w-none text-sm leading-relaxed text-muted
-                [&_h3]:text-accent-dark [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1.5 [&_h3]:text-sm
-                [&_h4]:text-accent [&_h4]:font-medium [&_h4]:mt-3 [&_h4]:mb-1 [&_h4]:text-xs [&_h4]:uppercase [&_h4]:tracking-wide
-                [&_p]:leading-relaxed [&_p]:my-2
-                [&_strong]:text-ink [&_strong]:font-semibold
-                [&_em]:text-accent [&_em]:italic
-                [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-accent-dark
-                [&_ul]:!list-disc [&_ul]:!pl-6 [&_ul]:!my-3 [&_ul]:!space-y-1.5
-                [&_ol]:!list-decimal [&_ol]:!pl-6 [&_ol]:!my-3 [&_ol]:!space-y-1.5
-                [&_li]:!pl-1 [&_li]:!marker:text-accent
-                [&_ul_ul]:!list-circle [&_ol_ol]:!list-lower-alpha
-                [&_blockquote]:border-l-4 [&_blockquote]:border-accent/40 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted [&_blockquote]:my-3
-                [&_code]:bg-surface-2 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-accent-dark [&_code]:text-xs [&_code]:font-mono
-                [&_pre]:bg-surface-2 [&_pre]:p-3 [&_pre]:rounded-lg [&_pre]:overflow-x-auto [&_pre]:my-3
-                [&_pre_code]:bg-transparent [&_pre_code]:p-0
-                [&_table]:w-full [&_table]:my-3 [&_table]:text-xs
-                [&_th]:bg-surface-2 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_th]:font-semibold [&_th]:border [&_th]:border-border
-                [&_td]:px-3 [&_td]:py-2 [&_td]:border [&_td]:border-border"
-              dangerouslySetInnerHTML={{
-                __html: full[lang]?.[subIdx] || full.id?.[subIdx] || "<p>Konten belum tersedia</p>",
-              }}
+            <RichContentRenderer
+              html={full[lang]?.[subIdx] || full.id?.[subIdx] || "<p>Konten belum tersedia</p>"}
+              lang={lang}
             />
           )}
         </div>
