@@ -248,8 +248,32 @@ export async function loadUserProgress(email: string) {
       return;
     }
     const data = await res.json();
+    const rawProgress = data.progress || {};
+    const sanitized: Record<string, BabProgress> = {};
+    for (const [babId, p] of Object.entries(rawProgress) as [string, any][]) {
+      const total = Math.max(0, Number(p?.total) || 0);
+      const correct = Math.max(0, Math.min(total, Number(p?.correct) || 0));
+      const subs = p?.subs || {};
+      const sanitizedSubs: Record<string, SubProgress> = {};
+      for (const [sk, s] of Object.entries(subs) as [string, any][]) {
+        sanitizedSubs[sk] = {
+          done: !!s?.done,
+          score: Math.max(0, Math.min(100, Number(s?.score) || 0)),
+          attempts: Math.max(0, Number(s?.attempts) || 0),
+        };
+      }
+      sanitized[babId] = {
+        quizzes: Math.max(0, Number(p?.quizzes) || 0),
+        correct,
+        total,
+        subs: sanitizedSubs,
+        reflection_done: !!p?.reflection_done,
+        reflection_score: Math.max(0, Math.min(100, Number(p?.reflection_score) || 0)),
+        completion_pct: Math.max(0, Math.min(100, Number(p?.completion_pct) || 0)),
+      };
+    }
     useProgressStore.setState({
-      progress: data.progress || {},
+      progress: sanitized,
       _hydrated: true,
     });
   } catch (e) {
