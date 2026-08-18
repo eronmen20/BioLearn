@@ -16,7 +16,8 @@ export function ProgressView() {
   const mastery = ready ? progress.getMastery() : 0;
   const totalQuizzes = ready ? progress.getTotalQuizzes() : 0;
   const totalCorrect = ready ? progress.getTotalCorrect() : 0;
-  const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + p.total, 0) : 0;
+  const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + Math.max(0, p.total), 0) : 0;
+  const totalCorrectClamped = Math.min(Math.max(0, totalCorrect), totalQs);
 
   return (
     <div className="animate-fade-in-up">
@@ -38,7 +39,7 @@ export function ProgressView() {
           <div className="w-14 h-14 rounded-2xl bg-green-light flex items-center justify-center mx-auto mb-3">
             <Target className="w-6 h-6 text-green" />
           </div>
-          <div className="text-3xl font-extrabold gradient-text">{totalCorrect}/{totalQs}</div>
+          <div className="text-3xl font-extrabold gradient-text">{totalCorrectClamped}/{totalQs}</div>
           <p className="text-sm text-muted mt-1">{t("quiz.correct")}</p>
         </div>
         <div className="bg-surface rounded-2xl p-6 shadow-card border border-border/50 text-center">
@@ -82,7 +83,7 @@ export function ProgressView() {
                   <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${b.color}, ${b.color}88)` }} />
                 </div>
                 <div className="flex justify-between mt-1">
-                  <span className="text-xs text-muted-2">{correct}/{total} {t("progress.correct")}</span>
+                  <span className="text-xs text-muted-2">{Math.min(correct, total)}/{total} {t("progress.correct")}</span>
                   <span className="text-xs text-muted-2">{quizzes} {t("progress.quizzes")}</span>
                 </div>
               </div>
