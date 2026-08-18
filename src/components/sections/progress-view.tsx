@@ -65,7 +65,7 @@ export function ProgressView() {
         <div className="space-y-4">
           {BAB.map((b, i) => {
             const p = progress.getProgress(b.id);
-            const pct = mounted && p.total > 0 ? Math.round((p.correct / p.total) * 100) : 0;
+            const pct = mounted && p.total > 0 ? Math.max(0, Math.min(100, Math.round((p.correct / p.total) * 100))) : 0;
             const quizzes = mounted ? p.quizzes : 0;
             const correct = mounted ? p.correct : 0;
             const total = mounted ? p.total : 0;

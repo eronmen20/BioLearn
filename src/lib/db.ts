@@ -85,31 +85,36 @@ export async function getProgress(userId: string) {
   const { data: rows } = await getDb().from("progress").select("*").eq("user_id", userId);
   const result: Record<string, any> = {};
   for (const row of rows || []) {
+    const subs = typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {};
+    const total = Math.max(0, row.total || 0);
+    const correct = Math.max(0, Math.min(total, row.correct || 0));
     result[row.bab_id] = {
-      quizzes: row.quizzes,
-      correct: row.correct,
-      total: row.total,
-      subs: typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {},
+      quizzes: row.quizzes || 0,
+      correct,
+      total,
+      subs,
       reflection_done: row.reflection_done || false,
       reflection_score: row.reflection_score || 0,
-      completion_pct: row.completion_pct || 0,
+      completion_pct: Math.max(0, Math.min(100, row.completion_pct || 0)),
     };
   }
   return result;
 }
 
 export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number }>; reflection_done?: boolean; reflection_score?: number; completion_pct?: number }) {
+  const total = Math.max(0, data.total || 0);
+  const correct = Math.max(0, Math.min(total, data.correct || 0));
   const { error } = await getDb().from("progress").upsert(
     {
       user_id: userId,
       bab_id: babId,
-      quizzes: data.quizzes,
-      correct: data.correct,
-      total: data.total,
+      quizzes: data.quizzes || 0,
+      correct,
+      total,
       subs: data.subs,
       reflection_done: data.reflection_done || false,
       reflection_score: data.reflection_score || 0,
-      completion_pct: data.completion_pct || 0,
+      completion_pct: Math.max(0, Math.min(100, data.completion_pct || 0)),
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id,bab_id" }

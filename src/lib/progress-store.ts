@@ -112,12 +112,12 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       let babCorrect = 0;
       for (const sk of Object.keys(newSubs)) {
         const sub = newSubs[sk];
-        // We don't have totalQuestions per sub stored — but we can derive:
-        // the best score tells us the % correct; we just count attempts at the quiz level.
-        // For mastery display, use: bestScore (0-100) → "100%" = 1 question right per attempt's worth.
-        // Simpler: track per-sub correct via the score, but keep babTotal as sum of unique sub attempts.
         babCorrect += sub.score; // accumulate best score per sub (each sub ≤ 100)
         babTotal += 100;          // each sub worth 100% of its quiz
+      }
+      if (p.reflection_done) {
+        babCorrect += p.reflection_score;
+        babTotal += 100;
       }
       newProgress[babId].correct = babCorrect;
       newProgress[babId].total = babTotal;
@@ -216,7 +216,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       totalCorrect += p.correct;
       totalQs += p.total;
     });
-    return totalQs > 0 ? Math.round((totalCorrect / totalQs) * 100) : 0;
+    if (totalQs <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((totalCorrect / totalQs) * 100)));
   },
 
   getTotalQuizzes: () => {
