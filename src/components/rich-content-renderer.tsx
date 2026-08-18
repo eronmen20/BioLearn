@@ -160,9 +160,9 @@ function AccordionSection({
 
         {/* Accordion Content */}
         <div
-          className="relative overflow-hidden transition-all duration-300 ease-out"
+          className="relative overflow-y-auto transition-all duration-300 ease-out"
           style={{
-            maxHeight: isOpen ? `${height}px` : "0px",
+            maxHeight: isOpen ? `min(${height}px, calc(100dvh - 14rem))` : "0px",
             opacity: isOpen ? 1 : 0,
           }}
         >
