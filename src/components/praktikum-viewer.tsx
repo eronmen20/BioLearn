@@ -58,13 +58,13 @@ export function PraktikumViewer({
   const diff = DIFFICULTY_BADGE_LOCAL[difficulty ?? "sedang"] || DIFFICULTY_BADGE_LOCAL.sedang;
 
   // Bilingual content display — chrome stays Indonesian
-  const t = lang === "en" ? title_en || title : title;
+  const praktikumTitle = lang === "en" ? title_en || title : title;
   const desc = lang === "en" ? description_en || description : description;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="text-lg font-bold text-ink">{t}</h3>
+        <h3 className="text-lg font-bold text-ink">{praktikumTitle}</h3>
         <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full ${diff.color}`}>
           {diff.label}
         </span>

@@ -323,7 +323,7 @@ export function LandingPage() {
                     📡 {t("landing.stay_tuned_title")}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted leading-relaxed">
-                    {t("landing.stay_tuned_desc")} {archivedCount > 0 && <span>{archivedCount} materi BAB lainnya sedang dalam tahap pengembangan dan akan diaktifkan setelah siap.</span>}
+                    {t("landing.stay_tuned_desc")} {archivedCount > 0 && <span>{t("landing.archived_note").replace("{count}", String(archivedCount))}</span>}
                   </p>
                   <p className="text-[10px] text-muted mt-2 inline-flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -411,7 +411,7 @@ export function LandingPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
             {[
               { num: archiveLoaded ? String(visibleSubjects.length) : "…", labelKey: "landing.stat_active", icon: "📚" },
-              { num: archiveLoaded && archivedCount > 0 ? `+${archivedCount}` : "—", label: "Coming Soon", icon: "🚀" },
+              { num: archiveLoaded && archivedCount > 0 ? `+${archivedCount}` : "—", labelKey: "landing.coming_soon", icon: "🚀" },
               { num: "32+", labelKey: "landing.stat_subs", icon: "📑" },
               { num: "100+", labelKey: "landing.stat_quiz", icon: "❓" },
             ].map((s, i) => (
@@ -428,7 +428,7 @@ export function LandingPage() {
                     {s.icon}
                   </motion.div>
                   <div className="text-2xl sm:text-3xl font-extrabold gradient-text mb-1">{s.num}</div>
-                  <div className="text-xs sm:text-sm text-muted font-medium">{"labelKey" in s ? t(s.labelKey) : s.label}</div>
+                  <div className="text-xs sm:text-sm text-muted font-medium">{t(s.labelKey)}</div>
                 </motion.div>
               </AnimatedSection>
             ))}
