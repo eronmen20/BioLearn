@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useLangStore } from "@/lib/lang-store";
 
 interface Flashcard {
   name: string;
@@ -33,6 +34,7 @@ export function StrukturViewer({
   const [activeIdx, setActiveIdx] = useState<number | null>(null);
   const [flipped, setFlipped] = useState(false);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const { t } = useLangStore();
 
   const current = activeIdx !== null ? flashcards[activeIdx] : null;
 
@@ -216,7 +218,7 @@ export function StrukturViewer({
                 disabled={activeIdx === 0}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted hover:text-ink disabled:opacity-30 transition-colors"
               >
-                <ChevronLeft className="w-3 h-3" /> Sebelumnya
+                <ChevronLeft className="w-3 h-3" /> {t("nav.prev")}
               </button>
               <span className="text-xs text-muted">
                 {(activeIdx ?? 0) + 1} / {flashcards.length}
@@ -226,7 +228,7 @@ export function StrukturViewer({
                 disabled={activeIdx === flashcards.length - 1}
                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted hover:text-ink disabled:opacity-30 transition-colors"
               >
-                Selanjutnya <ChevronRight className="w-3 h-3" />
+                {t("nav.next")} <ChevronRight className="w-3 h-3" />
               </button>
             </div>
           )}

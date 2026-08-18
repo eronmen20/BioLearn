@@ -53,7 +53,7 @@ export function ForgotPasswordPage() {
         startTimer();
       }
     } catch {
-      setError("Gagal terhubung ke server");
+      setError(t("auth.server_error"));
     } finally {
       setIsLoading(false);
     }
@@ -85,7 +85,7 @@ export function ForgotPasswordPage() {
   const handleResetPassword = async () => {
     setError("");
     if (newPassword.length < 6) {
-      setError("Password minimal 6 karakter");
+      setError(t("auth.password_min"));
       return;
     }
     setIsLoading(true);
@@ -103,7 +103,7 @@ export function ForgotPasswordPage() {
         setTimeout(() => router.push("/login"), 2000);
       }
     } catch {
-      setError("Gagal terhubung ke server");
+      setError(t("auth.server_error"));
     } finally {
       setIsLoading(false);
     }
@@ -117,8 +117,8 @@ export function ForgotPasswordPage() {
             <div className="w-16 h-16 bg-green-light/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green" />
             </div>
-            <h1 className="text-xl font-extrabold mb-2">Password Berhasil Diubah!</h1>
-            <p className="text-muted text-sm">Mengalihkan ke halaman login...</p>
+            <h1 className="text-xl font-extrabold mb-2">{t("auth.password_changed")}</h1>
+            <p className="text-muted text-sm">{t("auth.redirect_login")}</p>
           </div>
         </div>
       </div>
@@ -134,14 +134,14 @@ export function ForgotPasswordPage() {
               <KeyRound className="w-8 h-8 text-accent" />
             </div>
             <h1 className="text-2xl font-extrabold mb-2">
-              {step === "email" && "Lupa Password"}
-              {step === "code" && "Masukkan Kode"}
-              {step === "new_password" && "Password Baru"}
+              {step === "email" && t("auth.forgot_title")}
+              {step === "code" && t("auth.enter_code")}
+              {step === "new_password" && t("auth.new_password")}
             </h1>
             <p className="text-muted text-sm">
-              {step === "email" && "Masukkan email kamu untuk reset password"}
-              {step === "code" && `Kode 6 digit dikirim ke ${email}`}
-              {step === "new_password" && "Buat password baru untuk akun kamu"}
+              {step === "email" && t("auth.forgot_desc")}
+              {step === "code" && t("auth.code_sent_to").replace("{email}", email)}
+              {step === "new_password" && t("auth.new_password_desc")}
             </p>
           </div>
 
@@ -173,7 +173,7 @@ export function ForgotPasswordPage() {
                 className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Kirim Kode
+                {t("auth.send_code")}
               </button>
             </div>
           )}
@@ -198,10 +198,10 @@ export function ForgotPasswordPage() {
               <div className="text-center">
                 {canResend ? (
                   <button onClick={async () => { setError(""); setIsLoading(true); await fetch("/api/auth/forgot-password/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) }); startTimer(); setIsLoading(false); }} className="text-sm text-accent font-semibold hover:underline">
-                    Kirim ulang kode
+                    {t("auth.resend_code")}
                   </button>
                 ) : (
-                  <p className="text-sm text-muted-2">Kirim ulang dalam {resendTimer} detik</p>
+                  <p className="text-sm text-muted-2">{t("auth.resend_in").replace("{seconds}", String(resendTimer))}</p>
                 )}
               </div>
             </div>
@@ -210,13 +210,13 @@ export function ForgotPasswordPage() {
           {step === "new_password" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-ink mb-1.5">Password Baru</label>
+                <label className="block text-sm font-semibold text-ink mb-1.5">{t("auth.new_password")}</label>
                 <div className="relative">
                   <input
                     type={showPw ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 6 karakter"
+                    placeholder={t("auth.password_placeholder")}
                     required
                     minLength={6}
                     className="w-full px-4 py-3 pr-12 border-2 border-border rounded-xl text-sm outline-none focus:border-accent-light transition-colors bg-surface"
@@ -236,14 +236,14 @@ export function ForgotPasswordPage() {
                 className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-                Reset Password
+                {t("auth.reset_password")}
               </button>
             </div>
           )}
 
           <div className="mt-6 text-center">
             <button onClick={() => router.push("/login")} className="text-sm text-accent font-semibold hover:underline">
-              Kembali ke Login
+              {t("auth.back_to_login")}
             </button>
           </div>
         </div>

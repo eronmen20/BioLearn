@@ -55,16 +55,16 @@ export function Dashboard() {
           <div className="relative flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
               <span className="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
-                Stay Tuned
+                {t("dashboard.stay_tuned")}
               </span>
               <span className="text-[10px] font-semibold text-amber-700">
-                Materi baru segera hadir
+                {t("dashboard.new_material_soon")}
               </span>
             </div>
             <p className="text-sm text-ink leading-snug">
-              Kami akan menambahkan <span className="font-bold text-amber-700">materi bab baru secara berkala</span>. Sementara ini, BAB Bakteri sudah lengkap untuk kamu pelajari.
+              {t("dashboard.material_desc")}
               <span className="inline-flex items-center gap-0.5 ml-1 text-amber-600 font-semibold">
-                <Sparkles className="w-3 h-3" /> Nantikan update selanjutnya!
+                <Sparkles className="w-3 h-3" /> {t("dashboard.stay_tuned_cta")}
               </span>
             </p>
           </div>
@@ -75,7 +75,7 @@ export function Dashboard() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
         <StatCard icon={<BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />} num={visibleBabCount} label={t("stat.chapters")} sub={`${visibleSubCount} ${t("stat.subtopics").toLowerCase()}`} color="accent" />
         <StatCard icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />} num={totalQuizzes} label={t("stat.quiz")} sub={`${totalQs} ${t("stat.questions").toLowerCase()}`} color="green" />
-        <StatCard icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />} num={`${completedBabs}/${visibleBabCount}`} label={t("stat.mastery")} sub={completedBabs === visibleBabCount && visibleBabCount > 0 ? `Selesai!` : `${Math.round((completedBabs / Math.max(1, visibleBabCount)) * 100)}%`} color="amber" />
+        <StatCard icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />} num={`${completedBabs}/${visibleBabCount}`} label={t("stat.mastery")} sub={completedBabs === visibleBabCount && visibleBabCount > 0 ? t("dashboard.complete") : `${Math.round((completedBabs / Math.max(1, visibleBabCount)) * 100)}%`} color="amber" />
         <StatCard icon={<Library className="w-4 h-4 sm:w-5 sm:h-5" />} num="24" label={t("stat.glossary")} sub={t("stat.bilingual")} color="blue" />
       </div>
 

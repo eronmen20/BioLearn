@@ -5,6 +5,7 @@ import {
   Bell, X, Pin, Clock, ChevronRight, Sparkles, CheckCheck, Megaphone,
 } from "lucide-react";
 import { useIsMounted } from "@/lib/use-is-mounted";
+import { useLangStore } from "@/lib/lang-store";
 
 interface Announcement {
   id: number;
@@ -25,19 +26,14 @@ const DISMISSED_KEY = "biolearn-announcement-dismissed";
 
 export function AnnouncementBell() {
   const mounted = useIsMounted();
+  const { lang, t } = useLangStore();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [open, setOpen] = useState(false);
   const [dismissed, setDismissed] = useState<Set<number>>(new Set());
-  const [lang, setLang] = useState<"id" | "en">("id");
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Read language preference + dismissed list from localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      const stored = window.localStorage.getItem("biolearn-lang") as "id" | "en" | null;
-      if (stored === "id" || stored === "en") setLang(stored);
-    } catch {}
     try {
       const raw = window.localStorage.getItem(DISMISSED_KEY);
       if (raw) {
@@ -47,8 +43,6 @@ export function AnnouncementBell() {
     } catch {}
   }, []);
 
-  // Lightweight polling every 60s — only re-fetch if bell is mounted (won't reach SPA
-  // tabs the user isn't using, so it's fine)
   useEffect(() => {
     if (!mounted) return;
     let alive = true;
@@ -60,16 +54,13 @@ export function AnnouncementBell() {
         });
         const json = await res.json();
         if (alive && json.announcements) setAnnouncements(json.announcements);
-      } catch {
-        // keep stale data on transient errors
-      }
+      } catch {}
     };
     load();
     const interval = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(interval); };
   }, [mounted]);
 
-  // Click outside to close
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
@@ -105,10 +96,9 @@ export function AnnouncementBell() {
 
   const formatDate = (iso: string | null) => {
     if (!iso) return null;
-    return new Date(iso).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    return new Date(iso).toLocaleString(lang === "en" ? "en-US" : "id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
   };
 
-  // Bilingual text helper
   const pick = (a: Announcement, key: "title" | "body"): string => {
     if (lang === "en") {
       const en = a[`${key}_en` as const];
@@ -132,11 +122,10 @@ export function AnnouncementBell() {
 
   return (
     <div ref={wrapRef} className="relative">
-      {/* Bell trigger */}
       <button
         onClick={() => setOpen(!open)}
-        aria-label="Pengumuman"
-        title={unreadCount > 0 ? `${unreadCount} pengumuman belum dibaca` : "Pengumuman"}
+        aria-label={t("ann.title")}
+        title={unreadCount > 0 ? `${unreadCount} ${t("ann.unread")}` : t("ann.title")}
         className="relative p-2 rounded-full hover:bg-bg-alt transition-all"
       >
         <div className="relative">
@@ -152,11 +141,9 @@ export function AnnouncementBell() {
         </div>
       </button>
 
-      {/* ▼ Dropdown anchored bawah icon bell. No filter, eye-catching header. */}
       {open && (
         <div className="fixed top-16 left-3 right-3 sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-[340px] z-50 animate-slide-down origin-top sm:origin-top-right">
           <div className="w-full sm:w-[340px] bg-surface rounded-xl shadow-lg border border-border overflow-hidden flex flex-col">
-            {/* Header — icon: gradient accent → purple → pink + megaphone besar */}
             <div className="relative px-4 py-3.5 bg-gradient-to-r from-accent via-purple-500 to-pink-500 text-white overflow-hidden">
               <span className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10 blur-xl pointer-events-none" />
               <div className="relative flex items-center justify-between gap-2">
@@ -165,42 +152,40 @@ export function AnnouncementBell() {
                     <Megaphone className="w-5 h-5 text-white" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-extrabold text-sm leading-tight">Pengumuman</h3>
+                    <h3 className="font-extrabold text-sm leading-tight">{t("ann.title")}</h3>
                     {unreadCount > 0 && (
-                      <p className="text-[10px] text-white/90 font-medium">{unreadCount} belum dibaca</p>
+                      <p className="text-[10px] text-white/90 font-medium">{t("ann.unread_count").replace("{count}", String(unreadCount))}</p>
                     )}
                   </div>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
                   className="p-1 rounded-md hover:bg-white/20 text-white transition-colors flex-shrink-0"
-                  aria-label="Tutup"
+                  aria-label={t("ann.close")}
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Mark-all-read bar (subtle, di luar header area) */}
             {unreadCount > 0 && sorted.length > 0 && (
               <div className="px-4 py-1.5 border-b border-border bg-bg-alt/40 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-muted">{unreadCount} baru</span>
+                <span className="text-[11px] font-semibold text-muted">{t("ann.new_count").replace("{count}", String(unreadCount))}</span>
                 <button
                   onClick={markAllRead}
                   className="text-[11px] font-semibold text-accent hover:text-accent-dark inline-flex items-center gap-1 transition-colors"
                 >
-                  <CheckCheck className="w-3 h-3" /> Tandai semua dibaca
+                  <CheckCheck className="w-3 h-3" /> {t("ann.mark_all_read")}
                 </button>
               </div>
             )}
 
-            {/* Body — scroll, NO truncation. Item "sudah dibaca" lebih redup. */}
             <div className="max-h-[50vh] sm:max-h-[420px] overflow-y-auto">
               {sorted.length === 0 ? (
                 <div className="p-8 text-center">
                   <Bell className="w-7 h-7 mx-auto text-muted opacity-40 mb-2" />
-                  <p className="text-sm text-muted font-medium">Belum ada pengumuman</p>
-                  <p className="text-xs text-muted mt-1">Stay tuned — kami akan kabari kamu kalau ada materi baru.</p>
+                  <p className="text-sm text-muted font-medium">{t("ann.empty")}</p>
+                  <p className="text-xs text-muted mt-1">{t("ann.empty_desc")}</p>
                 </div>
               ) : (
                 <ul className="divide-y divide-border/70">
@@ -220,8 +205,6 @@ export function AnnouncementBell() {
                           }`}
                         >
                           <div className="flex items-start gap-2.5">
-                            {/* Avatar icon — soft accent blue gradient kalau belum dibaca,
-                                grey/redup kalau sudah dibaca */}
                             <div className={`relative flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-lg shadow-sm transition-colors ${
                               isRead
                                 ? "bg-bg-alt text-muted"
@@ -254,19 +237,16 @@ export function AnnouncementBell() {
                                   </>
                                 )}
                               </div>
-                              {/* Title */}
                               <h4 className={`font-semibold text-[13px] leading-snug ${
                                 isRead ? "text-muted/80" : "text-ink"
                               }`}>
                                 {pick(a, "title")}
                               </h4>
-                              {/* Body */}
                               <p className={`mt-1 text-[12.5px] leading-relaxed whitespace-pre-line break-words ${
                                 isRead ? "text-muted/80" : "text-ink"
                               }`}>
                                 {pick(a, "body")}
                               </p>
-                              {/* Actions */}
                               <div className="flex items-center justify-between mt-2 gap-2">
                                 {a.bab_id ? (
                                   <a
@@ -276,7 +256,7 @@ export function AnnouncementBell() {
                                       isRead ? "text-muted/80 hover:text-accent" : "text-accent hover:text-accent-dark"
                                     }`}
                                   >
-                                    Buka BAB <ChevronRight className="w-3 h-3" />
+                                    {t("ann.open_chapter")} <ChevronRight className="w-3 h-3" />
                                   </a>
                                 ) : <span />}
                                 <button
@@ -287,7 +267,7 @@ export function AnnouncementBell() {
                                       : "text-accent hover:bg-accent hover:text-white"
                                   }`}
                                 >
-                                  {isRead ? "✓ Dibaca" : "Tandai dibaca"}
+                                  {isRead ? `✓ ${t("ann.marked_read")}` : t("ann.mark_read")}
                                 </button>
                               </div>
                             </div>
@@ -300,21 +280,20 @@ export function AnnouncementBell() {
               )}
             </div>
 
-            {/* Footer — iconic: pink-to-purple gradient + sparkles */}
             <div className="px-4 py-2 border-t border-border bg-gradient-to-r from-pink-500/15 to-purple-500/15 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-accent-dark inline-flex items-center gap-1">
                 <Sparkles className="w-3 h-3" />
                 {unreadCount > 0 ? (
-                  <>{unreadCount} belum dibaca</>
+                  <>{t("ann.unread_count").replace("{count}", String(unreadCount))}</>
                 ) : (
-                  <span className="text-green-700">✓ Semua bersih</span>
+                  <span className="text-green-700">✓ {t("ann.all_clear")}</span>
                 )}
               </span>
               <button
                 onClick={() => setOpen(false)}
                 className="text-[11px] font-semibold text-muted hover:text-ink transition-colors"
               >
-                Selesai
+                {t("ann.done")}
               </button>
             </div>
           </div>

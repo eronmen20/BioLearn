@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
 import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell } from "lucide-react";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
+import { useLangStore } from "@/lib/lang-store";
 
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
@@ -22,32 +23,32 @@ const FLOATING_ITEMS = [
 const FEATURES = [
   {
     icon: <BookOpen className="w-6 h-6" />,
-    title: "Materi Lengkap",
-    desc: "8 bab biologi lengkap dari sel, pencernaan, sirkulasi, saraf, bakteri, genetika, evolusi, hingga ekosistem.",
+    titleKey: "landing.feature_materi_title",
+    descKey: "landing.feature_materi_desc",
     color: "from-purple-500 to-indigo-500",
     bg: "bg-purple-50",
     iconColor: "text-purple-500",
   },
   {
     icon: <Brain className="w-6 h-6" />,
-    title: "Kuis Interaktif",
-    desc: "Uji pemahamanmu dengan kuis di setiap subbab. Langsung dapat feedback dan penjelasan!",
+    titleKey: "landing.feature_kuis_title",
+    descKey: "landing.feature_kuis_desc",
     color: "from-pink-500 to-rose-500",
     bg: "bg-pink-50",
     iconColor: "text-pink-500",
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
-    title: "Animasi & Visual",
-    desc: "Visualisasi interaktif struktur sel, sistem pencernaan, dan DNA double helix.",
+    titleKey: "landing.feature_animasi_title",
+    descKey: "landing.feature_animasi_desc",
     color: "from-cyan-500 to-teal-500",
     bg: "bg-cyan-50",
     iconColor: "text-cyan-500",
   },
   {
     icon: <Heart className="w-6 h-6" />,
-    title: "Track Progress",
-    desc: "Pantai penguasaanmu di setiap bab. Lihat statistik kuis dan mastery score.",
+    titleKey: "landing.feature_progress_title",
+    descKey: "landing.feature_progress_desc",
     color: "from-orange-500 to-amber-500",
     bg: "bg-orange-50",
     iconColor: "text-orange-500",
@@ -67,6 +68,7 @@ const SUBJECTS = [
 
 // AnimatedTitle - slide-up reveal animation
 function AnimatedTitle() {
+  const { t } = useLangStore();
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -75,8 +77,8 @@ function AnimatedTitle() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="gradient-text">Belajar</span>{" "}
-          <span className="gradient-text">Biologi</span>
+          <span className="gradient-text">{t("landing.hero_belajar")}</span>{" "}
+          <span className="gradient-text">{t("landing.hero_biologi")}</span>
         </motion.div>
       </div>
       <div className="overflow-hidden mt-1">
@@ -86,7 +88,7 @@ function AnimatedTitle() {
           transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="bg-gradient-to-r from-[#fd79a8] via-[#fdcb6e] to-[#00cec9] bg-clip-text text-transparent">
-            Jadi Menyenangkan
+            {t("landing.hero_jadi")}
           </span>
         </motion.div>
       </div>
@@ -119,9 +121,7 @@ export function LandingPage() {
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
-  // Whitelist-first filter: only babs in ALWAYS_VISIBLE_BABS show by default.
-  // After archiveLoaded, also exclude explicitly archived ones.
-  // This avoids FOUC and is safe even before SQL migration runs.
+  const { t } = useLangStore();
   const visibleSubjects = SUBJECTS.filter((s) => {
     if (!ALWAYS_VISIBLE_BABS.includes(s.id)) return false;
     if (archiveLoaded && archivedIds.has(s.id)) return false;
@@ -174,7 +174,7 @@ export function LandingPage() {
             >
               <Sparkles className="w-4 h-4" />
             </motion.div>
-            Pembelajaran Biologi Interaktif
+            {t("landing.badge")}
           </motion.div>
 
           {/* Title */}
@@ -187,8 +187,9 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 1.3 }}
           >
-            Jelajahi 8 bab biologi dengan materi lengkap, kuis interaktif, animasi visual, dan progress tracking.
-            Cocok untuk siswa SMA & persiapan kuliah.
+            {t("landing.subtitle")}
+            <br />
+            {t("landing.subtitle2")}
           </motion.p>
 
           {/* CTA Buttons */}
@@ -203,7 +204,7 @@ export function LandingPage() {
                 href="/login"
                 className="group flex items-center gap-2 px-8 py-4 bg-accent hover:bg-accent-dark text-white rounded-full font-bold text-base sm:text-lg transition-all shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30"
               >
-                Mulai Belajar
+                {t("landing.cta_start")}
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
@@ -217,7 +218,7 @@ export function LandingPage() {
                 href="/dashboard"
                 className="flex items-center gap-2 px-8 py-4 bg-white hover:bg-gray-50 text-ink border-2 border-border rounded-full font-bold text-base sm:text-lg transition-all hover:border-accent/30"
               >
-                Lihat Materi
+                {t("landing.cta_view")}
               </Link>
             </motion.div>
           </motion.div>
@@ -253,7 +254,7 @@ export function LandingPage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 2.2 }}
         >
-          <span className="text-xs text-muted-2 font-medium">Scroll</span>
+          <span className="text-xs text-muted-2 font-medium">{t("landing.scroll")}</span>
           <motion.div
             className="w-5 h-8 border-2 border-muted-2/30 rounded-full flex justify-center pt-1.5"
             animate={{ opacity: [0.5, 1, 0.5] }}
@@ -273,10 +274,10 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
-              Kenapa <span className="gradient-text">BioLearn</span>?
+              {t("landing.why_title")} <span className="gradient-text">BioLearn</span>?
             </h2>
             <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
-              Belajar biologi nggak harus membosankan. Fitur lengkap untuk bantu kamu paham dan ingat.
+              {t("landing.why_desc")}
             </p>
           </AnimatedSection>
 
@@ -294,8 +295,8 @@ export function LandingPage() {
                   >
                     {f.icon}
                   </motion.div>
-                  <h3 className="font-bold text-ink mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted leading-relaxed">{f.desc}</p>
+                  <h3 className="font-bold text-ink mb-2">{t(f.titleKey)}</h3>
+                  <p className="text-sm text-muted leading-relaxed">{t(f.descKey)}</p>
                 </motion.div>
               </AnimatedSection>
             ))}
@@ -319,14 +320,14 @@ export function LandingPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-base sm:text-lg text-ink mb-1">
-                    📡 Materi akan kami perbarui secara berkala — stay tuned!
+                    📡 {t("landing.stay_tuned_title")}
                   </h3>
                   <p className="text-xs sm:text-sm text-muted leading-relaxed">
-                    Saat ini fokus kami adalah BAB <span className="font-bold text-accent">🦠 Bakteri</span> yang sudah lengkap dengan sub-bab, ringkasan, video, animasi, flashcard, dan kuis. {archivedCount > 0 && <span>{archivedCount} materi BAB lainnya sedang dalam tahap pengembangan dan akan diaktifkan setelah siap.</span>}
+                    {t("landing.stay_tuned_desc")} {archivedCount > 0 && <span>{archivedCount} materi BAB lainnya sedang dalam tahap pengembangan dan akan diaktifkan setelah siap.</span>}
                   </p>
                   <p className="text-[10px] text-muted mt-2 inline-flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Pantau terus <span className="font-bold">🔔 ikon pengumuman</span> di header — kami akan beri tahu setiap BAB baru rilis.
+                    {t("landing.stay_tuned_note")}
                   </p>
                 </div>
               </div>
@@ -340,10 +341,10 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
-              Materi <span className="text-accent">Lengkap</span> untuk Semua Kelas
+              {t("landing.subjects_title")}
             </h2>
             <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
-              Dari Kelas X sampai XII, semua tersedia dengan penjelasan detail dan visual menarik.
+              {t("landing.subjects_desc")}
             </p>
           </AnimatedSection>
 
@@ -377,9 +378,9 @@ export function LandingPage() {
                     <div className="font-bold text-sm text-ink mb-1 relative z-10">{s.name}</div>
                     <div className="flex items-center justify-center gap-2">
                       <span className="text-[10px] font-semibold text-muted bg-border/50 px-2 py-0.5 rounded-full">
-                        Kelas {s.kelas}
+                        {t("landing.kelas_label").replace("{kelas}", s.kelas)}
                       </span>
-                      <span className="text-[10px] text-muted-2">{s.subs} sub-bab</span>
+                      <span className="text-[10px] text-muted-2">{t("landing.sub_count").replace("{count}", String(s.subs))}</span>
                     </div>
                     {/* Arrow indicator on hover */}
                     <div className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -395,7 +396,7 @@ export function LandingPage() {
                 <div className="rounded-2xl border-2 border-dashed border-border bg-bg-alt/40 p-4 sm:p-5 text-center">
                   <div className="text-xs sm:text-sm text-muted inline-flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    Lebih banyak BAB akan hadir di pembaruan berikutnya.
+                    {t("landing.more_coming")}
                   </div>
                 </div>
               </AnimatedSection>
@@ -409,10 +410,10 @@ export function LandingPage() {
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
             {[
-              { num: archiveLoaded ? String(visibleSubjects.length) : "…", label: "Bab Aktif", icon: "📚" },
+              { num: archiveLoaded ? String(visibleSubjects.length) : "…", labelKey: "landing.stat_active", icon: "📚" },
               { num: archiveLoaded && archivedCount > 0 ? `+${archivedCount}` : "—", label: "Coming Soon", icon: "🚀" },
-              { num: "32+", label: "Subbab", icon: "📑" },
-              { num: "100+", label: "Soal Kuis", icon: "❓" },
+              { num: "32+", labelKey: "landing.stat_subs", icon: "📑" },
+              { num: "100+", labelKey: "landing.stat_quiz", icon: "❓" },
             ].map((s, i) => (
               <AnimatedSection key={i} delay={i * 0.1}>
                 <motion.div
@@ -427,7 +428,7 @@ export function LandingPage() {
                     {s.icon}
                   </motion.div>
                   <div className="text-2xl sm:text-3xl font-extrabold gradient-text mb-1">{s.num}</div>
-                  <div className="text-xs sm:text-sm text-muted font-medium">{s.label}</div>
+                  <div className="text-xs sm:text-sm text-muted font-medium">{"labelKey" in s ? t(s.labelKey) : s.label}</div>
                 </motion.div>
               </AnimatedSection>
             ))}
@@ -460,17 +461,17 @@ export function LandingPage() {
 
               <div className="relative z-10">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">
-                  Siap Belajar Biologi?
+                  {t("landing.cta_ready")}
                 </h2>
                 <p className="text-white/80 text-sm sm:text-base mb-8 max-w-lg mx-auto">
-                  Mulai petualangan belajarmu sekarang. Gratis, interaktif, dan menyenangkan!
+                  {t("landing.cta_desc")}
                 </p>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     href="/login"
                     className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-gray-50 transition-all shadow-xl"
                   >
-                    Daftar Sekarang
+                    {t("landing.cta_register")}
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
@@ -495,7 +496,7 @@ export function LandingPage() {
               <span className="text-ink">Learn</span>
             </span>
           </div>
-          <p>&copy; 2026 BioLearn. Dibuat dengan ❤️ untuk pelajar Indonesia.</p>
+          <p>&copy; 2026 BioLearn. {t("landing.footer")}</p>
         </div>
       </footer>
     </div>

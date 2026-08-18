@@ -79,14 +79,14 @@ export function BabContent({ babId }: { babId: string }) {
         <div className="w-16 h-16 rounded-2xl bg-red/10 flex items-center justify-center mb-4">
           <AlertTriangle className="w-8 h-8 text-red" />
         </div>
-        <h3 className="text-lg font-bold text-ink mb-2">Gagal Memuat Konten</h3>
+        <h3 className="text-lg font-bold text-ink mb-2">{t("auth.error")}</h3>
         <p className="text-sm text-muted max-w-sm mb-6">{error}</p>
         <button
           onClick={() => window.location.reload()}
           className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
         >
           <RefreshCw className="w-4 h-4" />
-          Coba Lagi
+          {t("quiz.again")}
         </button>
       </div>
     );
@@ -301,7 +301,7 @@ function SubbabNav({
               key={s}
               onClick={() => isUnlocked && onSelect(i)}
               disabled={!isUnlocked}
-              title={!isUnlocked ? "Selesaikan kuis subbab sebelumnya (skor ≥80%) untuk membuka" : undefined}
+              title={!isUnlocked ? t("bab.locked_tooltip") : undefined}
               className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
                 !isUnlocked
                   ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
@@ -330,8 +330,7 @@ function SubbabNav({
         <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted">
           <Lock className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-muted/70" />
           <p className="leading-relaxed">
-            Selesaikan kuis di subbab ini dengan skor minimal{" "}
-            <span className="font-semibold text-accent">80%</span> untuk membuka subbab berikutnya.
+            {t("bab.locked_hint")}
           </p>
         </div>
       )}
@@ -349,7 +348,7 @@ function SubBabQuiz({
   subKey: string;
   allSubKeys: string[];
 }) {
-  const { lang } = useLangStore();
+  const { lang, t } = useLangStore();
   const progress = useProgressStore();
   const [questions, setQuestions] = useState<QuizV2Question[]>([]);
   const [loading, setLoading] = useState(true);
@@ -454,11 +453,11 @@ function SubBabQuiz({
         </p>
         {passed ? (
           <p className="text-sm text-green font-semibold mb-4">
-            ✅ Sub-bab selesai! Lanjut ke sub-bab berikutnya.
+            ✅ {t("quiz.complete")}
           </p>
         ) : (
           <p className="text-sm text-red font-semibold mb-4">
-            ❌ Skor minimal 80% untuk lanjut. Coba lagi ya!
+            ❌ {t("quiz.wrong")} {t("bab.locked_hint")}
           </p>
         )}
         {!passed && (
@@ -467,7 +466,7 @@ function SubBabQuiz({
             className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
           >
             <RotateCcw className="w-4 h-4 inline mr-2" />
-            Coba Lagi
+            {t("quiz.again")}
           </button>
         )}
       </div>
@@ -480,7 +479,7 @@ function SubBabQuiz({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-sm flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-accent" />
-            Quiz Sub-Bab
+            {t("quiz.title")}
           </h3>
           <span className="text-xs text-muted">
             {currentQ + 1}/{questions.length}
@@ -492,7 +491,7 @@ function SubBabQuiz({
         {q.question_image_url && (
           <img
             src={q.question_image_url}
-            alt="Gambar soal"
+            alt={t("image")}
             className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
             loading="lazy"
           />
@@ -532,7 +531,7 @@ function SubBabQuiz({
                 <XCircle className="w-4 h-4 text-red" />
               )}
               <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
-                {isCorrect ? "Benar!" : "Salah!"}
+                {isCorrect ? t("quiz.correct") : t("quiz.wrong_text")}
               </span>
             </div>
             {explanation && (
@@ -551,14 +550,14 @@ function SubBabQuiz({
             disabled={selected === null}
             className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
           >
-            Periksa Jawaban
+            {t("quiz.check_answer")}
           </button>
         ) : (
           <button
             onClick={handleNext}
             className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
           >
-            {currentQ < questions.length - 1 ? "Soal Berikutnya" : "Lihat Hasil"}
+            {currentQ < questions.length - 1 ? t("quiz.next") : t("quiz.view_result")}
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
@@ -575,7 +574,7 @@ function ReflectionQuiz({
   babId: string;
   allSubKeys: string[];
 }) {
-  const { lang } = useLangStore();
+  const { lang, t } = useLangStore();
   const progress = useProgressStore();
   const mounted = useIsMounted();
 
@@ -714,7 +713,7 @@ function ReflectionQuiz({
               className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
             >
               <RotateCcw className="w-4 h-4 inline mr-2" />
-              Coba Lagi
+              {t("quiz.again")}
             </button>
           </div>
         )}
@@ -740,7 +739,7 @@ function ReflectionQuiz({
         {q.question_image_url && (
           <img
             src={q.question_image_url}
-            alt="Gambar soal"
+            alt={t("image")}
             className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
             loading="lazy"
           />
@@ -780,7 +779,7 @@ function ReflectionQuiz({
                 <XCircle className="w-4 h-4 text-red" />
               )}
               <span className={`text-sm font-semibold ${isCorrect ? "text-green" : "text-red"}`}>
-                {isCorrect ? "Benar!" : "Salah!"}
+                {isCorrect ? t("quiz.correct") : t("quiz.wrong_text")}
               </span>
             </div>
             {explanation && (
@@ -799,14 +798,14 @@ function ReflectionQuiz({
             disabled={selected === null}
             className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
           >
-            Periksa Jawaban
+            {t("quiz.check_answer")}
           </button>
         ) : (
           <button
             onClick={handleNext}
             className="w-full py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors flex items-center justify-center gap-2"
           >
-            {currentQ < questions.length - 1 ? "Soal Berikutnya" : "Lihat Hasil"}
+            {currentQ < questions.length - 1 ? t("quiz.next") : t("quiz.view_result")}
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
@@ -1288,6 +1287,7 @@ function AnimationErrorFallback({
   detail?: string;
   onRetry?: () => void;
 }) {
+  const { t } = useLangStore();
   return (
     <div className="flex flex-col items-center gap-2 text-center p-4 max-w-md">
       <span className="text-3xl opacity-50">🎬</span>
@@ -1308,7 +1308,7 @@ function AnimationErrorFallback({
             onClick={onRetry}
             className="text-xs px-3 py-1.5 rounded-lg border border-border hover:bg-bg-alt"
           >
-            Coba Lagi
+            {t("quiz.again")}
           </button>
         )}
         <span className="text-[10px] text-muted/60 self-center">{title}</span>
@@ -1407,7 +1407,7 @@ function InlineImageSection({
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-lg">🖼️</span>
-        <h3 className="font-bold text-sm">{t("gambar") || "Gambar"}</h3>
+        <h3 className="font-bold text-sm">{t("image")}</h3>
       </div>
       <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-3 sm:p-4 flex items-center justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}

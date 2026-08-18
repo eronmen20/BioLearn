@@ -105,7 +105,7 @@ export function VerifyEmailPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Verifikasi gagal");
+        setError(data.error || t("auth.verify_failed"));
         setCode(["", "", "", "", "", ""]);
         const first = document.querySelector('input[name="code-0"]') as HTMLInputElement;
         first?.focus();
@@ -114,7 +114,7 @@ export function VerifyEmailPage() {
         setTimeout(() => router.push("/login"), 2000);
       }
     } catch {
-      setError("Gagal terhubung ke server");
+      setError(t("auth.server_error"));
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export function VerifyEmailPage() {
     return (
       <div className="min-h-[80vh] flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted">Email tidak ditemukan. Silakan daftar terlebih dahulu.</p>
+          <p className="text-muted">{t("auth.email_not_found")}</p>
         </div>
       </div>
     );
@@ -138,8 +138,8 @@ export function VerifyEmailPage() {
             <div className="w-16 h-16 bg-green-light/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green" />
             </div>
-            <h1 className="text-xl font-extrabold mb-2">Verifikasi Berhasil!</h1>
-            <p className="text-muted text-sm">Email kamu sudah terverifikasi. Mengalihkan ke halaman login...</p>
+            <h1 className="text-xl font-extrabold mb-2">{t("auth.verify_success")}</h1>
+            <p className="text-muted text-sm">{t("auth.verify_redirect")}</p>
           </div>
         </div>
       </div>
@@ -154,9 +154,9 @@ export function VerifyEmailPage() {
             <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <Mail className="w-8 h-8 text-accent" />
             </div>
-            <h1 className="text-2xl font-extrabold mb-2">Verifikasi Email</h1>
+            <h1 className="text-2xl font-extrabold mb-2">{t("auth.verify_title")}</h1>
             <p className="text-muted text-sm">
-              Masukkan kode 6 digit yang dikirim ke
+              {t("auth.verify_enter_code")}
             </p>
             <p className="text-accent font-semibold text-sm mt-1">{email}</p>
           </div>
@@ -188,7 +188,7 @@ export function VerifyEmailPage() {
           {isLoading && (
             <div className="flex items-center justify-center gap-2 mb-4">
               <Loader2 className="w-4 h-4 animate-spin text-accent" />
-              <span className="text-sm text-muted">Memverifikasi...</span>
+              <span className="text-sm text-muted">{t("auth.verifying")}</span>
             </div>
           )}
 
@@ -198,11 +198,11 @@ export function VerifyEmailPage() {
                 onClick={handleResend}
                 className="text-sm text-accent font-semibold hover:underline"
               >
-                Kirim ulang kode
+                {t("auth.resend_code")}
               </button>
             ) : (
               <p className="text-sm text-muted-2">
-                Kirim ulang dalam {resendTimer} detik
+                {t("auth.resend_in").replace("{seconds}", String(resendTimer))}
               </p>
             )}
           </div>

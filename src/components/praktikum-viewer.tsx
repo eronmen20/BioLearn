@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, ChevronLeft, ChevronRight, FlaskConical } from "lucide-react";
+import { useLangStore } from "@/lib/lang-store";
 
 interface PraktikumCard {
   name: string;
@@ -32,12 +33,6 @@ interface PraktikumViewerProps {
   lang?: "id" | "en";
 }
 
-const DIFFICULTY_BADGE: Record<string, { label: string; color: string }> = {
-  mudah: { label: "🟢 Mudah", color: "bg-green-500/15 text-green-700" },
-  sedang: { label: "🟡 Sedang", color: "bg-yellow-500/15 text-yellow-700" },
-  sulit: { label: "🔴 Sulit", color: "bg-red-500/15 text-red-700" },
-};
-
 export function PraktikumViewer({
   title,
   title_en,
@@ -52,8 +47,15 @@ export function PraktikumViewer({
 }: PraktikumViewerProps) {
   const [activeFlashcardIdx, setActiveFlashcardIdx] = useState<number | null>(null);
   const [flipped, setFlipped] = useState(false);
+  const { t } = useLangStore();
 
-  const diff = DIFFICULTY_BADGE[difficulty ?? "sedang"] || DIFFICULTY_BADGE.sedang;
+  const DIFFICULTY_BADGE_LOCAL: Record<string, { label: string; color: string }> = {
+    mudah: { label: `🟢 ${t("diff.easy")}`, color: "bg-green-500/15 text-green-700" },
+    sedang: { label: `🟡 ${t("diff.medium")}`, color: "bg-yellow-500/15 text-yellow-700" },
+    sulit: { label: `🔴 ${t("diff.hard")}`, color: "bg-red-500/15 text-red-700" },
+  };
+
+  const diff = DIFFICULTY_BADGE_LOCAL[difficulty ?? "sedang"] || DIFFICULTY_BADGE_LOCAL.sedang;
 
   // Bilingual content display — chrome stays Indonesian
   const t = lang === "en" ? title_en || title : title;
@@ -192,7 +194,7 @@ export function PraktikumViewer({
                     }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-bg-alt transition-colors"
                   >
-                    <ChevronLeft className="w-3 h-3" /> Sebelumnya
+                    <ChevronLeft className="w-3 h-3" /> {t("nav.prev")}
                   </button>
                   <span className="text-muted">
                     {(activeFlashcardIdx ?? 0) + 1} / {flashcards.length}
@@ -204,7 +206,7 @@ export function PraktikumViewer({
                     }}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-muted hover:text-ink hover:bg-bg-alt transition-colors"
                   >
-                    Selanjutnya <ChevronRight className="w-3 h-3" />
+                    {t("nav.next")} <ChevronRight className="w-3 h-3" />
                   </button>
                 </div>
               )}
