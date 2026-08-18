@@ -85,16 +85,36 @@ export async function getProgress(userId: string) {
   const { data: rows } = await getDb().from("progress").select("*").eq("user_id", userId);
   const result: Record<string, any> = {};
   for (const row of rows || []) {
-    const subs = typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {};
-    const total = Math.max(0, row.total || 0);
-    const correct = Math.max(0, Math.min(total, row.correct || 0));
+    const subsRaw = typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {};
+    // Recompute correct/total/quizzes from the actual sub-bab state instead of the
+    // stale accumulated values written by older app versions.
+    const subs: Record<string, { done: boolean; score: number; attempts: number }> = {};
+    let babTotal = 0;
+    let babCorrect = 0;
+    for (const [sk, s] of Object.entries(subsRaw)) {
+      const sub = (s ?? {}) as Record<string, any>;
+      const score = Math.max(0, Math.min(100, Number(sub.score) || 0));
+      subs[sk] = {
+        done: !!sub.done,
+        score,
+        attempts: Math.max(0, Number(sub.attempts) || 0),
+      };
+      babTotal += 100; // each sub quiz worth up to 100
+      babCorrect += score;
+    }
+    const reflection_done = !!row.reflection_done;
+    const reflection_score = Math.max(0, Math.min(100, Number(row.reflection_score) || 0));
+    if (reflection_done) {
+      babTotal += 100;
+      babCorrect += reflection_score;
+    }
     result[row.bab_id] = {
-      quizzes: row.quizzes || 0,
-      correct,
-      total,
+      quizzes: Object.keys(subs).length + (reflection_done ? 1 : 0),
+      correct: babCorrect,
+      total: babTotal,
       subs,
-      reflection_done: row.reflection_done || false,
-      reflection_score: row.reflection_score || 0,
+      reflection_done,
+      reflection_score,
       completion_pct: Math.max(0, Math.min(100, row.completion_pct || 0)),
     };
   }

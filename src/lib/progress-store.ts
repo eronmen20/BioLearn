@@ -100,7 +100,6 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
           // total accumulates questions attempted in this bab across unique sub-babs
           total: p.total,
           correct: p.correct,
-          quizzes: p.quizzes + 1,
           subs: newSubs,
           completion_pct: completionPct,
         },
@@ -121,6 +120,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       }
       newProgress[babId].correct = babCorrect;
       newProgress[babId].total = babTotal;
+      // quizzes = unique quizzes taken (each sub-bab once + reflection once), not attempts
+      newProgress[babId].quizzes = Object.keys(newSubs).length + (p.reflection_done ? 1 : 0);
 
       // Save to API (fire and forget)
       fetch("/api/progress", {
@@ -148,7 +149,6 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         // total/correct will be recomputed from subs state below
         total: p.total,
         correct: p.correct,
-        quizzes: p.quizzes + 1,
       };
 
       // Recalculate completion
@@ -171,6 +171,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       }
       newP.correct = babCorrect;
       newP.total = babTotal;
+      // quizzes = unique quizzes taken (each sub-bab once + reflection once), not attempts
+      newP.quizzes = Object.keys(newP.subs).length + (newP.reflection_done ? 1 : 0);
 
       const newProgress = { ...state.progress, [babId]: newP };
 
@@ -251,24 +253,35 @@ export async function loadUserProgress(email: string) {
     const rawProgress = data.progress || {};
     const sanitized: Record<string, BabProgress> = {};
     for (const [babId, p] of Object.entries(rawProgress) as [string, any][]) {
-      const total = Math.max(0, Number(p?.total) || 0);
-      const correct = Math.max(0, Math.min(total, Number(p?.correct) || 0));
       const subs = p?.subs || {};
       const sanitizedSubs: Record<string, SubProgress> = {};
+      // Recompute correct/total/quizzes from the actual sub-bab state, not the
+      // stale accumulated values that old versions of the app wrote to the DB.
+      let babTotal = 0;
+      let babCorrect = 0;
       for (const [sk, s] of Object.entries(subs) as [string, any][]) {
+        const score = Math.max(0, Math.min(100, Number(s?.score) || 0));
         sanitizedSubs[sk] = {
           done: !!s?.done,
-          score: Math.max(0, Math.min(100, Number(s?.score) || 0)),
+          score,
           attempts: Math.max(0, Number(s?.attempts) || 0),
         };
+        babTotal += 100; // each sub quiz worth up to 100
+        babCorrect += score;
+      }
+      const reflection_done = !!p?.reflection_done;
+      const reflection_score = Math.max(0, Math.min(100, Number(p?.reflection_score) || 0));
+      if (reflection_done) {
+        babTotal += 100;
+        babCorrect += reflection_score;
       }
       sanitized[babId] = {
-        quizzes: Math.max(0, Number(p?.quizzes) || 0),
-        correct,
-        total,
+        quizzes: Object.keys(sanitizedSubs).length + (reflection_done ? 1 : 0),
+        correct: babCorrect,
+        total: babTotal,
         subs: sanitizedSubs,
-        reflection_done: !!p?.reflection_done,
-        reflection_score: Math.max(0, Math.min(100, Number(p?.reflection_score) || 0)),
+        reflection_done,
+        reflection_score,
         completion_pct: Math.max(0, Math.min(100, Number(p?.completion_pct) || 0)),
       };
     }
