@@ -266,25 +266,27 @@ export async function loadUserProgress(email: string) {
       let babCorrect = 0;
       for (const [sk, s] of Object.entries(subsRaw) as [string, any][]) {
         const score = Math.max(0, Math.min(100, Number(s?.score) || 0));
-        const questions = Math.max(1, Number(s?.questions) || 100);
-        sanitizedSubs[sk] = {
-          done: !!s?.done,
-          score,
-          attempts: Math.max(0, Number(s?.attempts) || 0),
-          questions,
-        };
-        babTotal += questions;
-        babCorrect += Math.round((score / 100) * questions);
+        const questions = Math.max(1, Number(s?.questions) || 5);
+        const attempts = Math.max(0, Number(s?.attempts) || 0);
+        const done = !!s?.done;
+        // Hanya hitung sub yang benar-benar pernah dikerjakan
+        if (attempts > 0 || done) {
+          sanitizedSubs[sk] = { done, score, attempts, questions };
+          babTotal += questions;
+          babCorrect += Math.round((score / 100) * questions);
+        }
       }
       const reflection_done = !!p?.reflection_done;
       const reflection_score = Math.max(0, Math.min(100, Number(p?.reflection_score) || 0));
-      const reflection_questions = Math.max(1, Number(p?.reflection_questions) || 100);
+      const reflection_questions = Math.max(1, Number(p?.reflection_questions) || 5);
       if (reflection_done) {
         babTotal += reflection_questions;
         babCorrect += Math.round((reflection_score / 100) * reflection_questions);
       }
+      const quizCount = Object.keys(sanitizedSubs).length + (reflection_done ? 1 : 0);
+      if (quizCount === 0 && babTotal === 0) continue; // skip bab tanpa data
       sanitized[babId] = {
-        quizzes: Object.keys(sanitizedSubs).length + (reflection_done ? 1 : 0),
+        quizzes: quizCount,
         correct: babCorrect,
         total: babTotal,
         subs: sanitizedSubs,
