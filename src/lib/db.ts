@@ -86,27 +86,28 @@ export async function getProgress(userId: string) {
   const result: Record<string, any> = {};
   for (const row of rows || []) {
     const subsRaw = typeof row.subs === "string" ? JSON.parse(row.subs) : row.subs || {};
-    // Recompute correct/total/quizzes from the actual sub-bab state instead of the
-    // stale accumulated values written by older app versions.
-    const subs: Record<string, { done: boolean; score: number; attempts: number }> = {};
+    const subs: Record<string, { done: boolean; score: number; attempts: number; questions: number }> = {};
     let babTotal = 0;
     let babCorrect = 0;
     for (const [sk, s] of Object.entries(subsRaw)) {
       const sub = (s ?? {}) as Record<string, any>;
       const score = Math.max(0, Math.min(100, Number(sub.score) || 0));
+      const questions = Math.max(1, Number(sub.questions) || 100);
       subs[sk] = {
         done: !!sub.done,
         score,
         attempts: Math.max(0, Number(sub.attempts) || 0),
+        questions,
       };
-      babTotal += 100; // each sub quiz worth up to 100
-      babCorrect += score;
+      babTotal += questions;
+      babCorrect += Math.round((score / 100) * questions);
     }
     const reflection_done = !!row.reflection_done;
     const reflection_score = Math.max(0, Math.min(100, Number(row.reflection_score) || 0));
+    const reflection_questions = Math.max(1, Number(row.reflection_questions) || 100);
     if (reflection_done) {
-      babTotal += 100;
-      babCorrect += reflection_score;
+      babTotal += reflection_questions;
+      babCorrect += Math.round((reflection_score / 100) * reflection_questions);
     }
     result[row.bab_id] = {
       quizzes: Object.keys(subs).length + (reflection_done ? 1 : 0),
@@ -115,13 +116,14 @@ export async function getProgress(userId: string) {
       subs,
       reflection_done,
       reflection_score,
+      reflection_questions,
       completion_pct: Math.max(0, Math.min(100, row.completion_pct || 0)),
     };
   }
   return result;
 }
 
-export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number }>; reflection_done?: boolean; reflection_score?: number; completion_pct?: number }) {
+export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number; questions?: number }>; reflection_done?: boolean; reflection_score?: number; reflection_questions?: number; completion_pct?: number }) {
   const total = Math.max(0, data.total || 0);
   const correct = Math.max(0, Math.min(total, data.correct || 0));
   const { error } = await getDb().from("progress").upsert(
@@ -134,6 +136,7 @@ export async function saveProgress(userId: string, babId: string, data: { quizze
       subs: data.subs,
       reflection_done: data.reflection_done || false,
       reflection_score: data.reflection_score || 0,
+      reflection_questions: data.reflection_questions || 0,
       completion_pct: Math.max(0, Math.min(100, data.completion_pct || 0)),
       updated_at: new Date().toISOString(),
     },

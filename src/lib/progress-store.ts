@@ -7,6 +7,7 @@ export interface SubProgress {
   done: boolean;        // quiz sub-bab lulus
   score: number;        // 0-100
   attempts: number;     // berapa kali coba
+  questions: number;    // jumlah soal asli dalam kuis ini
 }
 
 export interface BabProgress {
@@ -16,6 +17,7 @@ export interface BabProgress {
   subs: Record<string, SubProgress>;
   reflection_done: boolean;
   reflection_score: number;
+  reflection_questions: number; // jumlah soal refleksi
   completion_pct: number; // 0-100
 }
 
@@ -51,6 +53,7 @@ const defaultProgress = (): BabProgress => ({
   subs: {},
   reflection_done: false,
   reflection_score: 0,
+  reflection_questions: 0,
   completion_pct: 0,
 });
 
@@ -73,9 +76,10 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const newSubs = {
         ...p.subs,
         [subKey]: {
-          done: passed || (p.subs[subKey]?.done ?? false), // once done, stays done
+          done: passed || (p.subs[subKey]?.done ?? false),
           score: Math.max(score, p.subs[subKey]?.score ?? 0),
           attempts: (p.subs[subKey]?.attempts ?? 0) + 1,
+          questions: totalQuestions,
         },
       };
 
@@ -105,18 +109,19 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         },
       };
 
-      // Recompute total/correct from the actual sub-bab state (no double-count)
-      // Each sub-bab contributes its BEST attempt's score×questions to the bab total.
+      // Recompute total/correct from the actual sub-bab state using real question counts.
       let babTotal = 0;
       let babCorrect = 0;
       for (const sk of Object.keys(newSubs)) {
         const sub = newSubs[sk];
-        babCorrect += sub.score; // accumulate best score per sub (each sub ≤ 100)
-        babTotal += 100;          // each sub worth 100% of its quiz
+        const q = sub.questions || 100; // fallback 100 untuk data lama tanpa questions
+        babTotal += q;
+        babCorrect += Math.round((sub.score / 100) * q);
       }
       if (p.reflection_done) {
-        babCorrect += p.reflection_score;
-        babTotal += 100;
+        const rq = p.reflection_questions || 100;
+        babTotal += rq;
+        babCorrect += Math.round((p.reflection_score / 100) * rq);
       }
       newProgress[babId].correct = babCorrect;
       newProgress[babId].total = babTotal;
@@ -146,7 +151,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         ...p,
         reflection_done: passed || p.reflection_done,
         reflection_score: Math.max(score, p.reflection_score),
-        // total/correct will be recomputed from subs state below
+        reflection_questions: totalQuestions,
         total: p.total,
         correct: p.correct,
       };
@@ -157,17 +162,19 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       const reflectionPct = newP.reflection_done ? 1 : 0;
       newP.completion_pct = totalSubs + 1 > 0 ? Math.round(((doneSubs + reflectionPct) / (totalSubs + 1)) * 100) : 0;
 
-      // Recompute correct/total from subs (best score per sub + reflection if done)
+      // Recompute correct/total from subs using real question counts
       let babTotal = 0;
       let babCorrect = 0;
       for (const sk of Object.keys(newP.subs)) {
         const sub = newP.subs[sk];
-        babCorrect += sub.score;
-        babTotal += 100;
+        const q = sub.questions || 100;
+        babTotal += q;
+        babCorrect += Math.round((sub.score / 100) * q);
       }
       if (newP.reflection_done) {
-        babCorrect += newP.reflection_score;
-        babTotal += 100;
+        const rq = newP.reflection_questions || 100;
+        babTotal += rq;
+        babCorrect += Math.round((newP.reflection_score / 100) * rq);
       }
       newP.correct = babCorrect;
       newP.total = babTotal;
@@ -253,27 +260,28 @@ export async function loadUserProgress(email: string) {
     const rawProgress = data.progress || {};
     const sanitized: Record<string, BabProgress> = {};
     for (const [babId, p] of Object.entries(rawProgress) as [string, any][]) {
-      const subs = p?.subs || {};
+      const subsRaw = p?.subs || {};
       const sanitizedSubs: Record<string, SubProgress> = {};
-      // Recompute correct/total/quizzes from the actual sub-bab state, not the
-      // stale accumulated values that old versions of the app wrote to the DB.
       let babTotal = 0;
       let babCorrect = 0;
-      for (const [sk, s] of Object.entries(subs) as [string, any][]) {
+      for (const [sk, s] of Object.entries(subsRaw) as [string, any][]) {
         const score = Math.max(0, Math.min(100, Number(s?.score) || 0));
+        const questions = Math.max(1, Number(s?.questions) || 100);
         sanitizedSubs[sk] = {
           done: !!s?.done,
           score,
           attempts: Math.max(0, Number(s?.attempts) || 0),
+          questions,
         };
-        babTotal += 100; // each sub quiz worth up to 100
-        babCorrect += score;
+        babTotal += questions;
+        babCorrect += Math.round((score / 100) * questions);
       }
       const reflection_done = !!p?.reflection_done;
       const reflection_score = Math.max(0, Math.min(100, Number(p?.reflection_score) || 0));
+      const reflection_questions = Math.max(1, Number(p?.reflection_questions) || 100);
       if (reflection_done) {
-        babTotal += 100;
-        babCorrect += reflection_score;
+        babTotal += reflection_questions;
+        babCorrect += Math.round((reflection_score / 100) * reflection_questions);
       }
       sanitized[babId] = {
         quizzes: Object.keys(sanitizedSubs).length + (reflection_done ? 1 : 0),
@@ -282,6 +290,7 @@ export async function loadUserProgress(email: string) {
         subs: sanitizedSubs,
         reflection_done,
         reflection_score,
+        reflection_questions,
         completion_pct: Math.max(0, Math.min(100, Number(p?.completion_pct) || 0)),
       };
     }

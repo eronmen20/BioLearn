@@ -1,0 +1,1 @@
+ALTER TABLE progress ADD COLUMN IF NOT EXISTS reflection_questions INTEGER DEFAULT 0;
