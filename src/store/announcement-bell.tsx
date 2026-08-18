@@ -22,7 +22,6 @@ interface Announcement {
 }
 
 const DISMISSED_KEY = "biolearn-announcement-dismissed";
-const MAX_HEIGHT = "max-h-[420px]";
 
 export function AnnouncementBell() {
   const mounted = useIsMounted();
@@ -155,8 +154,8 @@ export function AnnouncementBell() {
 
       {/* ▼ Dropdown anchored bawah icon bell. No filter, eye-catching header. */}
       {open && (
-        <div className="absolute top-full right-0 mt-2 z-50 animate-slide-down origin-top-right">
-          <div className="w-[300px] sm:w-[340px] bg-surface rounded-xl shadow-lg border border-border overflow-hidden flex flex-col">
+        <div className="fixed top-16 left-3 right-3 sm:absolute sm:left-auto sm:right-0 sm:mt-2 sm:w-[340px] z-50 animate-slide-down origin-top sm:origin-top-right">
+          <div className="w-full sm:w-[340px] bg-surface rounded-xl shadow-lg border border-border overflow-hidden flex flex-col">
             {/* Header — icon: gradient accent → purple → pink + megaphone besar */}
             <div className="relative px-4 py-3.5 bg-gradient-to-r from-accent via-purple-500 to-pink-500 text-white overflow-hidden">
               <span className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10 blur-xl pointer-events-none" />
@@ -196,7 +195,7 @@ export function AnnouncementBell() {
             )}
 
             {/* Body — scroll, NO truncation. Item "sudah dibaca" lebih redup. */}
-            <div className={`${MAX_HEIGHT} overflow-y-auto`}>
+            <div className="max-h-[50vh] sm:max-h-[420px] overflow-y-auto">
               {sorted.length === 0 ? (
                 <div className="p-8 text-center">
                   <Bell className="w-7 h-7 mx-auto text-muted opacity-40 mb-2" />
