@@ -19,6 +19,47 @@ export interface HomepageSettings {
   meta_description: string;
 }
 
+// Hero description/subtitle lines — editable via admin settings
+interface HeroDescProps {
+  settings?: HomepageSettings;
+}
+
+function HeroDesc({ settings }: HeroDescProps) {
+  const { t } = useLangStore();
+  const sub = settings?.hero_subtitle?.trim();
+  if (sub) {
+    // Admin provided a single subtitle — split by newline if present
+    const lines = sub.split("\n");
+    return (
+      <motion.p
+        className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8 leading-relaxed"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 1.3 }}
+      >
+        {lines.map((line, i) => (
+          <span key={i}>
+            {line}
+            {i < lines.length - 1 && <><br /></>}
+          </span>
+        ))}
+      </motion.p>
+    );
+  }
+  return (
+    <motion.p
+      className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8 leading-relaxed"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, delay: 1.3 }}
+    >
+      {t("landing.subtitle")}
+      <br />
+      {t("landing.subtitle2")}
+    </motion.p>
+  );
+}
+
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
   { emoji: "🔬", x: "85%", y: "15%", delay: 1, duration: 7 },
@@ -197,16 +238,7 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
           <AnimatedTitle heroTitle={settings?.hero_title} heroSubtitle={settings?.hero_subtitle} />
 
           {/* Subtitle */}
-          <motion.p
-            className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8 leading-relaxed"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 1.3 }}
-          >
-            {t("landing.subtitle")}
-            <br />
-            {t("landing.subtitle2")}
-          </motion.p>
+          <HeroDesc settings={settings} />
 
           {/* CTA Buttons */}
           <motion.div
