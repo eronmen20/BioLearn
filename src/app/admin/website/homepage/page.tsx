@@ -18,7 +18,7 @@ interface HomepageSettings {
 }
 
 const DEFAULT_SETTINGS: HomepageSettings = {
-  hero_title: 'Jadi Mudah!',
+  hero_title: 'Belajar Biologi Jadi Mudah!',
   hero_subtitle: 'Jelajahi 8 bab biologi dengan materi lengkap, kuis, animasi, dan tracking progress.\nCocok untuk siswa SMA & persiapan kuliah.',
   hero_cta: 'Mulai Belajar',
   show_banner: true,
@@ -87,7 +87,7 @@ export default function HomepageSettingsPage() {
             <h3 className="text-sm font-semibold text-ink">Hero Section</h3>
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Judul Warna Warni</label>
+            <label className="block text-sm font-medium text-ink mb-1">Judul Hero</label>
             <input type="text" value={settings.hero_title} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
           </div>
           <div>

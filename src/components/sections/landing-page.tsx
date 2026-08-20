@@ -20,32 +20,10 @@ export interface HomepageSettings {
 }
 
 // Hero description/subtitle lines — editable via admin settings
-interface HeroDescProps {
-  settings?: HomepageSettings;
-}
-
-function HeroDesc({ settings }: HeroDescProps) {
+function HeroDesc({ settings }: { settings?: HomepageSettings }) {
   const { t } = useLangStore();
-  const sub = settings?.hero_subtitle?.trim();
-  if (sub) {
-    // Admin provided a single subtitle — split by newline if present
-    const lines = sub.split("\n");
-    return (
-      <motion.p
-        className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8 leading-relaxed"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, delay: 1.3 }}
-      >
-        {lines.map((line, i) => (
-          <span key={i}>
-            {line}
-            {i < lines.length - 1 && <><br /></>}
-          </span>
-        ))}
-      </motion.p>
-    );
-  }
+  const desc = settings?.hero_subtitle?.trim() || "Jelajahi 8 bab biologi dengan materi lengkap, kuis, animasi, dan tracking progress.\nCocok untuk siswa SMA & persiapan kuliah.";
+  const lines = desc.split("\n");
   return (
     <motion.p
       className="text-base sm:text-lg md:text-xl text-muted max-w-2xl mx-auto mb-8 leading-relaxed"
@@ -53,9 +31,12 @@ function HeroDesc({ settings }: HeroDescProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 1.3 }}
     >
-      {t("landing.subtitle")}
-      <br />
-      {t("landing.subtitle2")}
+      {lines.map((line, i) => (
+        <span key={i}>
+          {line}
+          {i < lines.length - 1 && <><br /></>}
+        </span>
+      ))}
     </motion.p>
   );
 }
@@ -122,7 +103,7 @@ const SUBJECTS = [
 // AnimatedTitle - slide-up reveal animation
 function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
   const { t } = useLangStore();
-  const colorfulLine = heroTitle?.trim() || t("landing.hero_jadi");
+  const title = heroTitle?.trim() || "Belajar Biologi Jadi Mudah!";
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -131,19 +112,7 @@ function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="gradient-text">{t("landing.hero_belajar")}</span>{" "}
-          <span className="gradient-text">{t("landing.hero_biologi")}</span>
-        </motion.div>
-      </div>
-      <div className="overflow-hidden mt-1">
-        <motion.div
-          initial={{ y: "100%", opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <span className="bg-gradient-to-r from-[#fd79a8] via-[#fdcb6e] to-[#00cec9] bg-clip-text text-transparent">
-            {colorfulLine}
-          </span>
+          <span className="gradient-text">{title}</span>
         </motion.div>
       </div>
     </h1>
