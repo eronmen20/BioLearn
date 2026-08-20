@@ -7,6 +7,18 @@ import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRigh
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useLangStore } from "@/lib/lang-store";
 
+export interface HomepageSettings {
+  hero_title: string;
+  hero_subtitle: string;
+  hero_cta: string;
+  show_banner: boolean;
+  show_pengumuman: boolean;
+  show_materi_terbaru: boolean;
+  show_statistik: boolean;
+  meta_title: string;
+  meta_description: string;
+}
+
 const FLOATING_ITEMS = [
   { emoji: "🧬", x: "10%", y: "20%", delay: 0, duration: 6 },
   { emoji: "🔬", x: "85%", y: "15%", delay: 1, duration: 7 },
@@ -67,8 +79,10 @@ const SUBJECTS = [
 ];
 
 // AnimatedTitle - slide-up reveal animation
-function AnimatedTitle() {
+function AnimatedTitle({ heroTitle, heroSubtitle }: { heroTitle?: string; heroSubtitle?: string }) {
   const { t } = useLangStore();
+  const title = heroTitle?.trim() || t("landing.hero_belajar") + " " + t("landing.hero_biologi");
+  const subtitle = heroSubtitle?.trim() || t("landing.hero_jadi");
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -77,8 +91,7 @@ function AnimatedTitle() {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="gradient-text">{t("landing.hero_belajar")}</span>{" "}
-          <span className="gradient-text">{t("landing.hero_biologi")}</span>
+          <span className="gradient-text">{title}</span>
         </motion.div>
       </div>
       <div className="overflow-hidden mt-1">
@@ -88,7 +101,7 @@ function AnimatedTitle() {
           transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="bg-gradient-to-r from-[#fd79a8] via-[#fdcb6e] to-[#00cec9] bg-clip-text text-transparent">
-            {t("landing.hero_jadi")}
+            {subtitle}
           </span>
         </motion.div>
       </div>
@@ -115,13 +128,16 @@ function AnimatedSection({ children, className = "", delay = 0 }: { children: Re
 }
 
 
-export function LandingPage() {
+export function LandingPage({ settings }: { settings?: HomepageSettings }) {
   const { scrollYProgress } = useScroll();
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
   const { t } = useLangStore();
+  const showMateri = settings?.show_materi_terbaru !== false;
+  const showStatistik = settings?.show_statistik !== false;
+  const heroCta = settings?.hero_cta?.trim() || t("landing.cta_start");
   const visibleSubjects = SUBJECTS.filter((s) => {
     if (!ALWAYS_VISIBLE_BABS.includes(s.id)) return false;
     if (archiveLoaded && archivedIds.has(s.id)) return false;
@@ -178,7 +194,7 @@ export function LandingPage() {
           </motion.div>
 
           {/* Title */}
-          <AnimatedTitle />
+          <AnimatedTitle heroTitle={settings?.hero_title} heroSubtitle={settings?.hero_subtitle} />
 
           {/* Subtitle */}
           <motion.p
@@ -204,7 +220,7 @@ export function LandingPage() {
                 href="/login"
                 className="group flex items-center gap-2 px-8 py-4 bg-accent hover:bg-accent-dark text-white rounded-full font-bold text-base sm:text-lg transition-all shadow-lg shadow-accent/25 hover:shadow-xl hover:shadow-accent/30"
               >
-                {t("landing.cta_start")}
+                {heroCta}
                 <motion.div
                   animate={{ x: [0, 5, 0] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
@@ -337,6 +353,7 @@ export function LandingPage() {
       )}
 
       {/* Subjects Preview */}
+      {showMateri && (
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff]">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
@@ -404,8 +421,10 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Stats Section */}
+      {showStatistik && (
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
@@ -435,6 +454,7 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* CTA Section */}
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6">
