@@ -120,10 +120,9 @@ const SUBJECTS = [
 ];
 
 // AnimatedTitle - slide-up reveal animation
-function AnimatedTitle({ heroTitle, heroSubtitle }: { heroTitle?: string; heroSubtitle?: string }) {
+function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
   const { t } = useLangStore();
-  const title = heroTitle?.trim() || t("landing.hero_belajar") + " " + t("landing.hero_biologi");
-  const subtitle = heroSubtitle?.trim() || t("landing.hero_jadi");
+  const colorfulLine = heroTitle?.trim() || t("landing.hero_jadi");
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -132,7 +131,8 @@ function AnimatedTitle({ heroTitle, heroSubtitle }: { heroTitle?: string; heroSu
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="gradient-text">{title}</span>
+          <span className="gradient-text">{t("landing.hero_belajar")}</span>{" "}
+          <span className="gradient-text">{t("landing.hero_biologi")}</span>
         </motion.div>
       </div>
       <div className="overflow-hidden mt-1">
@@ -142,7 +142,7 @@ function AnimatedTitle({ heroTitle, heroSubtitle }: { heroTitle?: string; heroSu
           transition={{ duration: 0.8, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="bg-gradient-to-r from-[#fd79a8] via-[#fdcb6e] to-[#00cec9] bg-clip-text text-transparent">
-            {subtitle}
+            {colorfulLine}
           </span>
         </motion.div>
       </div>
@@ -235,7 +235,7 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
           </motion.div>
 
           {/* Title */}
-          <AnimatedTitle heroTitle={settings?.hero_title} heroSubtitle={settings?.hero_subtitle} />
+          <AnimatedTitle heroTitle={settings?.hero_title} />
 
           {/* Subtitle */}
           <HeroDesc settings={settings} />
