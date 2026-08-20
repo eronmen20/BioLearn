@@ -23,7 +23,11 @@ export const metadata: Metadata = {
   description:
     "Pembelajaran biologi interaktif untuk SMA & persiapan kuliah. Jelajahi, belajar, uji pemahamanmu! Interactive biology learning for high school & college prep.",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png?v=2", type: "image/png", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "any" },
+    ],
+    apple: [{ url: "/favicon.png?v=2", type: "image/png" }],
   },
   openGraph: {
     title: "BioLearn — Belajar Biologi Interaktif",
