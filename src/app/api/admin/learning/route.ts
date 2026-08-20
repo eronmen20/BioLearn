@@ -42,8 +42,10 @@ export async function GET() {
 
     const userMap = new Map<string, { name: string }>();
     for (const u of users || []) {
-      // progress.user_id stores the user's email
-      userMap.set((u.email || "").toLowerCase(), { name: u.name || "Tanpa Nama" });
+      const nameEntry = { name: u.name || "Tanpa Nama" };
+      // progress.user_id stores the user's id (UUID); some legacy rows store email
+      userMap.set((u.id || "").toLowerCase(), nameEntry);
+      userMap.set((u.email || "").toLowerCase(), nameEntry);
     }
     const babMap = new Map<string, string>();
     for (const b of babs || []) {
@@ -55,8 +57,8 @@ export async function GET() {
     const riwayat: any[] = [];
 
     for (const row of progressRows || []) {
-      const email = (row.user_id || "").toLowerCase();
-      const nama = userMap.get(email)?.name || row.user_id || "Tanpa Nama";
+      const key = (row.user_id || "").toLowerCase();
+      const nama = userMap.get(key)?.name || row.user_id || "Tanpa Nama";
       const babTitle = babMap.get(row.bab_id) || row.bab_id;
       const subs = parseSubs(row.subs);
       const updatedAt = row.updated_at
