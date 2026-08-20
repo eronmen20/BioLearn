@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { StatsCard } from '@/components/admin/stats-card';
-import { ChartCard, SimpleBarChart } from '@/components/admin/chart-card';
+import { ChartCard } from '@/components/admin/chart-card';
 import { GraduationCap, TrendingUp, BookOpen, Clock } from 'lucide-react';
 
 interface ProgressRow {
@@ -17,7 +17,11 @@ interface ProgressRow {
   status: string;
 }
 
-const placeholderData: ProgressRow[] = [];
+interface LearningStats {
+  nilai?: { total: number; avg: number; highest: number; lowest: number };
+  progress?: { activeStudents: number; avgProgress: number; completedItems: number };
+  riwayat?: { total: number; lulus: number; gagal: number };
+}
 
 const columns: Column<ProgressRow>[] = [
   { key: 'nama', label: 'Nama Siswa', sortable: true },
@@ -32,7 +36,7 @@ const columns: Column<ProgressRow>[] = [
         <div className="flex-1 h-2 bg-border-light rounded-full overflow-hidden max-w-[120px]">
           <div
             className="h-full rounded-full bg-accent"
-            style={{ width: `${row.progress}%` }}
+            style={{ width: `${Math.max(0, Math.min(100, row.progress))}%` }}
           />
         </div>
         <span className="text-xs font-semibold text-ink">{row.progress}%</span>
@@ -60,7 +64,20 @@ const columns: Column<ProgressRow>[] = [
 ];
 
 export default function ProgressBelajarPage() {
-  const [data] = useState<ProgressRow[]>(placeholderData);
+  const [data, setData] = useState<ProgressRow[]>([]);
+  const [stats, setStats] = useState<LearningStats>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/learning')
+      .then((r) => r.json())
+      .then((d) => {
+        setData(d.progress || []);
+        setStats(d.stats || {});
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -70,15 +87,17 @@ export default function ProgressBelajarPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Siswa Aktif" value={0} icon={GraduationCap} color="accent" />
-        <StatsCard title="Rata-rata Progress" value="0%" icon={TrendingUp} color="green" />
-        <StatsCard title="Materi Diselesaikan" value={0} icon={BookOpen} color="blue" />
-        <StatsCard title="Waktu Belajar Hari Ini" value="0 jam" icon={Clock} color="yellow" />
+        <StatsCard title="Total Siswa Aktif" value={stats.progress?.activeStudents ?? 0} icon={GraduationCap} color="accent" loading={loading} />
+        <StatsCard title="Rata-rata Progress" value={`${stats.progress?.avgProgress ?? 0}%`} icon={TrendingUp} color="green" loading={loading} />
+        <StatsCard title="Materi Diselesaikan" value={stats.progress?.completedItems ?? 0} icon={BookOpen} color="blue" loading={loading} />
+        <StatsCard title="Total Progress Records" value={data.length} icon={Clock} color="yellow" loading={loading} />
       </div>
 
       <ChartCard title="Progress per Materi" subtitle="Rata-rata persentase penyelesaian">
         <div className="text-center py-8 text-muted text-sm">
-          Data akan tersedia seiring penggunaan platform
+          {data.length > 0
+            ? `${new Set(data.map((r) => r.nama)).size} siswa aktif, rata-rata ${stats.progress?.avgProgress ?? 0}%`
+            : 'Data akan tersedia seiring penggunaan platform'}
         </div>
       </ChartCard>
 
@@ -89,6 +108,7 @@ export default function ProgressBelajarPage() {
         <DataTable
           columns={columns}
           data={data}
+          loading={loading}
           searchPlaceholder="Cari siswa..."
           emptyMessage="Belum ada data progress siswa"
         />

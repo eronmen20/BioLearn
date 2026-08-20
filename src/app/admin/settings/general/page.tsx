@@ -1,26 +1,77 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Settings, Save, Globe, Clock, Languages, Mail } from 'lucide-react';
+import { showToast } from '@/components/ui/toaster';
+
+interface GeneralSettings {
+  site_name: string;
+  site_url: string;
+  description: string;
+  language: string;
+  timezone: string;
+  contact_email: string;
+  maintenance_mode: boolean;
+  registration_open: boolean;
+}
+
+const DEFAULT_SETTINGS: GeneralSettings = {
+  site_name: 'BioLearn',
+  site_url: 'https://biolearn.com',
+  description: 'Platform Belajar Biologi Interaktif',
+  language: 'id',
+  timezone: 'Asia/Jakarta',
+  contact_email: 'admin@biolearn.com',
+  maintenance_mode: false,
+  registration_open: true,
+};
 
 export default function GeneralSettingsPage() {
-  const [settings, setSettings] = useState({
-    site_name: 'BioLearn',
-    site_url: 'https://biolearn.com',
-    description: 'Platform Belajar Biologi Interaktif',
-    language: 'id',
-    timezone: 'Asia/Jakarta',
-    contact_email: 'admin@biolearn.com',
-    maintenance_mode: false,
-    registration_open: true,
-  });
+  const [settings, setSettings] = useState<GeneralSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings?key=general');
+        const data = await res.json();
+        if (data.settings?.value) {
+          setSettings({ ...DEFAULT_SETTINGS, ...data.settings.value });
+        }
+      } catch {
+        // use defaults
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => setSaving(false), 1000);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'general', value: settings }),
+      });
+      if (!res.ok) throw new Error('gagal');
+      showToast('Pengaturan umum berhasil disimpan!');
+    } catch {
+      showToast('Gagal menyimpan pengaturan');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-muted">
+        Memuat pengaturan...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

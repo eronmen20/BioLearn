@@ -1,14 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminPageHeader } from "@/components/admin/page-header";
-import { Lock, Save, Shield, Key, Clock } from "lucide-react";
+import { Lock, Save, Shield, Key } from "lucide-react";
 import { showToast } from "@/components/ui/toaster";
 
+interface SecuritySettings {
+  two_factor: boolean;
+  session_timeout: number;
+  max_login_attempts: number;
+}
+
+const DEFAULT_SETTINGS: SecuritySettings = {
+  two_factor: false,
+  session_timeout: 30,
+  max_login_attempts: 5,
+};
+
 export default function SecuritySettingsPage() {
-  const [twoFactor, setTwoFactor] = useState(false);
-  const [sessionTimeout, setSessionTimeout] = useState("30");
-  const [maxLoginAttempts, setMaxLoginAttempts] = useState("5");
+  const [settings, setSettings] = useState<SecuritySettings>(DEFAULT_SETTINGS);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/settings?key=security");
+        const data = await res.json();
+        if (data.settings?.value) {
+          setSettings({ ...DEFAULT_SETTINGS, ...data.settings.value });
+        }
+      } catch {
+        // use defaults
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "security", value: settings }),
+      });
+      if (!res.ok) throw new Error("gagal");
+      showToast("Pengaturan keamanan disimpan!");
+    } catch {
+      showToast("Gagal menyimpan pengaturan keamanan");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-muted">
+        Memuat pengaturan...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -30,14 +83,14 @@ export default function SecuritySettingsPage() {
                 <p className="text-xs text-muted">Tambahkan lapisan keamanan ekstra</p>
               </div>
               <button
-                onClick={() => setTwoFactor(!twoFactor)}
+                onClick={() => setSettings({ ...settings, two_factor: !settings.two_factor })}
                 className={`w-11 h-6 rounded-full transition-colors ${
-                  twoFactor ? "bg-accent" : "bg-border"
+                  settings.two_factor ? "bg-accent" : "bg-border"
                 }`}
               >
                 <div
                   className={`w-5 h-5 bg-white rounded-full shadow-sm transition-transform ${
-                    twoFactor ? "translate-x-5.5" : "translate-x-0.5"
+                    settings.two_factor ? "translate-x-5.5" : "translate-x-0.5"
                   }`}
                 />
               </button>
@@ -49,8 +102,8 @@ export default function SecuritySettingsPage() {
               </label>
               <input
                 type="number"
-                value={sessionTimeout}
-                onChange={(e) => setSessionTimeout(e.target.value)}
+                value={String(settings.session_timeout)}
+                onChange={(e) => setSettings({ ...settings, session_timeout: Number(e.target.value) })}
                 className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-alt text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
@@ -61,8 +114,8 @@ export default function SecuritySettingsPage() {
               </label>
               <input
                 type="number"
-                value={maxLoginAttempts}
-                onChange={(e) => setMaxLoginAttempts(e.target.value)}
+                value={String(settings.max_login_attempts)}
+                onChange={(e) => setSettings({ ...settings, max_login_attempts: Number(e.target.value) })}
                 className="w-full px-4 py-2.5 rounded-xl border border-border bg-bg-alt text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
@@ -91,11 +144,12 @@ export default function SecuritySettingsPage() {
         </div>
 
         <button
-          onClick={() => showToast("Pengaturan keamanan disimpan")}
-          className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors disabled:opacity-50"
         >
           <Save className="w-4 h-4" />
-          Simpan Pengaturan
+          {saving ? "Menyimpan..." : "Simpan Pengaturan"}
         </button>
       </div>
     </div>

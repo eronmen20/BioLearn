@@ -48,6 +48,29 @@ export async function GET(req: NextRequest) {
       .select("*", { count: "exact", head: true })
       .gte("created_at", today.toISOString());
 
+    // Content counts
+    const { count: totalMateri } = await supabase
+      .from("sub_bab")
+      .select("*", { count: "exact", head: true })
+      .eq("is_task", false);
+
+    const { count: totalQuiz } = await supabase
+      .from("sub_bab_quiz")
+      .select("*", { count: "exact", head: true });
+
+    const { count: totalFlashcard } = await supabase
+      .from("struktur_fungsi")
+      .select("*", { count: "exact", head: true });
+
+    const { count: totalPraktikum } = await supabase
+      .from("praktikum")
+      .select("*", { count: "exact", head: true });
+
+    const { count: totalReflection } = await supabase
+      .from("sub_bab_quiz")
+      .select("*", { count: "exact", head: true })
+      .eq("is_reflection", true);
+
     return NextResponse.json({
       stats: {
         totalUsers: totalUsers || 0,
@@ -55,11 +78,11 @@ export async function GET(req: NextRequest) {
         totalAdmin: totalAdmin || 0,
         totalProgress: totalProgress || 0,
         usersToday: usersToday || 0,
-        // These are from static data, not DB
-        totalMateri: 0,
-        totalQuiz: 0,
-        totalFlashcard: 0,
-        totalPraktikum: 0,
+        totalMateri: totalMateri || 0,
+        totalQuiz: totalQuiz || 0,
+        totalFlashcard: totalFlashcard || 0,
+        totalPraktikum: totalPraktikum || 0,
+        totalReflection: totalReflection || 0,
         totalAiRequest: 0,
       },
       recentUsers: recentUsers || [],

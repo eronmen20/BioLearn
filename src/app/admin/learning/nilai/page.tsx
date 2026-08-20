@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { StatsCard } from '@/components/admin/stats-card';
-import { ChartCard, SimpleBarChart } from '@/components/admin/chart-card';
+import { ChartCard } from '@/components/admin/chart-card';
 import { Award, TrendingUp, TrendingDown, Users } from 'lucide-react';
 
 interface NilaiRow {
@@ -17,7 +17,24 @@ interface NilaiRow {
   status: string;
 }
 
-const placeholderData: NilaiRow[] = [];
+interface LearningStats {
+  nilai?: {
+    total: number;
+    avg: number;
+    highest: number;
+    lowest: number;
+  };
+  progress?: {
+    activeStudents: number;
+    avgProgress: number;
+    completedItems: number;
+  };
+  riwayat?: {
+    total: number;
+    lulus: number;
+    gagal: number;
+  };
+}
 
 const columns: Column<NilaiRow>[] = [
   { key: 'nama', label: 'Nama Siswa', sortable: true },
@@ -56,7 +73,20 @@ const columns: Column<NilaiRow>[] = [
 ];
 
 export default function NilaiPage() {
-  const [data] = useState<NilaiRow[]>(placeholderData);
+  const [data, setData] = useState<NilaiRow[]>([]);
+  const [stats, setStats] = useState<LearningStats>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/learning')
+      .then((r) => r.json())
+      .then((d) => {
+        setData(d.nilai || []);
+        setStats(d.stats || {});
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -66,15 +96,17 @@ export default function NilaiPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Rata-rata Nilai" value={0} icon={Award} color="accent" />
-        <StatsCard title="Tertinggi" value={0} icon={TrendingUp} color="green" />
-        <StatsCard title="Terendah" value={0} icon={TrendingDown} color="red" />
-        <StatsCard title="Total Peserta" value={0} icon={Users} color="blue" />
+        <StatsCard title="Rata-rata Nilai" value={stats.nilai?.avg ?? 0} icon={Award} color="accent" loading={loading} />
+        <StatsCard title="Tertinggi" value={stats.nilai?.highest ?? 0} icon={TrendingUp} color="green" loading={loading} />
+        <StatsCard title="Terendah" value={stats.nilai?.lowest ?? 0} icon={TrendingDown} color="red" loading={loading} />
+        <StatsCard title="Total Peserta" value={stats.nilai?.total ?? 0} icon={Users} color="blue" loading={loading} />
       </div>
 
       <ChartCard title="Distribusi Nilai" subtitle="Jumlah siswa per rentang nilai">
         <div className="text-center py-8 text-muted text-sm">
-          Data akan tersedia seiring penggunaan platform
+          {data.length > 0
+            ? `${data.length} nilai quiz tercatat dari ${new Set(data.map((r) => r.nama)).size} siswa`
+            : 'Data akan tersedia seiring penggunaan platform'}
         </div>
       </ChartCard>
 
@@ -85,6 +117,7 @@ export default function NilaiPage() {
         <DataTable
           columns={columns}
           data={data}
+          loading={loading}
           searchPlaceholder="Cari siswa atau quiz..."
           emptyMessage="Belum ada data nilai"
         />

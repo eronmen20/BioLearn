@@ -1,28 +1,79 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Settings, Save, Eye, Layout, Type, Image } from 'lucide-react';
+import { showToast } from '@/components/ui/toaster';
+
+interface HomepageSettings {
+  hero_title: string;
+  hero_subtitle: string;
+  hero_cta: string;
+  show_banner: boolean;
+  show_pengumuman: boolean;
+  show_materi_terbaru: boolean;
+  show_statistik: boolean;
+  meta_title: string;
+  meta_description: string;
+}
+
+const DEFAULT_SETTINGS: HomepageSettings = {
+  hero_title: 'BioLearn',
+  hero_subtitle: 'Platform Belajar Biologi Interaktif',
+  hero_cta: 'Mulai Belajar',
+  show_banner: true,
+  show_pengumuman: true,
+  show_materi_terbaru: true,
+  show_statistik: true,
+  meta_title: 'BioLearn - Belajar Biologi Jadi Mudah',
+  meta_description: 'Platform pembelajaran biologi untuk siswa SMA dengan materi lengkap dan quiz interaktif.',
+};
 
 export default function HomepageSettingsPage() {
-  const [settings, setSettings] = useState({
-    hero_title: 'BioLearn',
-    hero_subtitle: 'Platform Belajar Biologi Interaktif',
-    hero_cta: 'Mulai Belajar',
-    show_banner: true,
-    show_pengumuman: true,
-    show_materi_terbaru: true,
-    show_statistik: true,
-    meta_title: 'BioLearn - Belajar Biologi Jadi Mudah',
-    meta_description: 'Platform pembelajaran biologi untuk siswa SMA dengan materi lengkap dan quiz interaktif.',
-  });
-
+  const [settings, setSettings] = useState<HomepageSettings>(DEFAULT_SETTINGS);
   const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch('/api/admin/settings?key=homepage');
+        const data = await res.json();
+        if (data.settings?.value) {
+          setSettings({ ...DEFAULT_SETTINGS, ...data.settings.value });
+        }
+      } catch {
+        // defaults
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => setSaving(false), 1000);
+    try {
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: 'homepage', value: settings }),
+      });
+      if (!res.ok) throw new Error('gagal');
+      showToast('Pengaturan homepage berhasil disimpan!');
+    } catch {
+      showToast('Gagal menyimpan pengaturan homepage');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-sm text-muted">
+        Memuat pengaturan...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

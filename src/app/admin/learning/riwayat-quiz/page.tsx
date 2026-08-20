@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { StatsCard } from '@/components/admin/stats-card';
@@ -17,7 +17,11 @@ interface QuizHistoryRow {
   tanggal: string;
 }
 
-const placeholderData: QuizHistoryRow[] = [];
+interface LearningStats {
+  nilai?: { total: number; avg: number; highest: number; lowest: number };
+  progress?: { activeStudents: number; avgProgress: number; completedItems: number };
+  riwayat?: { total: number; lulus: number; gagal: number };
+}
 
 const columns: Column<QuizHistoryRow>[] = [
   { key: 'nama', label: 'Nama Siswa', sortable: true },
@@ -38,7 +42,20 @@ const columns: Column<QuizHistoryRow>[] = [
 ];
 
 export default function RiwayatQuizPage() {
-  const [data] = useState<QuizHistoryRow[]>(placeholderData);
+  const [data, setData] = useState<QuizHistoryRow[]>([]);
+  const [stats, setStats] = useState<LearningStats>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/learning')
+      .then((r) => r.json())
+      .then((d) => {
+        setData(d.riwayat || []);
+        setStats(d.stats || {});
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -48,10 +65,10 @@ export default function RiwayatQuizPage() {
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Pengerjaan" value={0} icon={ClipboardList} color="accent" />
-        <StatsCard title="Lulus" value={0} icon={CheckCircle} color="green" />
-        <StatsCard title="Tidak Lulus" value={0} icon={XCircle} color="red" />
-        <StatsCard title="Rata-rata Waktu" value="0 mnt" icon={Clock} color="yellow" />
+        <StatsCard title="Total Pengerjaan" value={stats.riwayat?.total ?? 0} icon={ClipboardList} color="accent" loading={loading} />
+        <StatsCard title="Lulus" value={stats.riwayat?.lulus ?? 0} icon={CheckCircle} color="green" loading={loading} />
+        <StatsCard title="Tidak Lulus" value={stats.riwayat?.gagal ?? 0} icon={XCircle} color="red" loading={loading} />
+        <StatsCard title="Siswa Terlibat" value={new Set(data.map((r) => r.nama)).size} icon={Clock} color="yellow" loading={loading} />
       </div>
 
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
@@ -61,6 +78,7 @@ export default function RiwayatQuizPage() {
         <DataTable
           columns={columns}
           data={data}
+          loading={loading}
           searchPlaceholder="Cari siswa atau quiz..."
           emptyMessage="Belum ada riwayat quiz"
         />

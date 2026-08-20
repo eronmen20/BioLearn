@@ -26,6 +26,7 @@ interface AdminStats {
   totalQuiz: number;
   totalFlashcard: number;
   totalPraktikum: number;
+  totalReflection: number;
   totalAiRequest: number;
 }
 
@@ -40,28 +41,25 @@ interface RecentUser {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [recentUsers, setRecentUsers] = useState<RecentUser[]>([]);
+  const [babDistribution, setBabDistribution] = useState<{ label: string; value: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((r) => r.json())
-      .then((data) => {
-        setStats(data.stats);
-        setRecentUsers(data.recentUsers);
+    Promise.all([
+      fetch("/api/admin/stats").then((r) => r.json()),
+      fetch("/api/admin/analytics").then((r) => r.json()),
+    ])
+      .then(([statsData, analyticsData]) => {
+        setStats(statsData.stats);
+        setRecentUsers(statsData.recentUsers);
+        setBabDistribution(analyticsData?.materi?.babDistribution || []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
   // Static content counts from bab-data
-  const contentStats = [
-    { label: "Sel", value: 4 },
-    { label: "Pencernaan", value: 4 },
-    { label: "Pernapasan", value: 4 },
-    { label: "Peredaran", value: 4 },
-    { label: "Saraf", value: 4 },
-    { label: "Indra", value: 4 },
-  ];
+  const contentStats = babDistribution.length > 0 ? babDistribution : [];
 
   // Mock activity data (last 7 days)
   const activityData = [
@@ -93,28 +91,28 @@ export default function AdminDashboardPage() {
         />
         <StatsCard
           title="Total Materi"
-          value={24}
+          value={stats?.totalMateri ?? 0}
           icon={BookOpen}
           color="blue"
           loading={loading}
         />
         <StatsCard
           title="Total Quiz"
-          value={24}
+          value={stats?.totalQuiz ?? 0}
           icon={HelpCircle}
           color="green"
           loading={loading}
         />
         <StatsCard
           title="Total Flashcard"
-          value={0}
+          value={stats?.totalFlashcard ?? 0}
           icon={CreditCard}
           color="yellow"
           loading={loading}
         />
         <StatsCard
           title="Total Praktikum"
-          value={0}
+          value={stats?.totalPraktikum ?? 0}
           icon={FlaskConical}
           color="orange"
           loading={loading}
@@ -169,9 +167,15 @@ export default function AdminDashboardPage() {
           title="Konten per Bab"
           subtitle="Jumlah sub-bab"
         >
-          <SimpleBarChart
-            data={contentStats.map(d => ({ ...d, color: "var(--color-accent-2)" }))}
-          />
+          {contentStats.length > 0 ? (
+            <SimpleBarChart
+              data={contentStats.map(d => ({ ...d, color: "var(--color-accent-2)" }))}
+            />
+          ) : (
+            <div className="text-center py-12 text-muted text-sm">
+              Belum ada data konten
+            </div>
+          )}
         </ChartCard>
       </div>
 

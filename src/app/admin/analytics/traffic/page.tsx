@@ -1,48 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { StatsCard } from '@/components/admin/stats-card';
-import { ChartCard, SimpleBarChart, Sparkline } from '@/components/admin/chart-card';
-import { Globe, Eye, Clock, Smartphone } from 'lucide-react';
+import { ChartCard, SimpleBarChart } from '@/components/admin/chart-card';
+import { Globe, Users, BarChart3, Activity } from 'lucide-react';
+
+interface ChartData {
+  label: string;
+  value: number;
+}
+
+interface AnalyticsData {
+  traffic?: {
+    totalUsers: number;
+    usersToday: number;
+    totalProgress: number;
+  };
+  users?: {
+    registrationData: ChartData[];
+  };
+  quiz?: {
+    scoreBins: ChartData[];
+  };
+}
 
 export default function TrafficAnalyticsPage() {
+  const [data, setData] = useState<AnalyticsData>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/admin/analytics')
+      .then((r) => r.json())
+      .then((d) => setData(d))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const traffic = data.traffic;
+  const registrationData = data.users?.registrationData || [];
+  const activityData = [
+    { label: 'Belajar', value: traffic?.totalProgress ?? 0, color: 'var(--color-accent)' },
+    { label: 'Pengguna', value: traffic?.totalUsers ?? 0, color: 'var(--color-blue)' },
+    { label: 'Aktif Hari Ini', value: traffic?.usersToday ?? 0, color: 'var(--color-green)' },
+  ];
+
   return (
     <div className="space-y-6">
-      <AdminPageHeader title="Lalu Lintas Website" description="Overview traffic dan engagement pengunjung" />
+      <AdminPageHeader title="Lalu Lintas Website" description="Overview traffic dan engagement pengguna" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard title="Total Kunjungan" value={0} icon={Globe} color="accent" trend={{ value: 0, label: 'minggu ini' }} />
-        <StatsCard title="Page Views" value={0} icon={Eye} color="blue" />
-        <StatsCard title="Rata-rata Durasi" value="0 mnt" icon={Clock} color="green" />
-        <StatsCard title="Bounce Rate" value="0%" icon={Smartphone} color="yellow" />
+        <StatsCard title="Total Pengguna" value={traffic?.totalUsers ?? 0} icon={Globe} color="accent" loading={loading} />
+        <StatsCard title="Aktivitas Belajar" value={traffic?.totalProgress ?? 0} icon={Activity} color="blue" loading={loading} />
+        <StatsCard title="Pengguna Baru Hari Ini" value={traffic?.usersToday ?? 0} icon={Users} color="green" loading={loading} />
+        <StatsCard title="Sesi Aktif" value={traffic?.usersToday ?? 0} icon={BarChart3} color="yellow" loading={loading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Kunjungan Harian" subtitle="7 hari terakhir">
-          <div className="text-center py-12 text-muted text-sm">
-            Data akan tersedia seiring penggunaan platform
-          </div>
+        <ChartCard title="Pendaftaran per Bulan" subtitle="Pertumbuhan pengguna (6 bulan terakhir)">
+          {registrationData.length > 0 ? (
+            <SimpleBarChart data={registrationData} />
+          ) : (
+            <div className="text-center py-12 text-muted text-sm">
+              Belum ada data pendaftaran
+            </div>
+          )}
         </ChartCard>
 
-        <ChartCard title="Sumber Traffic" subtitle="Dari mana pengunjung berasal">
-          <div className="text-center py-12 text-muted text-sm">
-            Data akan tersedia seiring penggunaan platform
-          </div>
-        </ChartCard>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartCard title="Halaman Terpopuler" subtitle="Berdasarkan jumlah kunjungan">
-          <div className="text-center py-12 text-muted text-sm">
-            Data akan tersedia seiring penggunaan platform
-          </div>
-        </ChartCard>
-
-        <ChartCard title="Device Breakdown" subtitle="Jenis perangkat pengunjung">
-          <div className="text-center py-12 text-muted text-sm">
-            Data akan tersedia seiring penggunaan platform
-          </div>
+        <ChartCard title="Engagement Overview" subtitle="Ringkasan aktivitas platform">
+          <SimpleBarChart data={activityData} />
         </ChartCard>
       </div>
     </div>
