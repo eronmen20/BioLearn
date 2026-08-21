@@ -76,9 +76,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       const user: User = data.user;
-      const token: string | null = data.token || null;
-      saveToStorage(user, true, token);
-      set({ user, isAuthenticated: true, isLoading: false, adminToken: token });
+      saveToStorage(user, true);
+      set({ user, isAuthenticated: true, isLoading: false, adminToken: null });
 
       loadUserProgress(user.email);
 
@@ -89,7 +88,12 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
     }
   },
 
-  logout: () => {
+  logout: async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
     saveToStorage(null, false);
     set({ user: null, isAuthenticated: false, adminToken: null });
     resetProgress();

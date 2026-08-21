@@ -46,12 +46,26 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  let token: string | null = null;
+
+  // 1. Try httpOnly cookie first
+  const cookieToken = req.cookies.get("admin_token")?.value;
+  if (cookieToken) {
+    token = cookieToken;
+  }
+
+  // 2. Fallback to Authorization header (for API clients / backward compat)
+  if (!token) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.slice(7);
+    }
+  }
+
+  if (!token) {
     return NextResponse.json({ error: "Unauthorized: Missing token" }, { status: 401 });
   }
 
-  const token = authHeader.slice(7);
   const payload = await verifyToken(token);
 
   if (!payload) {

@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { NextRequest } from "next/server";
 
 const SECRET = process.env.ADMIN_TOKEN_SECRET || "biolearn-fallback-secret-2024";
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -7,6 +8,14 @@ interface AdminTokenPayload {
   email: string;
   role: string;
   exp: number;
+}
+
+export function extractAdminToken(req: NextRequest): string | null {
+  const cookieToken = req.cookies.get("admin_token")?.value;
+  if (cookieToken) return cookieToken;
+  const authHeader = req.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) return authHeader.slice(7);
+  return null;
 }
 
 export function generateAdminToken(email: string, role: string): string {

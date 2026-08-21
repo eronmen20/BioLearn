@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { verifyAdminToken, extractAdminToken } from "@/lib/admin-auth";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +10,7 @@ export async function GET(req: NextRequest) {
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
 
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    let token: string | null = extractAdminToken(req);
     const payload = token ? verifyAdminToken(token) : null;
     const isAdmin = !!payload && payload.role === "admin";
 
@@ -46,8 +45,7 @@ export async function GET(req: NextRequest) {
 // POST - Create announcement
 export async function POST(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const token = extractAdminToken(req);
     const payload = token ? verifyAdminToken(token) : null;
     if (!payload || payload.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -89,8 +87,7 @@ export async function POST(req: NextRequest) {
 // PUT - Update announcement
 export async function PUT(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const token = extractAdminToken(req);
     const payload = token ? verifyAdminToken(token) : null;
     if (!payload || payload.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -132,8 +129,7 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete announcement
 export async function DELETE(req: NextRequest) {
   try {
-    const authHeader = req.headers.get("authorization");
-    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const token = extractAdminToken(req);
     const payload = token ? verifyAdminToken(token) : null;
     if (!payload || payload.role !== "admin") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

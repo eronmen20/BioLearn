@@ -22,18 +22,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
     }
 
-    // Skip verification check for now (auto-verified on register)
-    // Re-enable when Resend custom domain is configured
-    // if (!user.email_verified) {
-    //   return NextResponse.json({ error: "Email belum diverifikasi. Silakan cek inbox kamu.", needsVerification: true }, { status: 403 });
-    // }
+    const response = NextResponse.json({ user });
 
-    const response: { user: typeof user; token?: string } = { user };
     if (user.role === "admin") {
-      response.token = generateAdminToken(user.email, user.role);
+      const token = generateAdminToken(user.email, user.role);
+      const isProd = process.env.NODE_ENV === "production";
+      response.cookies.set("admin_token", token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "strict",
+        path: "/api/admin",
+        maxAge: 24 * 60 * 60,
+      });
     }
 
-    return NextResponse.json(response);
+    return response;
   } catch (e) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
