@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getPublicDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 // GET - Get full bab content for user-facing pages
 //
@@ -23,7 +16,7 @@ function getDb() {
 // Title comes from sub_bab.title_id/title_en — NOT from materi.metadata.
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getDb();
+    const supabase = getPublicDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
 

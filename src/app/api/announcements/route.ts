@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyAdminToken, extractAdminToken } from "@/lib/admin-auth";
-import { getDb } from "@/lib/db";
+import { getDb, getPublicDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
 // GET - Public list of published announcements (newest first, pinned first)
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getDb();
+    const supabase = getPublicDb();
     const { searchParams } = new URL(req.url);
 
     let token: string | null = extractAdminToken(req);

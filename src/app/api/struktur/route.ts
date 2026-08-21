@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { getPublicDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 // GET - Public list struktur for user-facing pages
 // Query params:
@@ -18,7 +11,7 @@ function getDb() {
 //                           (fallback = apply to all sub-babs in this bab)
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getDb();
+    const supabase = getPublicDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
     const subBabKey = searchParams.get("sub_bab_key");
