@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ quiz: data || [] });
   } catch (e) {
+    console.error("[Admin Quiz GET]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = getDb();
     const body = await req.json();
+    if (!body.bab_id) return NextResponse.json({ error: "bab_id wajib diisi" }, { status: 400 });
     const { error } = await supabase.from("quiz").insert({
       bab_id: body.bab_id,
       question_id: body.question_id,
@@ -38,6 +40,7 @@ export async function POST(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error("[Admin Quiz POST]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -47,6 +50,7 @@ export async function PUT(req: NextRequest) {
   try {
     const supabase = getDb();
     const body = await req.json();
+    if (!body.id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
     const { error } = await supabase.from("quiz").update({
       question_id: body.question_id,
       question_en: body.question_en,
@@ -59,6 +63,7 @@ export async function PUT(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error("[Admin Quiz PUT]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -73,6 +78,7 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
     return NextResponse.json({ success: true });
   } catch (e) {
+    console.error("[Admin Quiz DELETE]", e);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

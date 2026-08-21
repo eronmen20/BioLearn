@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
 
 // GET - List all content
 export async function GET(req: NextRequest) {
   try {
-    const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // bab, flashcard, quiz, etc.
 
