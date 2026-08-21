@@ -42,8 +42,12 @@ export async function verifyPassword(email: string, password: string) {
     const sha = crypto.createHash("sha256").update(password).digest("hex");
     valid = sha === stored;
     if (valid) {
-      const newHash = await bcrypt.hash(password, 12);
-      await getDb().from("users").update({ password: newHash }).eq("id", user.id);
+      try {
+        const newHash = await bcrypt.hash(password, 12);
+        await getDb().from("users").update({ password: newHash }).eq("id", user.id);
+      } catch {
+        // login tetap jalan meskipun upgrade hash gagal
+      }
     }
   }
 
