@@ -51,8 +51,8 @@ export default function AdminDashboardPage() {
       adminFetch("/api/admin/analytics").then((r) => r.json()),
     ])
       .then(([statsData, analyticsData]) => {
-        setStats(statsData.stats);
-        setRecentUsers(statsData.recentUsers);
+        setStats(statsData.stats || null);
+        setRecentUsers(statsData.recentUsers || []);
         setBabDistribution(analyticsData?.materi?.babDistribution || []);
       })
       .catch(() => {})

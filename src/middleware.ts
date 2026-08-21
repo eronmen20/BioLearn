@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const SECRET = process.env.ADMIN_TOKEN_SECRET || "biolearn-fallback-secret-2024";
-const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 interface AdminTokenPayload {
   email: string;
@@ -41,20 +40,18 @@ async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
   }
 }
 
-export async function proxy(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith("/api/admin")) {
     return NextResponse.next();
   }
 
   let token: string | null = null;
 
-  // 1. Try httpOnly cookie first
   const cookieToken = req.cookies.get("admin_token")?.value;
   if (cookieToken) {
     token = cookieToken;
   }
 
-  // 2. Fallback to Authorization header (for API clients / backward compat)
   if (!token) {
     const authHeader = req.headers.get("authorization");
     if (authHeader && authHeader.startsWith("Bearer ")) {
