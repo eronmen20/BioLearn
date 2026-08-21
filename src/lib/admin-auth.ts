@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { NextRequest } from "next/server";
 
 const SECRET = process.env.ADMIN_TOKEN_SECRET || "biolearn-fallback-secret-2024";
-const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const TOKEN_EXPIRY_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 interface AdminTokenPayload {
   email: string;

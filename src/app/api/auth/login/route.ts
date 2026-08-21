@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
         secure: isProd,
         sameSite: "strict",
         path: "/api/admin",
-        maxAge: 24 * 60 * 60,
+        maxAge: 2 * 60 * 60,
       });
     }
 
