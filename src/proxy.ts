@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SECRET = process.env.ADMIN_TOKEN_SECRET || "";
+const SECRET = process.env.ADMIN_TOKEN_SECRET || "biolearn-fallback-secret-2024";
 const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
 
 interface AdminTokenPayload {
