@@ -1,6 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProgress, saveProgress, findUserByEmail } from "@/lib/db";
 
+function isSameOrigin(req: NextRequest): boolean {
+  const origin = req.headers.get("origin");
+  const host = req.headers.get("host");
+  if (origin && host) {
+    try {
+      const originUrl = new URL(origin);
+      return originUrl.host === host;
+    } catch {
+      return false;
+    }
+  }
+  const referer = req.headers.get("referer");
+  if (referer && host) {
+    try {
+      const refererUrl = new URL(referer);
+      return refererUrl.host === host;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const email = req.nextUrl.searchParams.get("email");
@@ -22,6 +45,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isSameOrigin(req)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const { email, babId, data } = await req.json();
 
     if (!email || !babId || !data) {

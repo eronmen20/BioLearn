@@ -89,7 +89,7 @@ export default function PraktikumPage() {
   const loadSubBabs = useCallback(async (babId: string) => {
     if (!babId) { setSubBabOptions([]); return; }
     try {
-      const res = await fetch(`/api/sub-bab?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, { cache: 'no-store' });
+      const res = await adminFetch(`/api/sub-bab?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       setSubBabOptions((json.subBab || []).map((s: any) => ({
         key: s.key,

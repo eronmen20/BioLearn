@@ -85,7 +85,7 @@ export default function StrukturPage() {
   const loadSubBabs = useCallback(async (babId: string) => {
     if (!babId) { setSubBabList([]); return; }
     try {
-      const res = await fetch(`/api/sub-bab?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, { cache: "no-store" });
+      const res = await adminFetch(`/api/sub-bab?bab_id=${encodeURIComponent(babId)}&_t=${Date.now()}`, { cache: "no-store" });
       const json = await res.json();
       setSubBabList(json.subBab || []);
     } catch {

@@ -11,7 +11,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.push("/login");
+      router.push("/admin/login");
     } else if (user && user.role !== "admin") {
       router.push("/dashboard");
     }

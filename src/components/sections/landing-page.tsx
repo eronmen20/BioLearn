@@ -94,10 +94,10 @@ const SUBJECTS = [
   { id: "sel", icon: "🔬", name: "Sel", kelas: "XI", color: "from-blue-400 to-cyan-500", subs: 4 },
   { id: "pencernaan", icon: "🍽️", name: "Pencernaan", kelas: "XI", color: "from-orange-400 to-amber-500", subs: 4 },
   { id: "sirkulasi", icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500", subs: 4 },
-  { id: "sistem_saraf", icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500", subs: 4 },
+  { id: "syaraf", icon: "🧠", name: "Sistem Saraf", kelas: "XI", color: "from-violet-400 to-purple-500", subs: 4 },
   { id: "genetika", icon: "🧬", name: "Genetika", kelas: "XII", color: "from-amber-400 to-orange-500", subs: 4 },
   { id: "evolusi", icon: "🦕", name: "Evolusi", kelas: "XII", color: "from-lime-400 to-green-500", subs: 4 },
-  { id: "ekologi", icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500", subs: 4 },
+  { id: "ekosistem", icon: "🌿", name: "Ekologi", kelas: "XII", color: "from-teal-400 to-cyan-500", subs: 4 },
 ];
 
 // AnimatedTitle - slide-up reveal animation
