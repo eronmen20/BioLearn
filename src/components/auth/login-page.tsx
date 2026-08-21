@@ -173,6 +173,12 @@ export function LoginPage() {
               </>
             )}
           </div>
+
+          <div className="mt-4 pt-4 border-t border-border text-center">
+            <button onClick={() => router.push("/admin/login")} className="text-xs text-muted hover:text-accent transition-colors">
+              Admin Panel
+            </button>
+          </div>
         </div>
       </div>
     </div>
