@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET - List banners (or single by id)
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const id = new URL(req.url).searchParams.get("id");
 
@@ -33,6 +36,8 @@ export async function GET(req: NextRequest) {
 // POST - Create banner
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -76,6 +81,8 @@ export async function POST(req: NextRequest) {
 // PUT - Update banner
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -122,6 +129,8 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete banner
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const id = new URL(req.url).searchParams.get("id");
 

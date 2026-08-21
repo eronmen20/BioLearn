@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
@@ -23,6 +26,8 @@ export async function GET(req: NextRequest) {
 // POST
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
     if (!body.bab_id) return NextResponse.json({ error: "bab_id wajib diisi" }, { status: 400 });
@@ -48,6 +53,8 @@ export async function POST(req: NextRequest) {
 // PUT
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
     if (!body.id) return NextResponse.json({ error: "ID wajib diisi" }, { status: 400 });
@@ -71,6 +78,8 @@ export async function PUT(req: NextRequest) {
 // DELETE
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const id = new URL(req.url).searchParams.get("id");
     if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

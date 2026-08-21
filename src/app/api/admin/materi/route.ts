@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,6 +26,8 @@ async function normalizeSortOrder(supabase: any, table: string, babId: string) {
 // GET - List materi (optionally filtered by bab_id)
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
@@ -44,6 +47,8 @@ export async function GET(req: NextRequest) {
 // POST - Create materi (auto-shift sort_order)
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -109,6 +114,8 @@ export async function POST(req: NextRequest) {
 // PUT - Update materi (auto-shift sort_order)
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -216,6 +223,8 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete materi
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

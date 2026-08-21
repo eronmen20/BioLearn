@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET - List struktur (optionally filtered by bab_id)
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
@@ -27,6 +30,8 @@ export async function GET(req: NextRequest) {
 // POST - Create struktur
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -67,6 +72,8 @@ export async function POST(req: NextRequest) {
 // PUT - Update struktur
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -109,6 +116,8 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete struktur
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

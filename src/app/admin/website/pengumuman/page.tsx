@@ -79,7 +79,7 @@ export default function PengumumanPage() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/announcements?admin=true', { cache: 'no-store' });
+      const res = await adminFetch('/api/announcements', { cache: 'no-store' as any });
       const json = await res.json();
       setData(json.announcements || []);
     } catch {
@@ -144,13 +144,13 @@ export default function PengumumanPage() {
       let res: Response;
       if (selected) {
         payload.id = selected.id;
-        res = await fetch('/api/announcements', {
+        res = await adminFetch('/api/announcements', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
       } else {
-        res = await fetch('/api/announcements', {
+        res = await adminFetch('/api/announcements', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -179,7 +179,7 @@ export default function PengumumanPage() {
 
   const handleTogglePinned = async (item: Announcement) => {
     try {
-      const res = await fetch('/api/announcements', {
+      const res = await adminFetch('/api/announcements', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, pinned: !item.pinned }),
@@ -195,7 +195,7 @@ export default function PengumumanPage() {
   const handleDelete = async () => {
     if (!selected) return;
     try {
-      const res = await fetch(`/api/announcements?id=${selected.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/announcements?id=${selected.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       showToast(`Pengumuman "${selected.title}" dihapus.`);
       setShowDelete(false);

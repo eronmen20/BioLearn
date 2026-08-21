@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdmin } from "@/lib/admin-guard";
+
+function sanitizeSearch(s: string): string {
+  return s.replace(/[%()]/g, "").replace(/[*,]/g, " ");
+}
 
 // GET - List all users with optional role filter
 export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
@@ -21,7 +29,8 @@ export async function GET(req: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+      const safeSearch = sanitizeSearch(search);
+      query = query.or(`name.ilike.%${safeSearch}%,email.ilike.%${safeSearch}%`);
     }
 
     query = query
@@ -49,6 +58,9 @@ export async function GET(req: NextRequest) {
 
 // PUT - Update user role
 export async function PUT(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const supabase = getDb();
     const { id, role, name } = await req.json();
@@ -91,6 +103,9 @@ export async function PUT(req: NextRequest) {
 
 // DELETE - Delete user
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const supabase = getDb();
     const { searchParams } = new URL(req.url);

@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET - List kelas
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const { data, error } = await supabase
       .from("kelas")
@@ -21,6 +24,8 @@ export async function GET() {
 // POST - Create kelas
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -64,6 +69,8 @@ export async function POST(req: NextRequest) {
 // PUT - Update kelas
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const body = await req.json();
 
@@ -106,6 +113,8 @@ export async function PUT(req: NextRequest) {
 // DELETE - Delete kelas
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const id = new URL(req.url).searchParams.get("id");
 

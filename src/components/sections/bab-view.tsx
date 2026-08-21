@@ -1298,6 +1298,12 @@ function AnimationHeader({ t, typeLabel }: { t: (k: string) => string; typeLabel
  * Shown when SVG/image both failed to load — gives user a way forward
  * instead of a silent empty box.
  */
+function isSafeHttpUrl(url: string): boolean {
+  if (!url) return false;
+  const trimmed = url.trim();
+  return /^https?:\/\//i.test(trimmed);
+}
+
 function AnimationErrorFallback({
   title,
   url,
@@ -1317,14 +1323,16 @@ function AnimationErrorFallback({
       {detail && <p className="text-[11px] text-muted/80">{detail}</p>}
       <p className="text-[11px] text-muted/70 break-all">{url}</p>
       <div className="flex gap-2 mt-1 flex-wrap justify-center">
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white hover:bg-accent-dark"
-        >
-          Buka di Tab Baru
-        </a>
+        {isSafeHttpUrl(url) && (
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs px-3 py-1.5 rounded-lg bg-accent text-white hover:bg-accent-dark"
+          >
+            Buka di Tab Baru
+          </a>
+        )}
         {onRetry && (
           <button
             onClick={onRetry}
@@ -1342,14 +1350,14 @@ function AnimationErrorFallback({
 /** Convert common animation URLs into iframe-friendly URLs. */
 function animUrlAsEmbed(url: string): string {
   if (!url) return "";
-  // Already an embed URL
+  // Already an embed URL — allow only trusted domains
   if (/youtube\.com\/embed|youtube\.com\/shorts\/embed|player\.vimeo\.com|h5p/.test(url)) {
     return url;
   }
   // YouTube watch → embed
   const ytWatchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{6,})/);
   if (ytWatchMatch) return `https://www.youtube.com/embed/${ytWatchMatch[1]}`;
-  return url;
+  return "";
 }
 
 /* ───────── InlineVideoSection ─────────

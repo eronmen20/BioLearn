@@ -9,11 +9,11 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
-    const includeArchived = searchParams.get("include_archived") === "true";
-    const isAdminCall = searchParams.get("status") !== null;
 
-    // Admin can see both published + draft via isAdminCall OR explicit status filter
-    const isAdmin = searchParams.has("admin") && searchParams.get("admin") === "true";
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    const isAdmin = !!payload && payload.role === "admin";
 
     let query = supabase
       .from("announcements")
@@ -21,18 +21,13 @@ export async function GET(req: NextRequest) {
       .order("pinned", { ascending: false })
       .order("created_at", { ascending: false });
 
-    if (isAdmin) {
-      // Admin view: return everything regardless of status
-      query = query;
-    } else {
-      // Public view: only published & within scheduled window
+    if (!isAdmin) {
       query = query.eq("status", "published");
     }
 
     const { data, error } = await query;
     if (error) throw error;
 
-    // Filter by starts_at/ends_at for public view
     const now = new Date().toISOString();
     const filtered = (data || []).filter((a) => {
       if (isAdmin) return true;

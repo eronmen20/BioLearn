@@ -7,6 +7,15 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
@@ -44,7 +53,7 @@ export async function POST(req: NextRequest) {
       html: `
         <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #6c5ce7; text-align: center;">🧬 BioLearn</h2>
-          <p style="font-size: 14px; color: #333;">Halo <b>${user.name}</b>,</p>
+          <p style="font-size: 14px; color: #333;">Halo <b>${escapeHtml(user.name || "")}</b>,</p>
           <p style="font-size: 14px; color: #333;">Gunakan kode berikut untuk memverifikasi email kamu:</p>
           <div style="text-align: center; margin: 24px 0;">
             <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #6c5ce7; background: #f0edff; padding: 12px 24px; border-radius: 12px;">${code}</span>

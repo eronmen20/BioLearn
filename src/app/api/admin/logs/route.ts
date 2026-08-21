@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { requireAdmin } from "@/lib/admin-guard";
+
+function sanitizeSearch(s: string): string {
+  return s.replace(/[%()]/g, "").replace(/[*,]/g, " ");
+}
 
 // GET - Activity logs
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "0");
     const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
@@ -23,7 +30,8 @@ export async function GET(req: NextRequest) {
       query = query.eq("target_type", targetType);
     }
     if (search) {
-      query = query.or(`user_email.ilike.%${search}%,action.ilike.%${search}%,target_id.ilike.%${search}%`);
+      const safe = sanitizeSearch(search);
+      query = query.or(`user_email.ilike.%${safe}%,action.ilike.%${safe}%,target_id.ilike.%${safe}%`);
     }
 
     query = query
@@ -48,6 +56,8 @@ export async function GET(req: NextRequest) {
 // DELETE - Clear old logs (older than 30 days)
 export async function DELETE(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 

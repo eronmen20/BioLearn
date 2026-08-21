@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
+import { requireAdmin } from "@/lib/admin-guard";
 
 function parseSubs(raw: unknown): Record<string, { done?: boolean; score?: number; attempts?: number; questions?: number }> {
   if (typeof raw === "string") {
@@ -12,8 +13,10 @@ function parseSubs(raw: unknown): Record<string, { done?: boolean; score?: numbe
   return (raw as Record<string, never>) || {};
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const supabase = getDb();
 
     // Users (for nama)

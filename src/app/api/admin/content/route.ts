@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // GET - List all content
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const { searchParams } = new URL(req.url);
     const type = searchParams.get("type"); // bab, flashcard, quiz, etc.
 
@@ -25,6 +28,8 @@ export async function GET(req: NextRequest) {
 // POST - Create content
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const body = await req.json();
     const { type, data } = body;
 

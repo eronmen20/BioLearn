@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/admin-guard";
 
 // Free translation using MyMemory API (no API key needed)
 async function translateText(text: string, from: string, to: string): Promise<string> {
@@ -61,6 +62,8 @@ function splitText(text: string, maxLen: number): string[] {
 // POST - Translate text
 export async function POST(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req);
+    if (auth instanceof NextResponse) return auth;
     const { text, from = "id", to = "en" } = await req.json();
 
     if (!text) {

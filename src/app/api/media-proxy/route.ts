@@ -164,8 +164,9 @@ export async function GET(req: NextRequest) {
       "Content-Length": String(
         typeof body === "string" ? Buffer.byteLength(body, "utf-8") : body.byteLength
       ),
-      // Permissive CORS so <object> / inline fetch can use it from any origin.
-      "Access-Control-Allow-Origin": "*",
+      // Same-origin CORS only
+      "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_SUPABASE_URL || "",
+      "Vary": "Origin",
       "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
       "X-Biolearn-Proxy": "1",
     },
@@ -177,10 +178,11 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Origin": process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       "Access-Control-Allow-Methods": "GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Max-Age": "86400",
+      "Vary": "Origin",
     },
   });
 }

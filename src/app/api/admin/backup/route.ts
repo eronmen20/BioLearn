@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
+import { requireAdmin } from '@/lib/admin-guard';
 
 const TABLES = [
-  'bab', 'materi', 'users', 'progress', 'kelas',
+  'bab', 'materi', 'progress', 'kelas',
   'sub_bab', 'sub_bab_quiz', 'struktur_fungsi', 'site_settings',
 ];
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const supabase = getDb();
     const backup: Record<string, unknown[]> = {};
@@ -18,6 +22,15 @@ export async function GET() {
       } else {
         backup[table] = data ?? [];
       }
+    }
+
+    const { data: users, error: usersErr } = await supabase
+      .from("users")
+      .select("id, name, email, role, email_verified, created_at");
+    if (usersErr) {
+      backup["users"] = { error: usersErr.message } as unknown as never[];
+    } else {
+      backup["users"] = users ?? [];
     }
 
     return NextResponse.json({
