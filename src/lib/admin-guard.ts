@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
+import { verifyAccessToken } from "@/lib/admin-auth";
 
 export async function requireAdmin(req: NextRequest): Promise<NextResponse | { email: string; role: string }> {
   // 1. Check headers set by middleware (middleware already verified the token)
@@ -13,16 +13,16 @@ export async function requireAdmin(req: NextRequest): Promise<NextResponse | { e
   const authHeader = req.headers.get("authorization");
   if (authHeader && authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    const payload = verifyAdminToken(token);
+    const payload = verifyAccessToken(token);
     if (payload && payload.role === "admin") {
       return { email: payload.email, role: payload.role };
     }
   }
 
   // 3. Check httpOnly cookie
-  const cookieToken = req.cookies.get("admin_token")?.value;
+  const cookieToken = req.cookies.get("access_token")?.value;
   if (cookieToken) {
-    const payload = verifyAdminToken(cookieToken);
+    const payload = verifyAccessToken(cookieToken);
     if (payload && payload.role === "admin") {
       return { email: payload.email, role: payload.role };
     }

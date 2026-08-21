@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPassword } from "@/lib/db";
-import { generateAdminToken } from "@/lib/admin-auth";
+import { generateAccessToken, generateRefreshToken } from "@/lib/admin-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -25,14 +25,24 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ user });
 
     if (user.role === "admin") {
-      const token = generateAdminToken(user.email, user.role);
       const isProd = process.env.NODE_ENV === "production";
-      response.cookies.set("admin_token", token, {
+      const accessToken = generateAccessToken(user.email, user.role);
+      const refreshToken = generateRefreshToken(user.email, user.role);
+
+      response.cookies.set("access_token", accessToken, {
         httpOnly: true,
         secure: isProd,
         sameSite: "strict",
         path: "/api/admin",
-        maxAge: 2 * 60 * 60,
+        maxAge: 15 * 60, // 15 minutes
+      });
+
+      response.cookies.set("refresh_token", refreshToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: "strict",
+        path: "/api/auth/refresh",
+        maxAge: 7 * 24 * 60 * 60, // 7 days
       });
     }
 

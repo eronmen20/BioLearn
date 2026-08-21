@@ -6,6 +6,7 @@ interface AdminTokenPayload {
   email: string;
   role: string;
   exp: number;
+  type: "access" | "refresh";
 }
 
 async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
@@ -31,7 +32,8 @@ async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
     if (signature !== expectedSig) return null;
 
     const payload: AdminTokenPayload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
-    if (!payload.email || !payload.role || !payload.exp) return null;
+    if (!payload.email || !payload.role || !payload.exp || !payload.type) return null;
+    if (payload.type !== "access") return null;
     if (Date.now() > payload.exp) return null;
 
     return payload;
@@ -47,7 +49,7 @@ export async function proxy(req: NextRequest) {
 
   let token: string | null = null;
 
-  const cookieToken = req.cookies.get("admin_token")?.value;
+  const cookieToken = req.cookies.get("access_token")?.value;
   if (cookieToken) {
     token = cookieToken;
   }
