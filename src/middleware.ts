@@ -1,7 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAdminToken } from "@/lib/admin-auth";
 
-export function middleware(req: NextRequest) {
+const SECRET = process.env.ADMIN_TOKEN_SECRET || "";
+const TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000;
+
+interface AdminTokenPayload {
+  email: string;
+  role: string;
+  exp: number;
+}
+
+async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
+  if (!SECRET) return null;
+  try {
+    const [payloadB64, signature] = token.split(".");
+    if (!payloadB64 || !signature) return null;
+
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(SECRET),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+
+    const sigBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
+    const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "");
+
+    if (signature !== expectedSig) return null;
+
+    const payload: AdminTokenPayload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
+    if (!payload.email || !payload.role || !payload.exp) return null;
+    if (Date.now() > payload.exp) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export async function middleware(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith("/api/admin")) {
     return NextResponse.next();
   }
@@ -12,7 +52,7 @@ export function middleware(req: NextRequest) {
   }
 
   const token = authHeader.slice(7);
-  const payload = verifyAdminToken(token);
+  const payload = await verifyToken(token);
 
   if (!payload) {
     return NextResponse.json({ error: "Unauthorized: Invalid or expired token" }, { status: 401 });
