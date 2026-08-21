@@ -32,7 +32,21 @@ export async function createUser(email: string, password: string, name: string) 
 export async function verifyPassword(email: string, password: string) {
   const user = await findUserByEmail(email);
   if (!user) return null;
-  const valid = await bcrypt.compare(password, user.password);
+
+  let valid = false;
+  const stored = user.password;
+
+  if (stored && (stored.startsWith("$2a$") || stored.startsWith("$2b$"))) {
+    valid = await bcrypt.compare(password, stored);
+  } else {
+    const sha = crypto.createHash("sha256").update(password).digest("hex");
+    valid = sha === stored;
+    if (valid) {
+      const newHash = await bcrypt.hash(password, 12);
+      await getDb().from("users").update({ password: newHash }).eq("id", user.id);
+    }
+  }
+
   if (!valid) return null;
   return { id: user.id, email: user.email, name: user.name, role: user.role, email_verified: user.email_verified };
 }
