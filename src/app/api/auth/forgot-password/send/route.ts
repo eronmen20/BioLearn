@@ -19,7 +19,7 @@ function escapeHtml(s: string): string {
 export async function POST(req: NextRequest) {
   try {
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-    const { allowed } = checkRateLimit(`auth:forgot-send:${ip}`, 3, 10 * 60 * 1000);
+    const { allowed } = await checkRateLimit(`auth:forgot-send:${ip}`, 3, 10 * 60 * 1000);
     if (!allowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi dalam beberapa menit." }, { status: 429 });
     }
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email wajib diisi" }, { status: 400 });
     }
 
-    const { allowed: emailAllowed } = checkRateLimit(`auth:forgot-send:email:${email}`, 3, 10 * 60 * 1000);
+    const { allowed: emailAllowed } = await checkRateLimit(`auth:forgot-send:email:${email}`, 3, 10 * 60 * 1000);
     if (!emailAllowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan untuk email ini. Coba lagi dalam beberapa menit." }, { status: 429 });
     }
