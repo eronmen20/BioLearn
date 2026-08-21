@@ -6,6 +6,7 @@ import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { Image, Plus, Edit3, Trash2 } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface Banner {
   id: number;
@@ -32,7 +33,7 @@ export default function BannerPage() {
   const fetchBanners = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/banner');
+      const res = await adminFetch('/api/admin/banner');
       const data = await res.json();
       setBanners(data.banners || []);
     } catch {
@@ -80,7 +81,7 @@ export default function BannerPage() {
       const payload = selectedBanner
         ? { id: selectedBanner.id, ...form }
         : form;
-      const res = await fetch(url, {
+      const res = await adminFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -100,7 +101,7 @@ export default function BannerPage() {
     if (!selectedBanner) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/admin/banner?id=${selectedBanner.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/banner?id=${selectedBanner.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('gagal');
       showToast('Banner berhasil dihapus!');
       setShowDelete(false);

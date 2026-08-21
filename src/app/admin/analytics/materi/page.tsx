@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { StatsCard } from '@/components/admin/stats-card';
 import { ChartCard, SimpleBarChart } from '@/components/admin/chart-card';
 import { BookOpen, ListTree, Eye, TrendingUp } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface ChartData {
   label: string;
@@ -25,7 +26,7 @@ export default function MateriAnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/analytics')
+    adminFetch('/api/admin/analytics')
       .then((r) => r.json())
       .then((d) => setData(d))
       .catch(() => {})

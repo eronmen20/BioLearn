@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { verifyAdminToken } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -50,14 +51,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ announcements: filtered });
   } catch (e) {
     console.error("[API Announcements GET]", e);
-    const msg = e instanceof Error ? e.message : typeof e === "object" && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // POST - Create announcement
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = getDb();
     const body = await req.json();
 
@@ -87,14 +94,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: data?.id });
   } catch (e) {
     console.error("[API Announcements POST]", e);
-    const msg = e instanceof Error ? e.message : typeof e === "object" && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // PUT - Update announcement
 export async function PUT(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = getDb();
     const body = await req.json();
 
@@ -124,14 +137,20 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, id: body.id });
   } catch (e) {
     console.error("[API Announcements PUT]", e);
-    const msg = e instanceof Error ? e.message : typeof e === "object" && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 // DELETE - Delete announcement
 export async function DELETE(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const supabase = getDb();
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -145,7 +164,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, id });
   } catch (e) {
     console.error("[API Announcements DELETE]", e);
-    const msg = e instanceof Error ? e.message : typeof e === "object" && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

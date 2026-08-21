@@ -7,6 +7,7 @@ import {
   Loader2, CheckCircle, XCircle, HardDrive, Clock,
 } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface TableInfo {
   name: string;
@@ -36,7 +37,7 @@ export default function DatabaseInfoPage() {
 
     try {
       // Test connection via backup API (it fetches all tables)
-      const res = await fetch('/api/admin/backup');
+      const res = await adminFetch('/api/admin/backup');
       if (!res.ok) throw new Error('Connection failed');
       const data = await res.json();
       setConnectionStatus('connected');
@@ -69,7 +70,7 @@ export default function DatabaseInfoPage() {
   async function handleBackup() {
     setBacking(true);
     try {
-      const res = await fetch('/api/admin/backup');
+      const res = await adminFetch('/api/admin/backup');
       const data = await res.json();
 
       // Download as JSON

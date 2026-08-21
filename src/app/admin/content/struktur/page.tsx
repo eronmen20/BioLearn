@@ -12,6 +12,7 @@ import {
   Plus, Trash2, Save, Edit, Eye, Loader2, FlaskConical, Image as ImageIcon,
   Move, GripVertical, X,
 } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface Flashcard {
   name: string;
@@ -69,7 +70,7 @@ export default function StrukturPage() {
     setLoading(true);
     try {
       const url = filterBab ? `/api/admin/struktur?bab_id=${filterBab}` : "/api/admin/struktur";
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       const data = await res.json();
       setItems(data.struktur || []);
     } catch {
@@ -139,7 +140,7 @@ export default function StrukturPage() {
         flashcards: form.flashcards,
       };
 
-      const res = await fetch("/api/admin/struktur", {
+      const res = await adminFetch("/api/admin/struktur", {
         method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -169,7 +170,7 @@ export default function StrukturPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/struktur?id=${deleting.id}`, { method: "DELETE" });
+      const res = await adminFetch(`/api/admin/struktur?id=${deleting.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed");
       showToast("Struktur berhasil dihapus!");
       setShowDelete(false);

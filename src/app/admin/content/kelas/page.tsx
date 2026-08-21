@@ -6,6 +6,7 @@ import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
 import { GraduationCap, BookOpen, Edit, Trash2, Save, Loader2, Palette } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface KelasItem {
   id: string;
@@ -47,12 +48,12 @@ export default function KelasPage() {
   const loadKelas = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/kelas');
+      const res = await adminFetch('/api/admin/kelas');
       const data = await res.json();
       setKelas(data.kelas || []);
 
       // Fetch bab counts per kelas
-      const resBab = await fetch('/api/admin/bab');
+      const resBab = await adminFetch('/api/admin/bab');
       const babData = await resBab.json();
       const counts: Record<string, number> = {};
       (babData.bab || []).forEach((b: { kelas_id?: string }) => {
@@ -105,7 +106,7 @@ export default function KelasPage() {
     setSaving(true);
     try {
       const payload = { ...form };
-      const res = await fetch('/api/admin/kelas', {
+      const res = await adminFetch('/api/admin/kelas', {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -124,7 +125,7 @@ export default function KelasPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/kelas?id=${deleting.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/kelas?id=${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       showToast('Kelas berhasil dihapus!');
       setShowDelete(false);

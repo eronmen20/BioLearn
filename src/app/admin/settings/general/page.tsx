@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Settings, Save, Globe, Clock, Languages, Mail } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface GeneralSettings {
   site_name: string;
@@ -35,7 +36,7 @@ export default function GeneralSettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch('/api/admin/settings?key=general');
+        const res = await adminFetch('/api/admin/settings?key=general');
         const data = await res.json();
         if (data.settings?.value) {
           setSettings({ ...DEFAULT_SETTINGS, ...data.settings.value });
@@ -51,7 +52,7 @@ export default function GeneralSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch('/api/admin/settings', {
+      const res = await adminFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: 'general', value: settings }),

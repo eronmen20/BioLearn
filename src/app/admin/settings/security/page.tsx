@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { Lock, Save, Shield, Key } from "lucide-react";
 import { showToast } from "@/components/ui/toaster";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface SecuritySettings {
   two_factor: boolean;
@@ -25,7 +26,7 @@ export default function SecuritySettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/admin/settings?key=security");
+        const res = await adminFetch("/api/admin/settings?key=security");
         const data = await res.json();
         if (data.settings?.value) {
           setSettings({ ...DEFAULT_SETTINGS, ...data.settings.value });
@@ -41,7 +42,7 @@ export default function SecuritySettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings", {
+      const res = await adminFetch("/api/admin/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: "security", value: settings }),

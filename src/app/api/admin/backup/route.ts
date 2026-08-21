@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { getDb } from '@/lib/db';
 
 const TABLES = [
   'bab', 'materi', 'users', 'progress', 'kelas',
@@ -13,6 +8,7 @@ const TABLES = [
 
 export async function GET() {
   try {
+    const supabase = getDb();
     const backup: Record<string, unknown[]> = {};
 
     for (const table of TABLES) {
@@ -30,9 +26,7 @@ export async function GET() {
       tables: backup,
     });
   } catch (e) {
-    return NextResponse.json(
-      { error: 'Backup gagal', detail: String(e) },
-      { status: 500 }
-    );
+    console.error("[API Backup GET]", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

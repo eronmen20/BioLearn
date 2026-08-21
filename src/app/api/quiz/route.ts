@@ -44,12 +44,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ quiz: data || [] });
   } catch (e) {
     console.error("[API Quiz Public GET]", e);
-    const msg =
-      e instanceof Error
-        ? e.message
-        : typeof e === "object" && e !== null
-        ? JSON.stringify(e)
-        : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

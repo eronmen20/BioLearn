@@ -22,6 +22,7 @@ import {
   Check,
   AlertCircle,
 } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 // Types — each sub tracks its DB ID for upsert
 interface SubBab {
@@ -73,7 +74,7 @@ export default function MateriEditorPage() {
   // Load content when bab changes — fetch sub-bab list from DB first
   useEffect(() => {
     // Fetch bab list from DB on mount
-    fetch('/api/admin/bab')
+    adminFetch('/api/admin/bab')
       .then(r => r.json())
       .then(data => {
         const list = data.bab || [];
@@ -93,16 +94,16 @@ export default function MateriEditorPage() {
     setLoadingContent(true);
     try {
       // 1. Fetch sub-bab list from sub_bab table (source of truth)
-      const resSubBab = await fetch(`/api/admin/sub-bab?bab_id=${babId}`);
+      const resSubBab = await adminFetch(`/api/admin/sub-bab?bab_id=${babId}`);
       const subBabData = await resSubBab.json();
       const subBabList: { key: string; title_id?: string; title_en?: string }[] = subBabData.sub_bab || [];
 
       // 2. Fetch existing materi content
-      const res = await fetch(`/api/admin/materi?bab_id=${babId}`);
+      const res = await adminFetch(`/api/admin/materi?bab_id=${babId}`);
       const data = await res.json();
 
       // 3. Fetch quiz from sub_bab_quiz table
-      const resQuiz = await fetch(`/api/admin/quiz-v2?bab_id=${babId}`);
+      const resQuiz = await adminFetch(`/api/admin/quiz-v2?bab_id=${babId}`);
       const quizData = await resQuiz.json();
 
       if (subBabList.length > 0) {
@@ -196,7 +197,7 @@ export default function MateriEditorPage() {
     if (!text.trim()) return;
     setTranslating(field);
     try {
-      const res = await fetch("/api/admin/translate", {
+      const res = await adminFetch("/api/admin/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text, from: target === "en" ? "id" : "en", to: target }),
@@ -307,19 +308,19 @@ export default function MateriEditorPage() {
           };
 
           // Check if sub-bab already exists in DB
-          const existingSubBab = await fetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
+          const existingSubBab = await adminFetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
             .then(r => r.json())
             .then(d => (d.sub_bab || []).find((s: Record<string, unknown>) => s.key === sub.key))
             .catch(() => null);
 
           if (existingSubBab) {
-            await fetch('/api/admin/sub-bab', {
+            await adminFetch('/api/admin/sub-bab', {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ ...subBabPayload, id: existingSubBab.id }),
             });
           } else {
-            await fetch('/api/admin/sub-bab', {
+            await adminFetch('/api/admin/sub-bab', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(subBabPayload),
@@ -344,13 +345,13 @@ export default function MateriEditorPage() {
 
           let res;
           if (sub.db_id) {
-            res = await fetch("/api/admin/materi", {
+            res = await adminFetch("/api/admin/materi", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...materiPayload, id: sub.db_id }),
             });
           } else {
-            res = await fetch("/api/admin/materi", {
+            res = await adminFetch("/api/admin/materi", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(materiPayload),
@@ -382,13 +383,13 @@ export default function MateriEditorPage() {
         try {
           let res;
           if (q.db_id) {
-            res = await fetch("/api/admin/quiz-v2", {
+            res = await adminFetch("/api/admin/quiz-v2", {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ ...payload, id: q.db_id }),
             });
           } else {
-            res = await fetch("/api/admin/quiz-v2", {
+            res = await adminFetch("/api/admin/quiz-v2", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(payload),
@@ -441,15 +442,15 @@ export default function MateriEditorPage() {
     const sub = content.subs[idx];
     // Delete from materi table if exists
     if (sub.db_id) {
-      fetch(`/api/admin/materi?id=${sub.db_id}`, { method: "DELETE" }).catch(() => {});
+      adminFetch(`/api/admin/materi?id=${sub.db_id}`, { method: "DELETE" }).catch(() => {});
     }
     // Also delete from sub_bab table if exists (find by key)
-    fetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
+    adminFetch(`/api/admin/sub-bab?bab_id=${content.bab_id}`)
       .then(r => r.json())
       .then(d => {
         const match = (d.sub_bab || []).find((s: Record<string, unknown>) => s.key === sub.key);
         if (match?.id) {
-          fetch(`/api/admin/sub-bab?id=${match.id}`, { method: "DELETE" }).catch(() => {});
+          adminFetch(`/api/admin/sub-bab?id=${match.id}`, { method: "DELETE" }).catch(() => {});
         }
       })
       .catch(() => {});
@@ -477,7 +478,7 @@ export default function MateriEditorPage() {
   const removeQuiz = (idx: number) => {
     const q = content.quiz[idx];
     if (q.db_id) {
-      fetch(`/api/admin/materi?id=${q.db_id}`, { method: "DELETE" }).catch(() => {});
+      adminFetch(`/api/admin/quiz-v2?id=${q.db_id}`, { method: "DELETE" }).catch(() => {});
     }
     setContent({ ...content, quiz: content.quiz.filter((_, i) => i !== idx) });
   };

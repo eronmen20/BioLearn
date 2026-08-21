@@ -7,6 +7,7 @@ import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
 import { TranslateButton } from '@/components/admin/translate-button';
 import { BookOpen, Edit, Trash2, Plus, Video, FileText, Save, Loader2, Archive, ArchiveRestore } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 function ArchivedToggleOffIcon() {
   return <Archive className="w-4 h-4" />;
@@ -58,10 +59,10 @@ export default function BabPage() {
   const loadBab = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/bab');
+      const res = await adminFetch('/api/admin/bab');
       const data = await res.json();
       // Also count materi for each bab
-      const resMateri = await fetch('/api/admin/materi');
+      const resMateri = await adminFetch('/api/admin/materi');
       const materiData = await resMateri.json();
       const materiList = materiData.materi || [];
 
@@ -132,7 +133,7 @@ export default function BabPage() {
         payload.is_archived = form.is_archived;
       }
 
-      const res = await fetch('/api/admin/bab', {
+      const res = await adminFetch('/api/admin/bab', {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -163,7 +164,7 @@ export default function BabPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/bab?id=${deleting.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/bab?id=${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed');
       const wasArchived = deleting.is_archived;
       showToast(wasArchived ? 'Bab arsip berhasil dihapus permanen!' : 'Bab berhasil dihapus!');
@@ -178,7 +179,7 @@ export default function BabPage() {
   // Quick archive/unarchive toggle from the row
   const handleToggleArchive = async (item: BabItem) => {
     try {
-      const res = await fetch('/api/admin/bab', {
+      const res = await adminFetch('/api/admin/bab', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, is_archived: !item.is_archived }),

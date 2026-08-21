@@ -1,9 +1,10 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 let supabase: SupabaseClient;
 
-function getDb(): SupabaseClient {
+export function getDb(): SupabaseClient {
   if (!supabase) {
     supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,7 +23,7 @@ export async function findUserByEmail(email: string) {
 
 export async function createUser(email: string, password: string, name: string) {
   const id = crypto.randomUUID();
-  const hash = crypto.createHash("sha256").update(password).digest("hex");
+  const hash = await bcrypt.hash(password, 12);
   const { error } = await getDb().from("users").insert({ id, email, password: hash, name, role: "user", email_verified: false });
   if (error) throw error;
   return { id, email, name, role: "user" as const };
@@ -31,13 +32,13 @@ export async function createUser(email: string, password: string, name: string) 
 export async function verifyPassword(email: string, password: string) {
   const user = await findUserByEmail(email);
   if (!user) return null;
-  const hash = crypto.createHash("sha256").update(password).digest("hex");
-  if (user.password !== hash) return null;
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return null;
   return { id: user.id, email: user.email, name: user.name, role: user.role, email_verified: user.email_verified };
 }
 
 export async function resetPassword(email: string, newPassword: string) {
-  const hash = crypto.createHash("sha256").update(newPassword).digest("hex");
+  const hash = await bcrypt.hash(newPassword, 12);
   const { error } = await getDb().from("users").update({ password: hash }).eq("email", email);
   if (error) throw error;
 }

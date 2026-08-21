@@ -287,6 +287,9 @@ function SubbabNav({
     ? subs.some((s, i) => i > 0 && !progress.isSubUnlocked(babId, s, subs))
     : false;
 
+  const reflectionUnlocked = mounted ? progress.isReflectionUnlocked(babId, subs) : false;
+  const reflectionDone = mounted ? (progress.getProgress(babId).reflection_done ?? false) : false;
+
   return (
     <div className="mb-5">
       <div className="flex gap-1.5 sm:gap-2 flex-wrap">
@@ -323,6 +326,25 @@ function SubbabNav({
             </button>
           );
         })}
+
+        {/* Quiz Refleksi button — only shows when all sub-babs done */}
+        {reflectionUnlocked && (
+          <button
+            onClick={() => {
+              document.getElementById("reflection-quiz")?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
+              reflectionDone
+                ? "bg-purple-100 text-purple-700 border-purple-300 hover:border-purple-400"
+                : "bg-accent text-white border-accent shadow-sm animate-pulse"
+            }`}
+          >
+            <span className="inline-flex items-center gap-1">
+              {reflectionDone ? <Check className="w-3 h-3" /> : <Trophy className="w-3 h-3" />}
+              🪞 Quiz Refleksi
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Petunjuk: kalau ada subbab di depan yang masih locked, kasih tau user */}
@@ -637,7 +659,7 @@ function ReflectionQuiz({
   // If reflection already completed, show congrats
   if (reflectionDone && !showResult) {
     return (
-      <div className="bg-gradient-to-br from-green-light to-surface rounded-2xl shadow-card border border-green/20 p-6 mb-6 text-center">
+      <div id="reflection-quiz" className="bg-gradient-to-br from-green-light to-surface rounded-2xl shadow-card border border-green/20 p-6 mb-6 text-center">
         <Trophy className="w-10 h-10 text-green mx-auto mb-3" />
         <h3 className="text-lg font-extrabold text-green mb-1">Selamat! Bab ini selesai! 🎉</h3>
         <p className="text-sm text-muted">
@@ -687,7 +709,7 @@ function ReflectionQuiz({
     const passed = score >= 80;
 
     return (
-      <div className="bg-gradient-to-br from-accent/[0.05] to-surface rounded-2xl shadow-card border border-accent/20 p-6 mb-6 text-center">
+      <div id="reflection-quiz" className="bg-gradient-to-br from-accent/[0.05] to-surface rounded-2xl shadow-card border border-accent/20 p-6 mb-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Trophy className={`w-6 h-6 ${passed ? "text-green" : "text-accent"}`} />
           <h3 className="text-lg font-bold">Hasil Quiz Refleksi</h3>
@@ -722,7 +744,7 @@ function ReflectionQuiz({
   }
 
   return (
-    <div className="bg-gradient-to-br from-accent/[0.03] to-surface rounded-2xl shadow-card border border-accent/20 overflow-hidden mb-6">
+      <div id="reflection-quiz" className="bg-gradient-to-br from-accent/[0.03] to-surface rounded-2xl shadow-card border border-accent/20 overflow-hidden mb-6">
       <div className="p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-sm flex items-center gap-2">

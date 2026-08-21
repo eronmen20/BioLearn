@@ -1,48 +1,66 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getDb } from "@/lib/db";
 
 // GET - Activity logs
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "0");
-    const limit = parseInt(searchParams.get("limit") || "50");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 200);
+    const action = searchParams.get("action");
+    const targetType = searchParams.get("target_type");
+    const search = searchParams.get("search");
 
-    // Placeholder - in production, you'd have an activity_logs table
+    const supabase = getDb();
+    let query = supabase
+      .from("activity_logs")
+      .select("*", { count: "exact" });
+
+    if (action) {
+      query = query.eq("action", action);
+    }
+    if (targetType) {
+      query = query.eq("target_type", targetType);
+    }
+    if (search) {
+      query = query.or(`user_email.ilike.%${search}%,action.ilike.%${search}%,target_id.ilike.%${search}%`);
+    }
+
+    query = query
+      .order("created_at", { ascending: false })
+      .range(page * limit, (page + 1) * limit - 1);
+
+    const { data, error, count } = await query;
+    if (error) throw error;
+
     return NextResponse.json({
-      logs: [],
-      total: 0,
+      logs: data || [],
+      total: count || 0,
       page,
       limit,
     });
   } catch (e) {
     console.error("[Admin Logs GET]", e);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-// POST - Create log entry
-export async function POST(req: NextRequest) {
+// DELETE - Clear old logs (older than 30 days)
+export async function DELETE(req: NextRequest) {
   try {
-    const { action, details, userId } = await req.json();
+    const supabase = getDb();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Placeholder - in production, insert into activity_logs table
-    return NextResponse.json({ success: true });
+    const { error, count } = await supabase
+      .from("activity_logs")
+      .delete()
+      .lt("created_at", thirtyDaysAgo);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, deleted: count || 0 });
   } catch (e) {
-    console.error("[Admin Logs POST]", e);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    console.error("[Admin Logs DELETE]", e);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getProgress, saveProgress, findUserByEmail } from "@/lib/db";
+import { verifyAdminToken } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const email = req.nextUrl.searchParams.get("email");
     if (!email) {
       return NextResponse.json({ error: "Email wajib diisi" }, { status: 400 });
@@ -22,6 +30,13 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const authHeader = req.headers.get("authorization");
+    const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+    const payload = token ? verifyAdminToken(token) : null;
+    if (!payload || payload.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { email, babId, data } = await req.json();
 
     if (!email || !babId || !data) {

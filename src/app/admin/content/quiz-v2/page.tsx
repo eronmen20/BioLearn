@@ -11,6 +11,7 @@ import {
   HelpCircle, Plus, Trash2, Save, Loader2, CheckCircle,
   ChevronDown, ChevronRight, Edit3, BookOpen, RefreshCw,
 } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface QuizQuestion {
   id?: number;
@@ -60,7 +61,7 @@ export default function QuizV2Page() {
 
   useEffect(() => {
     if (!filterBab) { setSubBabList([]); return; }
-    fetch(`/api/admin/sub-bab?bab_id=${filterBab}`)
+    adminFetch(`/api/admin/sub-bab?bab_id=${filterBab}`)
       .then((r) => r.json())
       .then((data) => {
         const list = (data.sub_bab || []).map((s: { key: string; title_id?: string }) => ({
@@ -87,7 +88,7 @@ export default function QuizV2Page() {
     setLoading(true);
     try {
       const url = filterBab ? `/api/admin/quiz-v2?bab_id=${filterBab}` : '/api/admin/quiz-v2';
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       const data = await res.json();
       setQuestions(data.quiz || []);
     } catch {
@@ -131,7 +132,7 @@ export default function QuizV2Page() {
 
     // If it has an id, delete from DB
     if (q.id) {
-      fetch(`/api/admin/quiz-v2?id=${q.id}`, { method: 'DELETE' })
+      adminFetch(`/api/admin/quiz-v2?id=${q.id}`, { method: 'DELETE' })
         .then(() => {
           showToast('Soal berhasil dihapus');
           loadQuestions();
@@ -171,7 +172,7 @@ export default function QuizV2Page() {
         sort_order: q.sort_order || globalIdx + 1,
       };
 
-      const res = await fetch('/api/admin/quiz-v2', {
+      const res = await adminFetch('/api/admin/quiz-v2', {
         method: q.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -195,7 +196,7 @@ export default function QuizV2Page() {
     for (const q of unsaved) {
       if (!q.question_id.trim() || q.options_id.some((o) => !o.trim())) continue;
       try {
-        const res = await fetch('/api/admin/quiz-v2', {
+        const res = await adminFetch('/api/admin/quiz-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(q),

@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getDb } from "@/lib/db";
 
 function parseSubs(raw: unknown): Record<string, { done?: boolean; score?: number; attempts?: number; questions?: number }> {
   if (typeof raw === "string") {

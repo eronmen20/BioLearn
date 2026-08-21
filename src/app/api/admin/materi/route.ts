@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getDb } from "@/lib/db";
+import { logActivity } from "@/lib/activity-log";
 
 // Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -43,8 +37,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ materi: data || [] });
   } catch (e) {
     console.error("[API Materi GET]", e);
-    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -95,10 +88,21 @@ export async function POST(req: NextRequest) {
     }).select("id").single();
 
     if (error) throw error;
+
+    const adminEmail = req.headers.get("x-admin-email") || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    await logActivity({
+      user_email: adminEmail,
+      action: "create",
+      target_type: "materi",
+      target_id: data?.id,
+      ip_address: ip,
+    });
+
     return NextResponse.json({ success: true, id: data?.id });
   } catch (e) {
     console.error("[API Materi POST]", e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -191,11 +195,21 @@ export async function PUT(req: NextRequest) {
       .eq("id", body.id);
 
     if (error) throw error;
+
+    const adminEmail = req.headers.get("x-admin-email") || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    await logActivity({
+      user_email: adminEmail,
+      action: "update",
+      target_type: "materi",
+      target_id: body.id,
+      ip_address: ip,
+    });
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[API Materi PUT]", e);
-    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -210,10 +224,20 @@ export async function DELETE(req: NextRequest) {
 
     const { error } = await supabase.from("materi").delete().eq("id", id);
     if (error) throw error;
+
+    const adminEmail = req.headers.get("x-admin-email") || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    await logActivity({
+      user_email: adminEmail,
+      action: "delete",
+      target_type: "materi",
+      target_id: id,
+      ip_address: ip,
+    });
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[API Materi DELETE]", e);
-    const msg = e instanceof Error ? e.message : typeof e === 'object' && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

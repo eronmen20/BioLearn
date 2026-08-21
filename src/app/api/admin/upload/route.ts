@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getDb } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,15 +7,16 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "images";
+    const safeFolder = folder.replace(/[^a-zA-Z0-9\/_-]/g, "").replace(/\.\./g, "").replace(/^\/+|\/+$/g, "") || "images";
 
     if (!file) {
       return NextResponse.json({ error: "File wajib diisi" }, { status: 400 });
     }
 
     // Validate file type
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      return NextResponse.json({ error: "Tipe file tidak didukung. Gunakan JPG, PNG, GIF, WebP, atau SVG" }, { status: 400 });
+      return NextResponse.json({ error: "Tipe file tidak didukung. Gunakan JPG, PNG, GIF, atau WebP" }, { status: 400 });
     }
 
     // Max 5MB
@@ -34,7 +28,7 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split(".").pop() || "png";
     const timestamp = Date.now();
     const randomStr = Math.random().toString(36).substring(2, 8);
-    const path = `${folder}/${timestamp}-${randomStr}.${ext}`;
+    const path = `${safeFolder}/${timestamp}-${randomStr}.${ext}`;
 
     // Upload to Supabase Storage
     const buffer = Buffer.from(await file.arrayBuffer());

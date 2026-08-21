@@ -7,6 +7,7 @@ import { Modal, ConfirmDialog } from '@/components/admin/modal';
 import { showToast } from '@/components/ui/toaster';
 import { TranslateButton } from '@/components/admin/translate-button';
 import { Megaphone, Plus, Edit3, Trash2, Pin, PinOff, Bell, Calendar, Clock, Loader2, Languages } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface Announcement {
   id: number;
@@ -67,7 +68,7 @@ export default function PengumumanPage() {
 
   const loadBabList = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/bab');
+      const res = await adminFetch('/api/admin/bab');
       const data = await res.json();
       setBabList(data.bab || []);
     } catch {

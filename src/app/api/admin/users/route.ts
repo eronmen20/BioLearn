@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-function getDb() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
+import { getDb } from "@/lib/db";
+import { logActivity } from "@/lib/activity-log";
 
 // GET - List all users with optional role filter
 export async function GET(req: NextRequest) {
@@ -74,6 +68,17 @@ export async function PUT(req: NextRequest) {
 
     if (error) throw error;
 
+    const adminEmail = req.headers.get("x-admin-email") || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    await logActivity({
+      user_email: adminEmail,
+      action: "update",
+      target_type: "users",
+      target_id: id,
+      detail: { role, name },
+      ip_address: ip,
+    });
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[Admin Users PUT]", e);
@@ -98,6 +103,16 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabase.from("users").delete().eq("id", id);
 
     if (error) throw error;
+
+    const adminEmail = req.headers.get("x-admin-email") || "unknown";
+    const ip = req.headers.get("x-forwarded-for") || "unknown";
+    await logActivity({
+      user_email: adminEmail,
+      action: "delete",
+      target_type: "users",
+      target_id: id,
+      ip_address: ip,
+    });
 
     return NextResponse.json({ success: true });
   } catch (e) {

@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { Palette, Save, Sun, Moon, Monitor, Check, Loader2 } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
 import { useThemeStore, type Theme } from '@/lib/theme-store';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface ColorPreset {
   name: string;
@@ -39,13 +40,13 @@ export default function ThemeSettingsPage() {
   async function fetchData() {
     try {
       // Fetch via API route instead of direct Supabase
-      const res = await fetch('/api/admin/settings?key=theme_presets');
+      const res = await adminFetch('/api/admin/settings?key=theme_presets');
       const data = await res.json();
       if (data.settings?.value) {
         setPresets(data.settings.value);
       }
 
-      const res2 = await fetch('/api/admin/settings?key=active_theme');
+      const res2 = await adminFetch('/api/admin/settings?key=active_theme');
       const data2 = await res2.json();
       if (data2.settings?.value) {
         setActivePreset(data2.settings.value.preset || 'Violet');
@@ -76,7 +77,7 @@ export default function ThemeSettingsPage() {
   async function saveToDB(value: Record<string, unknown>) {
     setSaving(true);
     try {
-      await fetch('/api/admin/settings', {
+      await adminFetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: 'active_theme', value }),

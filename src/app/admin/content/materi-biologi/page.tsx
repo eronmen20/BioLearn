@@ -10,6 +10,7 @@ import {
   FileText, Edit, Trash2, Save, Loader2, Video, Image as ImageIcon,
   Layers, Sparkles, Plus, Languages, Eye, EyeOff,
 } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface BabItem { id: string; icon: string; color: string; kelas_id?: string; }
 
@@ -74,19 +75,19 @@ export default function MateriBiologiPage() {
     setLoading(true);
     try {
       // Fetch bab list
-      const resBab = await fetch('/api/admin/bab');
+      const resBab = await adminFetch('/api/admin/bab');
       const babData = await resBab.json();
       setBabList(babData.bab || []);
 
       // Fetch sub_bab (primary source)
       const subBabUrl = filterBab ? `/api/admin/sub-bab?bab_id=${filterBab}` : '/api/admin/sub-bab';
-      const resSubBab = await fetch(subBabUrl);
+      const resSubBab = await adminFetch(subBabUrl);
       const subBabData = await resSubBab.json();
       const subBabList: Record<string, unknown>[] = subBabData.sub_bab || [];
 
       // Fetch materi (content source)
       const materiUrl = filterBab ? `/api/admin/materi?bab_id=${filterBab}` : '/api/admin/materi';
-      const resMateri = await fetch(materiUrl);
+      const resMateri = await adminFetch(materiUrl);
       const materiData = await resMateri.json();
       const materiList: Record<string, unknown>[] = materiData.materi || [];
 
@@ -159,7 +160,7 @@ export default function MateriBiologiPage() {
     if (!text.trim()) return null;
     setTranslating(field);
     try {
-      const res = await fetch('/api/admin/translate', {
+      const res = await adminFetch('/api/admin/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, from: target === 'en' ? 'id' : 'en', to: target }),
@@ -258,7 +259,7 @@ export default function MateriBiologiPage() {
         sort_order: form.sort_order,
       };
 
-      const subBabRes = await fetch('/api/admin/sub-bab', {
+      const subBabRes = await adminFetch('/api/admin/sub-bab', {
         method: editing?.sub_bab_id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subBabPayload),
@@ -315,7 +316,7 @@ export default function MateriBiologiPage() {
         },
       };
 
-      const materiRes = await fetch('/api/admin/materi', {
+      const materiRes = await adminFetch('/api/admin/materi', {
         method: editing?.materi_id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(materiPayload),
@@ -355,11 +356,11 @@ export default function MateriBiologiPage() {
     try {
       // Delete from sub_bab if exists
       if (deleting.sub_bab_id) {
-        await fetch(`/api/admin/sub-bab?id=${deleting.sub_bab_id}`, { method: 'DELETE' });
+        await adminFetch(`/api/admin/sub-bab?id=${deleting.sub_bab_id}`, { method: 'DELETE' });
       }
       // Delete from materi if exists
       if (deleting.materi_id) {
-        await fetch(`/api/admin/materi?id=${deleting.materi_id}`, { method: 'DELETE' });
+        await adminFetch(`/api/admin/materi?id=${deleting.materi_id}`, { method: 'DELETE' });
       }
       showToast('Materi biologi berhasil dihapus!');
       setShowDelete(false);

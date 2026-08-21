@@ -5,6 +5,7 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { StatsCard } from '@/components/admin/stats-card';
 import { ClipboardList, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface QuizHistoryRow {
   id: number;
@@ -47,7 +48,7 @@ export default function RiwayatQuizPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/learning')
+    adminFetch('/api/admin/learning')
       .then((r) => r.json())
       .then((d) => {
         setData(d.riwayat || []);

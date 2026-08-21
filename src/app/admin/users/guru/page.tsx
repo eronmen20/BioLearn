@@ -5,6 +5,8 @@ import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { ConfirmDialog } from '@/components/admin/modal';
 import { Users, BookOpen, Trash2, Edit3, CheckCircle, XCircle } from 'lucide-react';
+import { adminFetch } from "@/lib/admin-fetch";
+import { showToast } from "@/components/ui/toaster";
 
 interface User {
   id: string;
@@ -31,12 +33,13 @@ export default function GuruPage() {
     try {
       const params = new URLSearchParams({ role: 'guru', page: String(page), limit: '50' });
       if (search) params.set('search', search);
-      const res = await fetch(`/api/admin/users?${params}`);
+      const res = await adminFetch(`/api/admin/users?${params}`);
       const data = await res.json();
       setUsers(data.users || []);
       setTotal(data.total || 0);
     } catch {
       setUsers([]);
+      showToast("Gagal memuat data user");
     } finally {
       setLoading(false);
     }
@@ -48,9 +51,12 @@ export default function GuruPage() {
     if (!deleteTarget) return;
     setActionLoading(true);
     try {
-      await fetch(`/api/admin/users?id=${deleteTarget.id}`, { method: 'DELETE' });
+      await adminFetch(`/api/admin/users?id=${deleteTarget.id}`, { method: 'DELETE' });
       setDeleteTarget(null);
+      showToast("User berhasil dihapus");
       fetchUsers();
+    } catch {
+      showToast("Gagal menghapus user");
     } finally {
       setActionLoading(false);
     }
@@ -60,13 +66,16 @@ export default function GuruPage() {
     if (!editTarget || !editRole) return;
     setActionLoading(true);
     try {
-      await fetch('/api/admin/users', {
+      await adminFetch('/api/admin/users', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: editTarget.id, role: editRole }),
       });
       setEditTarget(null);
+      showToast("Role user berhasil diubah");
       fetchUsers();
+    } catch {
+      showToast("Gagal mengubah role user");
     } finally {
       setActionLoading(false);
     }

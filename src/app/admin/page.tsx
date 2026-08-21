@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { StatsCard } from "@/components/admin/stats-card";
-import { ChartCard, SimpleBarChart, Sparkline } from "@/components/admin/chart-card";
+import { ChartCard, SimpleBarChart } from "@/components/admin/chart-card";
 import {
   Users,
   BookOpen,
@@ -15,6 +15,7 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface AdminStats {
   totalUsers: number;
@@ -46,8 +47,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/analytics").then((r) => r.json()),
+      adminFetch("/api/admin/stats").then((r) => r.json()),
+      adminFetch("/api/admin/analytics").then((r) => r.json()),
     ])
       .then(([statsData, analyticsData]) => {
         setStats(statsData.stats);
@@ -58,19 +59,40 @@ export default function AdminDashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Static content counts from bab-data
   const contentStats = babDistribution.length > 0 ? babDistribution : [];
 
-  // Mock activity data (last 7 days)
-  const activityData = [
-    { label: "Sen", value: 12 },
-    { label: "Sel", value: 18 },
-    { label: "Rab", value: 8 },
-    { label: "Kam", value: 24 },
-    { label: "Jum", value: 15 },
-    { label: "Sab", value: 30 },
-    { label: "Min", value: 22 },
-  ];
+  const activityData = (() => {
+    const dayNames = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const now = new Date();
+    const days: { label: string; value: number }[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const next = new Date(d);
+      next.setDate(next.getDate() + 1);
+
+      const count = recentUsers.filter((u) => {
+        const created = new Date(u.created_at);
+        return created >= d && created < next;
+      }).length;
+
+      days.push({ label: dayNames[d.getDay()], value: count });
+    }
+    return days;
+  })();
+
+  const usersThisWeek = (() => {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return recentUsers.filter((u) => new Date(u.created_at) >= weekAgo).length;
+  })();
+
+  const completionRate =
+    stats && stats.totalMateri > 0 && stats.totalUsers > 0
+      ? Math.round((stats.totalProgress / (stats.totalMateri * stats.totalUsers)) * 100)
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -157,7 +179,7 @@ export default function AdminDashboardPage() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ChartCard
-          title="Aktivitas Platform"
+          title="User Baru per Hari"
           subtitle="7 hari terakhir"
         >
           <SimpleBarChart data={activityData} />
@@ -249,31 +271,37 @@ export default function AdminDashboardPage() {
           <div className="p-5 space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted">Tingkat Penyelesaian</span>
-              <span className="text-sm font-semibold text-green">—</span>
+              <span className="text-sm font-semibold text-green">{completionRate}%</span>
             </div>
             <div className="w-full h-2 bg-border-light rounded-full overflow-hidden">
-              <div className="h-full bg-green rounded-full" style={{ width: "0%" }} />
+              <div className="h-full bg-green rounded-full transition-all duration-500" style={{ width: `${completionRate}%` }} />
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Rata-rata Skor Quiz</span>
-              <span className="text-sm font-semibold text-accent">—</span>
+              <span className="text-sm text-muted">Progress Records</span>
+              <span className="text-sm font-semibold text-accent">{stats?.totalProgress ?? 0}</span>
             </div>
             <div className="w-full h-2 bg-border-light rounded-full overflow-hidden">
-              <div className="h-full bg-accent rounded-full" style={{ width: "0%" }} />
+              <div
+                className="h-full bg-accent rounded-full transition-all duration-500"
+                style={{ width: stats?.totalMateri ? `${Math.min((stats.totalProgress / stats.totalMateri) * 100, 100)}%` : "0%" }}
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted">User Aktif Minggu Ini</span>
-              <span className="text-sm font-semibold text-blue">—</span>
+              <span className="text-sm font-semibold text-blue">{usersThisWeek}</span>
             </div>
             <div className="w-full h-2 bg-border-light rounded-full overflow-hidden">
-              <div className="h-full bg-blue rounded-full" style={{ width: "0%" }} />
+              <div
+                className="h-full bg-blue rounded-full transition-all duration-500"
+                style={{ width: stats?.totalUsers ? `${Math.min((usersThisWeek / stats.totalUsers) * 100, 100)}%` : "0%" }}
+              />
             </div>
 
             <div className="pt-3 border-t border-border">
               <p className="text-xs text-muted">
-                Data akan terisi seiring penggunaan platform oleh siswa.
+                Data dihitung dari {recentUsers.length} user terbaru yang tercatat.
               </p>
             </div>
           </div>

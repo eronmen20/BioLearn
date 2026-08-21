@@ -48,7 +48,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ struktur: rows });
   } catch (e) {
     console.error("[API Struktur GET]", e);
-    const msg = e instanceof Error ? e.message : typeof e === "object" && e !== null ? JSON.stringify(e) : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

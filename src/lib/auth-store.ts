@@ -15,28 +15,37 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   _hydrated: boolean;
+  adminToken: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
 }
 
 const STORAGE_KEY = "biolearn-auth";
+const TOKEN_KEY = "biolearn-admin-token";
 
-function loadFromStorage(): { user: User | null; isAuthenticated: boolean } {
-  if (typeof window === "undefined") return { user: null, isAuthenticated: false };
+function loadFromStorage(): { user: User | null; isAuthenticated: boolean; adminToken: string | null } {
+  if (typeof window === "undefined") return { user: null, isAuthenticated: false, adminToken: null };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { user: null, isAuthenticated: false };
-    return JSON.parse(raw);
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!raw) return { user: null, isAuthenticated: false, adminToken: null };
+    const parsed = JSON.parse(raw);
+    return { ...parsed, adminToken: token || null };
   } catch {
-    return { user: null, isAuthenticated: false };
+    return { user: null, isAuthenticated: false, adminToken: null };
   }
 }
 
-function saveToStorage(user: User | null, isAuthenticated: boolean) {
+function saveToStorage(user: User | null, isAuthenticated: boolean, adminToken: string | null = null) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, isAuthenticated }));
+    if (adminToken) {
+      localStorage.setItem(TOKEN_KEY, adminToken);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
   } catch {
     // ignore
   }
@@ -47,6 +56,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   isAuthenticated: false,
   isLoading: false,
   _hydrated: false,
+  adminToken: null,
 
   login: async (email, password) => {
     set({ isLoading: true });
@@ -66,8 +76,9 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       }
 
       const user: User = data.user;
-      saveToStorage(user, true);
-      set({ user, isAuthenticated: true, isLoading: false });
+      const token: string | null = data.token || null;
+      saveToStorage(user, true, token);
+      set({ user, isAuthenticated: true, isLoading: false, adminToken: token });
 
       loadUserProgress(user.email);
 
@@ -80,7 +91,7 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
 
   logout: () => {
     saveToStorage(null, false);
-    set({ user: null, isAuthenticated: false });
+    set({ user: null, isAuthenticated: false, adminToken: null });
     resetProgress();
   },
 

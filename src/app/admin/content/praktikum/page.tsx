@@ -12,6 +12,7 @@ import {
   Image as ImageIcon, X, Move,
 } from 'lucide-react';
 import { BAB } from '@/lib/bab-data';
+import { adminFetch } from "@/lib/admin-fetch";
 
 interface PraktikumCard {
   name: string;
@@ -104,7 +105,7 @@ export default function PraktikumPage() {
     setLoading(true);
     try {
       const url = filterBab ? `/api/admin/praktikum?bab_id=${filterBab}` : '/api/admin/praktikum';
-      const res = await fetch(url, { cache: 'no-store' });
+      const res = await adminFetch(url, { cache: 'no-store' });
       const data = await res.json();
       setItems((data.praktikum || []) as PraktikumItem[]);
     } catch {
@@ -159,7 +160,7 @@ export default function PraktikumPage() {
   const handleDelete = async () => {
     if (!deleting) return;
     try {
-      const res = await fetch(`/api/admin/praktikum?id=${deleting.id}`, { method: 'DELETE' });
+      const res = await adminFetch(`/api/admin/praktikum?id=${deleting.id}`, { method: 'DELETE' });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Failed');
@@ -176,7 +177,7 @@ export default function PraktikumPage() {
   const handleTogglePublish = async (item: PraktikumItem) => {
     try {
       const newStatus = item.status === 'published' ? 'draft' : 'published';
-      const res = await fetch('/api/admin/praktikum', {
+      const res = await adminFetch('/api/admin/praktikum', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, status: newStatus }),
@@ -232,7 +233,7 @@ export default function PraktikumPage() {
       };
       if (editing) payload.id = editing.id;
 
-      const res = await fetch('/api/admin/praktikum', {
+      const res = await adminFetch('/api/admin/praktikum', {
         method: editing ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
