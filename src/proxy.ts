@@ -40,7 +40,7 @@ async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
   }
 }
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith("/api/admin")) {
     return NextResponse.next();
   }
