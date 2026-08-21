@@ -18,7 +18,7 @@ interface HomepageSettings {
 }
 
 const DEFAULT_SETTINGS: HomepageSettings = {
-  hero_title: 'Belajar Biologi Jadi Mudah!',
+  hero_title: 'Belajar Biologi Jadi Menyenangkan',
   hero_subtitle: 'Jelajahi 8 bab biologi dengan materi lengkap, kuis, animasi, dan tracking progress.\nCocok untuk siswa SMA & persiapan kuliah.',
   hero_cta: 'Mulai Belajar',
   show_banner: true,
@@ -99,18 +99,11 @@ export default function HomepageSettingsPage() {
               rows={2}
               className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 min-h-[60px]"
             />
-            <p className="text-[11px] text-muted mt-1">Pisahkan baris dengan Enter. Baris kosong akan diganti default i18n.</p>
+            <p className="text-[11px] text-muted mt-1">Pisahkan baris dengan Enter.</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Teks Tombol CTA</label>
             <input type="text" value={settings.hero_cta} onChange={(e) => setSettings({ ...settings, hero_cta: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-ink mb-1">Gambar Hero</label>
-            <div className="border-2 border-dashed border-border rounded-xl p-4 text-center">
-              <Image className="w-6 h-6 text-muted mx-auto mb-1" />
-              <p className="text-xs text-muted">Klik untuk upload gambar hero</p>
-            </div>
           </div>
         </div>
 

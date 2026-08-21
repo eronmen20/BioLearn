@@ -103,7 +103,7 @@ const SUBJECTS = [
 // AnimatedTitle - slide-up reveal animation
 function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
   const { t } = useLangStore();
-  const title = heroTitle?.trim() || "Belajar Biologi Jadi Mudah!";
+  const title = heroTitle?.trim() || "Belajar Biologi Jadi Menyenangkan";
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -112,7 +112,7 @@ function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="gradient-text">{title}</span>
+          <span className="gradient-rainbow">{title}</span>
         </motion.div>
       </div>
     </h1>
@@ -156,7 +156,7 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
   const archivedCount = SUBJECTS.length - visibleSubjects.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f0edff] via-white to-[#f0fdf4] overflow-hidden relative">
+    <div className="min-h-screen bg-white overflow-hidden relative">
       {/* Floating Biology Elements */}
       {FLOATING_ITEMS.map((item, i) => (
         <motion.div
