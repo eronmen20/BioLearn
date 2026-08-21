@@ -33,7 +33,7 @@ CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean AS $$
   SELECT EXISTS (
     SELECT 1 FROM users
-    WHERE id = auth.uid() AND role = 'admin'
+    WHERE id = auth.uid()::text AND role = 'admin'
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
@@ -156,21 +156,21 @@ CREATE POLICY "praktikum_admin_delete" ON praktikum
 DROP POLICY IF EXISTS "progress_user_read" ON progress;
 CREATE POLICY "progress_user_read" ON progress
   FOR SELECT USING (
-    user_id = auth.uid()
+    user_id = auth.uid()::text
     OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "progress_user_upsert" ON progress;
 CREATE POLICY "progress_user_upsert" ON progress
   FOR INSERT WITH CHECK (
-    user_id = auth.uid()
+    user_id = auth.uid()::text
     OR public.is_admin()
   );
 
 DROP POLICY IF EXISTS "progress_user_update" ON progress;
 CREATE POLICY "progress_user_update" ON progress
   FOR UPDATE USING (
-    user_id = auth.uid()
+    user_id = auth.uid()::text
     OR public.is_admin()
   );
 
@@ -271,7 +271,7 @@ CREATE POLICY "sub_bab_quiz_admin_delete" ON sub_bab_quiz
 DROP POLICY IF EXISTS "users_own_read" ON users;
 CREATE POLICY "users_own_read" ON users
   FOR SELECT USING (
-    id = auth.uid()
+    id = auth.uid()::text
     OR public.is_admin()
   );
 
@@ -282,7 +282,7 @@ CREATE POLICY "users_admin_insert" ON users
 DROP POLICY IF EXISTS "users_admin_update" ON users;
 CREATE POLICY "users_admin_update" ON users
   FOR UPDATE USING (
-    id = auth.uid()
+    id = auth.uid()::text
     OR public.is_admin()
   );
 
