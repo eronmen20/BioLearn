@@ -82,9 +82,15 @@ export async function GET(req: NextRequest) {
       metadata: unknown;
     };
     const materiByKey = new Map<string, MateriRow>();
+    const materiOrphan: MateriRow[] = [];
     for (const m of materi || []) {
       const k = (m.sub_bab_key as string | null) || "";
-      if (k) materiByKey.set(k, m as MateriRow);
+      if (k) {
+        materiByKey.set(k, m as MateriRow);
+      } else {
+        // Materi without sub_bab_key — treat as orphan
+        materiOrphan.push(m as MateriRow);
+      }
     }
 
     // Build subs array from sub_bab rows (source of truth)
@@ -113,15 +119,15 @@ export async function GET(req: NextRequest) {
       const titleEn =
         (sb.title_en as string) || (meta.title_en as string) || "";
 
-      // Summary: prefer materi.summary_id/en, fallback to sub_bab.summary_id/en
+      // Summary: prefer materi, fallback to sub_bab
       const summaryId =
         materiRow?.summary_id || (sb.summary_id as string) || "";
       const summaryEn =
         materiRow?.summary_en || (sb.summary_en as string) || "";
 
-      // Full content: only materi has it
-      const fullId = materiRow?.content_id || "";
-      const fullEn = materiRow?.content_en || "";
+      // Full content: prefer materi, fallback to sub_bab
+      const fullId = materiRow?.content_id || (sb.content_id as string) || "";
+      const fullEn = materiRow?.content_en || (sb.content_en as string) || "";
 
       subs.push({
         key,
@@ -141,15 +147,18 @@ export async function GET(req: NextRequest) {
 
     // Add orphan materi entries (materi rows without matching sub_bab)
     // These come from legacy data or admin imports. Use materi.sub_bab_key as key.
-    for (const m of Array.from(materiByKey.values())) {
-      const key = (m.sub_bab_key as string) || "";
-      if (!key) continue;
+    // Also include materi rows with empty sub_bab_key — generate key from row id.
+    let orphanIdx = 0;
+    const allOrphans = [...Array.from(materiByKey.values()), ...materiOrphan];
+    for (const m of allOrphans) {
+      const key = (m.sub_bab_key as string) || `orphan_${m.id || orphanIdx}`;
+      orphanIdx++;
       const meta = (m.metadata as Record<string, unknown>) || {};
 
       subs.push({
         key,
         title: {
-          id: (meta.title_id as string) || "",
+          id: (meta.title_id as string) || (meta.title as string) || "",
           en: (meta.title_en as string) || "",
         },
         summary: {

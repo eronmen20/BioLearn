@@ -47,9 +47,8 @@ export async function GET(req: NextRequest) {
 
     // Content counts
     const { count: totalMateri } = await supabase
-      .from("sub_bab")
-      .select("*", { count: "exact", head: true })
-      .eq("is_task", false);
+      .from("materi")
+      .select("*", { count: "exact", head: true });
 
     const { count: totalQuiz } = await supabase
       .from("sub_bab_quiz")

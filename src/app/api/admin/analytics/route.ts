@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
 
     // Materi data
     const { count: totalMateri } = await supabase
-      .from("sub_bab")
+      .from("materi")
       .select("*", { count: "exact", head: true });
 
     const { count: totalBab } = await supabase
