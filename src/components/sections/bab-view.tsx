@@ -15,7 +15,6 @@ import {
   Lightbulb,
   ChevronRight,
   RotateCcw,
-  Database,
   FlaskConical,
   Lock,
   Check,
@@ -96,7 +95,7 @@ export function BabContent({ babId }: { babId: string }) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
   }
 
-  const { bab, summary, full, quiz, subs, subTitles, mediaBySub, source } = content;
+  const { bab, summary, full, quiz, subs, subTitles, mediaBySub } = content;
 
   // Current sub-bab's media (from DB, or empty if hardcoded fallback)
   const currentSubKey = subs[subIdx];
@@ -123,12 +122,7 @@ export function BabContent({ babId }: { babId: string }) {
             <p className="text-muted text-xs sm:text-sm mt-0.5">{t(`bab.${bab.id}.desc`)}</p>
           </div>
         </div>
-        {source === "supabase" && (
-          <div className="flex items-center gap-1.5 text-xs text-green">
-            <Database className="w-3 h-3" />
-            <span>Konten dari database (bisa diedit dari admin)</span>
-          </div>
-        )}
+
       </div>
 
       {/* Progress Bar */}
