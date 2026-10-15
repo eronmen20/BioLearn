@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLangStore } from "@/lib/lang-store";
 import { BAB, KELAS } from "@/lib/bab-data";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
+import { useSidebarStore } from "@/lib/sidebar-store";
 import {
   Home,
   BookOpen,
@@ -18,7 +19,7 @@ import {
 export function Sidebar() {
   const { t } = useLangStore();
   const pathname = usePathname();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { open, mobileOpen, setOpen, setMobileOpen } = useSidebarStore();
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
   // Conservative visible set:
   //   - Before mounted: only ALWAYS_VISIBLE_BABS (whitelist, default = ["bakteri"])
@@ -51,40 +52,53 @@ export function Sidebar() {
     return pathname.startsWith(path);
   };
 
-  const closeSidebar = () => {
-    if (inputRef.current) inputRef.current.checked = false;
-  };
+  const closeMobileSidebar = useCallback(() => setMobileOpen(false), [setMobileOpen]);
 
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeSidebar();
+      if (e.key === "Escape") closeMobileSidebar();
     };
 
     document.addEventListener("keydown", handleEsc);
 
     return () =>
       document.removeEventListener("keydown", handleEsc);
-  }, []);
+  }, [closeMobileSidebar]);
 
   useEffect(() => {
-    closeSidebar();
-  }, [pathname]);
+    closeMobileSidebar();
+  }, [pathname, closeMobileSidebar]);
 
   return (
     <>
-      <input
-        type="checkbox"
-        id="sidebar-toggle"
-        className="hidden peer"
-        ref={inputRef}
+      {/* Backdrop (mobile only) */}
+      <button
+        type="button"
+        aria-label={t("sidebar.menu")}
+        onClick={closeMobileSidebar}
+        className={`fixed inset-0 bg-black/40 z-30 backdrop-blur-sm md:hidden ${
+          mobileOpen ? "block" : "hidden"
+        }`}
       />
 
-      <label
-        htmlFor="sidebar-toggle"
-        className="fixed inset-0 bg-black/40 z-30 hidden peer-checked:block md:hidden backdrop-blur-sm"
-      />
+      <nav
+        className={`fixed top-16 left-0 bottom-0 w-[280px] sm:w-[260px] bg-surface border-r border-border/50 overflow-y-auto z-30 transition-transform duration-300 shadow-lg md:shadow-none ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } ${open ? "md:translate-x-0" : "md:-translate-x-full"}`}
+      >
 
-      <nav className="fixed top-16 left-0 bottom-0 w-[280px] sm:w-[260px] bg-surface border-r border-border/50 overflow-y-auto z-30 transition-transform duration-300 -translate-x-full md:translate-x-0 peer-checked:translate-x-0 shadow-lg md:shadow-none">
+        {/* Desktop close — sidebar tetap bisa ditutup walau window fullscreen */}
+        <div className="hidden md:flex items-center justify-end px-3 pt-4">
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            className="p-2 rounded-lg hover:bg-bg-alt text-muted hover:text-ink transition-colors"
+            title="Tutup sidebar"
+            aria-label="Tutup sidebar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Mobile Header */}
         <div className="flex items-center justify-between px-4 pt-5 pb-2 md:hidden">
@@ -93,7 +107,9 @@ export function Sidebar() {
           </span>
 
           <button
-            onClick={closeSidebar}
+            type="button"
+            onClick={closeMobileSidebar}
+            aria-label={t("sidebar.menu")}
             className="p-2 rounded-lg hover:bg-bg-alt"
           >
             <X className="w-5 h-5" />
@@ -101,7 +117,7 @@ export function Sidebar() {
         </div>
 
         {/* Main Menu */}
-        <div className="px-4 pt-1 md:pt-5 pb-2">
+        <div className="px-4 pt-1 pb-2">
 
           <p className="px-3 text-[10px] font-bold uppercase tracking-[0.15em] text-muted-2 mb-1">
             {t("sidebar.menu")}

@@ -18,6 +18,7 @@ export interface BabProgress {
   reflection_done: boolean;
   reflection_score: number;
   reflection_questions: number; // jumlah soal refleksi
+  reflection_answers?: Record<string, number>; // pilihan user saat skor ≥80 (untuk mode review)
   completion_pct: number; // 0-100
 }
 
@@ -26,7 +27,12 @@ interface ProgressState {
   _hydrated: boolean;
   getProgress: (babId: string) => BabProgress;
   recordSubQuiz: (babId: string, subKey: string, score: number, totalQuestions: number) => void;
-  recordReflection: (babId: string, score: number, totalQuestions: number) => void;
+  recordReflection: (
+    babId: string,
+    score: number,
+    totalQuestions: number,
+    answers?: Record<string, number>
+  ) => void;
   isSubUnlocked: (babId: string, subKey: string, allSubKeys: string[]) => boolean;
   isReflectionUnlocked: (babId: string, allSubKeys: string[]) => boolean;
   getCompletionPct: (babId: string, allSubKeys: string[]) => number;
@@ -46,6 +52,48 @@ function getCurrentEmail(): string {
   }
 }
 
+/* ── Cache lokal jawaban refleksi (mode Review Soal) ─────────────────────────
+ * Server adalah sumber utama (kolom progress.reflection_answers), localStorage
+ * dipakai sebagai fallback supaya jawaban tetap ada walau kolom belum dimigrasi
+ * atau halaman dibuka ulang sebelum sinkronisasi.
+ */
+const REFLECTION_ANSWERS_PREFIX = "biolearn-reflection-answers";
+
+function answersKey(email: string, babId: string) {
+  return `${REFLECTION_ANSWERS_PREFIX}:${email}:${babId}`;
+}
+
+function sanitizeAnswers(raw: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const idx = Number(k);
+    const val = Number(v);
+    if (Number.isInteger(idx) && idx >= 0 && Number.isInteger(val) && val >= 0) {
+      out[String(idx)] = val;
+    }
+  }
+  return out;
+}
+
+function writeReflectionAnswersLS(email: string, babId: string, answers: Record<string, number>) {
+  try {
+    localStorage.setItem(answersKey(email, babId), JSON.stringify(answers));
+  } catch {
+    // private mode / quota — abaikan
+  }
+}
+
+function readReflectionAnswersLS(email: string, babId: string): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(answersKey(email, babId));
+    if (!raw) return {};
+    return sanitizeAnswers(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
 const defaultProgress = (): BabProgress => ({
   quizzes: 0,
   correct: 0,
@@ -54,6 +102,7 @@ const defaultProgress = (): BabProgress => ({
   reflection_done: false,
   reflection_score: 0,
   reflection_questions: 0,
+  reflection_answers: {},
   completion_pct: 0,
 });
 
@@ -139,19 +188,25 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     });
   },
 
-  recordReflection: (babId, score, totalQuestions) => {
+  recordReflection: (babId, score, totalQuestions, answers) => {
     const email = getCurrentEmail();
     if (!email) return;
 
+    const passed = score >= 80;
+    // Jawaban disimpan hanya saat lulus (≥80) — untuk mode review setelah refresh
+    if (passed && answers) writeReflectionAnswersLS(email, babId, answers);
+
     set((state) => {
       const p = { ...(state.progress[babId] || defaultProgress()) };
-      const passed = score >= 80;
 
       const newP = {
         ...p,
         reflection_done: passed || p.reflection_done,
         reflection_score: Math.max(score, p.reflection_score),
         reflection_questions: totalQuestions,
+        // Jawaban disimpan hanya saat skor ≥80 (satu set terakhir yang lulus)
+        // agar user tetap bisa melihat soal + jawabannya setelah refresh/buka lagi.
+        reflection_answers: passed && answers ? answers : (p.reflection_answers ?? {}),
         total: p.total,
         correct: p.correct,
       };
@@ -279,6 +334,12 @@ export async function loadUserProgress(email: string) {
       const reflection_done = !!p?.reflection_done;
       const reflection_score = Math.max(0, Math.min(100, Number(p?.reflection_score) || 0));
       const reflection_questions = Math.max(1, Number(p?.reflection_questions) || 5);
+      // Pilihan jawaban refleksi (dipakai mode review) — server dulu, fallback localStorage
+      const serverAnswers = sanitizeAnswers(p?.reflection_answers);
+      const reflection_answers =
+        Object.keys(serverAnswers).length > 0
+          ? serverAnswers
+          : readReflectionAnswersLS(email, babId);
       if (reflection_done) {
         babTotal += reflection_questions;
         babCorrect += Math.round((reflection_score / 100) * reflection_questions);
@@ -293,6 +354,7 @@ export async function loadUserProgress(email: string) {
         reflection_done,
         reflection_score,
         reflection_questions,
+        reflection_answers,
         completion_pct: Math.max(0, Math.min(100, Number(p?.completion_pct) || 0)),
       };
     }

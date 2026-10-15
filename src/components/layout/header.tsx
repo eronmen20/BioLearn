@@ -2,16 +2,18 @@
 
 import { useLangStore } from "@/lib/lang-store";
 import { useAuthStore } from "@/lib/auth-store";
+import { useSidebarStore } from "@/lib/sidebar-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { AnnouncementBell } from "@/store/announcement-bell";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { LogOut, User, ChevronDown, Menu, Shield } from "lucide-react";
+import { LogOut, User, ChevronDown, Menu, Shield, PanelLeft } from "lucide-react";
 
 export function Header() {
   const { lang, setLang, t } = useLangStore();
   const { user, isAuthenticated, logout } = useAuthStore();
+  const { open: sidebarOpen, toggleOpen, mobileOpen, setMobileOpen } = useSidebarStore();
   const mounted = useIsMounted();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -37,9 +39,25 @@ export function Header() {
     <header className="fixed top-0 left-0 right-0 h-16 bg-surface/95 backdrop-blur-xl border-b border-border/50 z-50 flex items-center justify-between px-3 sm:px-5">
       <div className="flex items-center gap-3">
         {/* Mobile hamburger */}
-        <label htmlFor="sidebar-toggle" className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none">
+        <button
+          type="button"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Buka menu"
+          className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none"
+        >
           <Menu className="w-5 h-5 text-ink" />
-        </label>
+        </button>
+
+        {/* Desktop sidebar toggle — sidebar bisa dibuka/tutup walau window fullscreen */}
+        <button
+          type="button"
+          onClick={toggleOpen}
+          aria-label={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          title={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none transition-colors"
+        >
+          <PanelLeft className="w-5 h-5 text-ink" />
+        </button>
 
         <Link href={mounted && isAuthenticated ? "/dashboard" : "/"} className="text-lg sm:text-xl font-extrabold whitespace-nowrap">
           <span className="gradient-text">Bio</span>

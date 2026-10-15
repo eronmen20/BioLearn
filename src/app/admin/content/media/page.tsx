@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { adminFetch } from '@/lib/admin-fetch';
 import { showToast } from '@/components/ui/toaster';
-import { Upload, Trash2, ImageIcon, Loader2, FileText, X, Grid3X3, List } from 'lucide-react';
+import { Upload, Trash2, ImageIcon, Loader2, FileText, X, Grid3X3, List, RefreshCw, AlertTriangle } from 'lucide-react';
 
 interface MediaFile {
   id: string;
   url: string;
   path: string;
   name: string;
+  folder?: string;
   uploadedAt: string;
   size: number;
 }
@@ -40,12 +41,47 @@ function isVideo(name: string): boolean {
 
 export default function MediaPage() {
   const [files, setFiles] = useState<MediaFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [view, setView] = useState<'grid' | 'list'>('grid');
   const [preview, setPreview] = useState<MediaFile | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const fetchMedia = useCallback(async (): Promise<{ files: MediaFile[] | null; error: string | null }> => {
+    try {
+      const res = await adminFetch('/api/admin/upload');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal memuat media');
+      return { files: data.files || [], error: null };
+    } catch (e) {
+      return { files: null, error: e instanceof Error ? e.message : 'Gagal memuat media' };
+    }
+  }, []);
+
+  const loadFiles = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
+    const result = await fetchMedia();
+    if (result.files) setFiles(result.files);
+    if (result.error) setLoadError(result.error);
+    setLoading(false);
+  }, [fetchMedia]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMedia().then((result) => {
+      if (cancelled) return;
+      if (result.files) setFiles(result.files);
+      if (result.error) setLoadError(result.error);
+      setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchMedia]);
 
   const handleUpload = useCallback(async (file: File) => {
     setUploading(true);
@@ -66,6 +102,7 @@ export default function MediaPage() {
         id: crypto.randomUUID(),
         url: data.url,
         path: data.path,
+        folder: String(data.path || '').split('/').slice(0, -1).join('/'),
         name: file.name,
         uploadedAt: new Date().toISOString(),
         size: file.size,
@@ -209,8 +246,31 @@ export default function MediaPage() {
         </div>
       </div>
 
+      {/* Loading state */}
+      {loading && (
+        <div className="bg-surface rounded-xl border border-border p-12 text-center">
+          <Loader2 className="w-8 h-8 text-accent animate-spin mx-auto mb-3" />
+          <p className="text-sm text-muted">Memuat daftar media...</p>
+        </div>
+      )}
+
+      {/* Error state */}
+      {!loading && loadError && (
+        <div className="bg-surface rounded-xl border border-border p-12 text-center">
+          <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+          <p className="text-sm text-ink font-medium">{loadError}</p>
+          <button
+            onClick={loadFiles}
+            className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Coba lagi
+          </button>
+        </div>
+      )}
+
       {/* Empty state */}
-      {files.length === 0 && !uploading && (
+      {!loading && !loadError && files.length === 0 && !uploading && (
         <div className="bg-surface rounded-xl border border-border p-12 text-center">
           <ImageIcon className="w-12 h-12 text-muted/40 mx-auto mb-3" />
           <p className="text-sm text-muted">Belum ada file media</p>

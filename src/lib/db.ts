@@ -141,6 +141,18 @@ export async function getProgress(userId: string) {
     }
     const quizCount = Object.keys(subs).length + (reflection_done ? 1 : 0);
     if (quizCount === 0 && babTotal === 0) continue;
+    // Pilihan jawaban refleksi (untuk mode review) — jsonb dari Supabase
+    const reflection_answers: Record<string, number> = {};
+    const raRaw = row.reflection_answers;
+    if (raRaw && typeof raRaw === "object" && !Array.isArray(raRaw)) {
+      for (const [k, v] of Object.entries(raRaw as Record<string, unknown>)) {
+        const idx = Number(k);
+        const val = Number(v);
+        if (Number.isInteger(idx) && idx >= 0 && Number.isInteger(val) && val >= 0) {
+          reflection_answers[String(idx)] = val;
+        }
+      }
+    }
     result[row.bab_id] = {
       quizzes: quizCount,
       correct: babCorrect,
@@ -149,30 +161,48 @@ export async function getProgress(userId: string) {
       reflection_done,
       reflection_score,
       reflection_questions,
+      reflection_answers,
       completion_pct: Math.max(0, Math.min(100, row.completion_pct || 0)),
     };
   }
   return result;
 }
 
-export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number; questions?: number }>; reflection_done?: boolean; reflection_score?: number; reflection_questions?: number; completion_pct?: number }) {
+export async function saveProgress(userId: string, babId: string, data: { quizzes: number; correct: number; total: number; subs: Record<string, { done: boolean; score?: number; attempts?: number; questions?: number }>; reflection_done?: boolean; reflection_score?: number; reflection_questions?: number; reflection_answers?: Record<string, number>; completion_pct?: number }) {
   const total = Math.max(0, data.total || 0);
   const correct = Math.max(0, Math.min(total, data.correct || 0));
-  const { error } = await getDb().from("progress").upsert(
-    {
-      user_id: userId,
-      bab_id: babId,
-      quizzes: data.quizzes || 0,
-      correct,
-      total,
-      subs: data.subs,
-      reflection_done: data.reflection_done || false,
-      reflection_score: data.reflection_score || 0,
-      reflection_questions: data.reflection_questions || 0,
-      completion_pct: Math.max(0, Math.min(100, data.completion_pct || 0)),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,bab_id" }
-  );
+  const base = {
+    user_id: userId,
+    bab_id: babId,
+    quizzes: data.quizzes || 0,
+    correct,
+    total,
+    subs: data.subs,
+    reflection_done: data.reflection_done || false,
+    reflection_score: data.reflection_score || 0,
+    reflection_questions: data.reflection_questions || 0,
+    completion_pct: Math.max(0, Math.min(100, data.completion_pct || 0)),
+    updated_at: new Date().toISOString(),
+  };
+  const answers = data.reflection_answers;
+
+  if (answers && Object.keys(answers).length > 0) {
+    const { error } = await getDb().from("progress").upsert(
+      { ...base, reflection_answers: answers },
+      { onConflict: "user_id,bab_id" }
+    );
+    if (!error) return;
+    // Kolom reflection_answers mungkin belum ada (belum jalankan migrasi):
+    // jangan gagalkan seluruh penyimpanan progres — ulangi tanpa kolom itu.
+    const { error: fallbackError } = await getDb().from("progress").upsert(base, {
+      onConflict: "user_id,bab_id",
+    });
+    if (fallbackError) throw fallbackError;
+    return;
+  }
+
+  const { error } = await getDb().from("progress").upsert(base, {
+    onConflict: "user_id,bab_id",
+  });
   if (error) throw error;
 }

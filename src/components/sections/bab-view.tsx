@@ -22,6 +22,8 @@ import {
   BookOpen,
   AlertTriangle,
   RefreshCw,
+  ArrowLeft,
+  Eye,
 } from "lucide-react";
 
 /* ───────── Quiz-v2 API types ───────── */
@@ -48,6 +50,7 @@ export function BabContent({ babId }: { babId: string }) {
   const { data: content, loading, error } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
   const [viewType, setViewType] = useState<"full" | "summary">("summary");
+  const [showReflection, setShowReflection] = useState(false);
 
   // Loading skeleton
   if (loading) {
@@ -133,10 +136,20 @@ export function BabContent({ babId }: { babId: string }) {
         subs={subs}
         subTitles={subTitles}
         babId={babId}
-        subIdx={subIdx}
-        onSelect={setSubIdx}
+        subIdx={showReflection ? -1 : subIdx}
+        onSelect={(i) => {
+          setShowReflection(false);
+          setSubIdx(i);
+        }}
+        reflectionActive={showReflection}
+        onSelectReflection={() => setShowReflection(true)}
       />
 
+      {/* Quiz Refleksi sebagai "sub-bab" sendiri — tampilan mandiri di posisi nav terakhir */}
+      {showReflection ? (
+        <ReflectionQuiz babId={babId} allSubKeys={subs} />
+      ) : (
+        <>
       {/* View Toggle */}
       <div className="flex gap-1 bg-border/40 rounded-full p-[3px] w-fit mb-5">
         <button
@@ -208,9 +221,8 @@ export function BabContent({ babId }: { babId: string }) {
 
       {/* Sub-bab Quiz (quiz-v2) */}
       <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
-
-      {/* Reflection Quiz (only visible when all sub-bab quizzes passed) */}
-      <ReflectionQuiz babId={babId} allSubKeys={subs} />
+        </>
+      )}
     </div>
   );
 }
@@ -250,12 +262,16 @@ function SubbabNav({
   babId,
   subIdx,
   onSelect,
+  reflectionActive,
+  onSelectReflection,
 }: {
   subs: string[];
   subTitles?: { id: string; en: string }[];
   babId: string;
   subIdx: number;
   onSelect: (i: number) => void;
+  reflectionActive: boolean;
+  onSelectReflection: () => void;
 }) {
   const { t, lang } = useLangStore();
   const progress = useProgressStore();
@@ -321,24 +337,33 @@ function SubbabNav({
           );
         })}
 
-        {/* Quiz Refleksi button — only shows when all sub-babs done */}
-        {reflectionUnlocked && (
-          <button
-            onClick={() => {
-              document.getElementById("reflection-quiz")?.scrollIntoView({ behavior: "smooth", block: "center" });
-            }}
-            className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
-              reflectionDone
-                ? "bg-purple-100 text-purple-700 border-purple-300 hover:border-purple-400"
-                : "bg-accent text-white border-accent shadow-sm animate-pulse"
-            }`}
-          >
-            <span className="inline-flex items-center gap-1">
-              {reflectionDone ? <Check className="w-3 h-3" /> : <Trophy className="w-3 h-3" />}
-              🪞 Quiz Refleksi
-            </span>
-          </button>
-        )}
+        {/* Quiz Refleksi — item nav terpisah, gaya & perilaku sama seperti sub-bab */}
+        <button
+          type="button"
+          onClick={() => reflectionUnlocked && onSelectReflection()}
+          disabled={!reflectionUnlocked}
+          title={!reflectionUnlocked ? t("bab.locked_tooltip") : undefined}
+          className={`relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 transition-all touch-manipulation active:scale-[0.97] ${
+            !reflectionUnlocked
+              ? "bg-bg-alt text-muted/50 border-border/40 cursor-not-allowed opacity-60"
+              : reflectionActive
+              ? "bg-accent text-white border-accent shadow-sm"
+              : reflectionDone
+              ? "bg-purple-100 text-purple-700 border-purple-300 hover:border-purple-400"
+              : "bg-accent text-white border-accent shadow-sm animate-pulse"
+          }`}
+        >
+          <span className="inline-flex items-center gap-1">
+            {!reflectionUnlocked ? (
+              <Lock className="w-3 h-3" />
+            ) : reflectionDone ? (
+              <Check className="w-3 h-3" />
+            ) : (
+              <Trophy className="w-3 h-3" />
+            )}
+            🪞 Quiz Refleksi
+          </span>
+        </button>
       </div>
 
       {/* Petunjuk: kalau ada subbab di depan yang masih locked, kasih tau user */}
@@ -602,10 +627,28 @@ function ReflectionQuiz({
   const [checked, setChecked] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
+  const [reviewMode, setReviewMode] = useState(false);
+  // Jawaban user per sesi berjalan — penanda saja untuk mode review (tidak dihitung ulang)
+  const [answers, setAnswers] = useState<Record<string, number>>({});
 
   const isUnlocked = mounted ? progress.isReflectionUnlocked(babId, allSubKeys) : false;
   const prog = mounted ? progress.getProgress(babId) : null;
   const reflectionDone = prog?.reflection_done ?? false;
+  const storedScore = prog?.reflection_score ?? 0;
+  // Jawaban tersimpan (diambil dari server) — tersedia walau halaman di-refresh
+  const persistedAnswers: Record<string, number> = prog?.reflection_answers ?? {};
+
+  // Reset state quiz — dipakai untuk mengulang, walau refleksi sudah pernah selesai.
+  // Dideklarasikan sebelum semua early-return agar aman dipakai di JSX mana pun.
+  const restartQuiz = () => {
+    setCurrentQ(0);
+    setSelected(null);
+    setChecked(false);
+    setShowResult(false);
+    setCorrectCount(0);
+    setReviewMode(false);
+    setAnswers({});
+  };
 
   // Fetch reflection quiz when unlocked
   useEffect(() => {
@@ -639,7 +682,7 @@ function ReflectionQuiz({
   // Don't render anything if not unlocked
   if (!mounted || !isUnlocked) return null;
 
-  if (loading) {
+  if (loading || !fetched) {
     return (
       <div className="bg-surface rounded-2xl shadow-card border border-border/50 p-6 mb-6 animate-pulse">
         <div className="h-4 w-40 bg-border-light rounded mb-4" />
@@ -650,7 +693,122 @@ function ReflectionQuiz({
 
   if (questions.length === 0) return null;
 
-  // If reflection already completed, show congrats
+  const hasSessionAnswers = Object.keys(answers).length > 0;
+  const hasPersistedAnswers = Object.keys(persistedAnswers).length > 0;
+  const sessionPassed = Math.round((correctCount / questions.length) * 100) >= 80;
+  // Utamakan jawaban dari attempt yang lulus; kalau belum pernah lulus, pakai attempt sesi berjalan.
+  const reviewAnswers: Record<string, number> =
+    hasSessionAnswers && (sessionPassed || !hasPersistedAnswers) ? answers : persistedAnswers;
+
+  /* ───────── Mode Review (read-only) ─────────
+   * Untuk user yang sudah ≥80: semua soal + "Jawaban yang Tepat" (hijau),
+   * jawaban user yang salah (merah) dan pembahasan. Tanpa penilaian ulang —
+   * skor tersimpan tidak berubah. Sumber jawaban: attempt sesi berjalan,
+   * fallback ke `reflection_answers` (server / localStorage) supaya tetap
+   * ada walau halaman di-refresh atau dibuka lagi nanti.
+   */
+  if (reviewMode) {
+    return (
+      <div
+        id="reflection-quiz"
+        className="bg-gradient-to-br from-accent/[0.03] to-surface rounded-2xl shadow-card border border-accent/20 overflow-hidden mb-6"
+      >
+        <div className="p-4 sm:p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <span className="text-lg">🔍</span>
+              Review Quiz Refleksi
+            </h3>
+            <span className="text-xs text-muted">Skor terbaik: {storedScore}%</span>
+          </div>
+
+          <div className="space-y-4">
+            {questions.map((q, qi) => {
+              const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
+              const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+              const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
+              const userAnswer = reviewAnswers[String(qi)];
+
+              return (
+                <div key={q.id} className="bg-surface rounded-xl border border-border/50 p-4">
+                  <p className="text-xs font-semibold text-muted mb-2">
+                    Soal {qi + 1}/{questions.length}
+                  </p>
+
+                  <p className="text-sm font-medium mb-3">{question}</p>
+
+                  {q.question_image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={q.question_image_url}
+                      alt={t("image")}
+                      className="mb-3 rounded-xl max-h-48 object-contain"
+                      loading="lazy"
+                    />
+                  )}
+
+                  <div className="space-y-2">
+                    {options.map((opt: string, i: number) => {
+                      const isCorrectOpt = i === q.correct_answer;
+                      const isUserWrong =
+                        userAnswer !== undefined && i === userAnswer && !isCorrectOpt;
+
+                      return (
+                        <div
+                          key={i}
+                          className={`w-full text-left px-4 py-3 rounded-xl text-sm border-2 flex items-start gap-2 ${
+                            isCorrectOpt
+                              ? "border-green bg-green-light text-green"
+                              : isUserWrong
+                              ? "border-red bg-red-light text-red"
+                              : "border-border text-muted"
+                          }`}
+                        >
+                          {isCorrectOpt ? (
+                            <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          ) : isUserWrong ? (
+                            <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                          ) : (
+                            <span className="w-4 flex-shrink-0" />
+                          )}
+                          <span>
+                            {opt}
+                            {isCorrectOpt && (
+                              <span className="ml-2 text-[11px] font-semibold">Jawaban yang Tepat</span>
+                            )}
+                            {isUserWrong && (
+                              <span className="ml-2 text-[11px] font-semibold">Jawabanmu</span>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {explanation && (
+                    <div className="flex items-start gap-2 mt-3">
+                      <Lightbulb className="w-4 h-4 text-yellow flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-muted">{explanation}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setReviewMode(false)}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Kembali
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // If reflection already completed, show congrats — tetap bisa dibuka ulang
   if (reflectionDone && !showResult) {
     return (
       <div id="reflection-quiz" className="bg-gradient-to-br from-green-light to-surface rounded-2xl shadow-card border border-green/20 p-6 mb-6 text-center">
@@ -661,6 +819,23 @@ function ReflectionQuiz({
         </p>
         {prog?.reflection_score !== undefined && (
           <p className="text-xs text-muted mt-2">Skor refleksi: {prog.reflection_score}%</p>
+        )}
+        {storedScore >= 80 ? (
+          <button
+            onClick={() => setReviewMode(true)}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+            Review Soal
+          </button>
+        ) : (
+          <button
+            onClick={restartQuiz}
+            className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Ulangi Quiz Refleksi
+          </button>
         )}
       </div>
     );
@@ -675,6 +850,7 @@ function ReflectionQuiz({
   const handleCheck = () => {
     if (selected === null) return;
     setChecked(true);
+    setAnswers((prev) => ({ ...prev, [currentQ]: selected }));
     if (isCorrect) setCorrectCount((c) => c + 1);
   };
 
@@ -686,16 +862,11 @@ function ReflectionQuiz({
     } else {
       setShowResult(true);
       const score = Math.round(((correctCount + (isCorrect ? 1 : 0)) / questions.length) * 100);
-      progress.recordReflection(babId, score, questions.length);
+      const finalAnswers: Record<string, number> = { ...answers };
+      if (selected !== null) finalAnswers[String(currentQ)] = selected;
+      // Jawaban ikut disimpan hanya jika skor ≥80 (lihat recordReflection)
+      progress.recordReflection(babId, score, questions.length, finalAnswers);
     }
-  };
-
-  const handleRetry = () => {
-    setCurrentQ(0);
-    setSelected(null);
-    setChecked(false);
-    setShowResult(false);
-    setCorrectCount(0);
   };
 
   if (showResult) {
@@ -718,6 +889,13 @@ function ReflectionQuiz({
           <div className="mt-3">
             <p className="text-green font-bold text-lg mb-1">🎉 Selamat! Bab ini selesai!</p>
             <p className="text-sm text-muted">Kamu telah menyelesaikan semua materi dan quiz.</p>
+            <button
+              onClick={() => setReviewMode(true)}
+              className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+            >
+              <Eye className="w-4 h-4" />
+              Review Soal
+            </button>
           </div>
         ) : (
           <div className="mt-3">
@@ -725,7 +903,7 @@ function ReflectionQuiz({
               ❌ Skor minimal 80%. Coba lagi ya!
             </p>
             <button
-              onClick={handleRetry}
+              onClick={restartQuiz}
               className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
             >
               <RotateCcw className="w-4 h-4 inline mr-2" />
@@ -1088,15 +1266,17 @@ function resolvedAnimLabel(type: string, url: string): string {
 /** Full-bleed <iframe> embed (16:9 aspect, used for h5p/iframe). */
 function FullBleedIframe({ url, title }: { url: string; title: string }) {
   return (
-    <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
-      <iframe
-        className="absolute inset-0 w-full h-full"
-        src={url}
-        title={title}
-        allowFullScreen
-        loading="lazy"
-        sandbox="allow-scripts allow-same-origin allow-presentation"
-      />
+    <div className="mx-auto w-full max-w-4xl">
+      <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src={url}
+          title={title}
+          allowFullScreen
+          loading="lazy"
+          sandbox="allow-scripts allow-same-origin allow-presentation"
+        />
+      </div>
     </div>
   );
 }
@@ -1376,14 +1556,16 @@ function InlineVideoSection({
           <span className="text-lg">▶</span>
           <h3 className="font-bold text-sm">{t("video")}</h3>
         </div>
-        <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
-          <iframe
-            className="absolute inset-0 w-full h-full"
-            src={embedUrl}
-            title="Video Sub-Bab"
-            allowFullScreen
-            loading="lazy"
-          />
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src={embedUrl}
+              title="Video Sub-Bab"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     );
@@ -1397,14 +1579,16 @@ function InlineVideoSection({
           <span className="text-lg">▶</span>
           <h3 className="font-bold text-sm">{t("video")}</h3>
         </div>
-        <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
-          <iframe
-            className="absolute inset-0 w-full h-full"
-            src={`https://www.youtube.com/embed/${babVideoId}`}
-            title="Video Bab"
-            allowFullScreen
-            loading="lazy"
-          />
+        <div className="mx-auto w-full max-w-4xl">
+          <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden bg-black shadow-card border border-border/50">
+            <iframe
+              className="absolute inset-0 w-full h-full"
+              src={`https://www.youtube.com/embed/${babVideoId}`}
+              title="Video Bab"
+              allowFullScreen
+              loading="lazy"
+            />
+          </div>
         </div>
       </div>
     );
