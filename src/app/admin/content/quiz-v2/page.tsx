@@ -21,6 +21,7 @@ interface QuizQuestion {
   question_id: string;
   question_en: string;
   question_image_url: string;
+  question_type?: string;
   options_id: string[];
   options_en: string[];
   correct_answer: number;
@@ -38,6 +39,7 @@ const EMPTY_QUESTION: Omit<QuizQuestion, 'id' | 'bab_id' | 'sub_bab_key' | 'is_r
   question_id: '',
   question_en: '',
   question_image_url: '',
+  question_type: 'single',
   options_id: ['', '', '', ''],
   options_en: ['', '', '', ''],
   correct_answer: 0,
@@ -45,6 +47,11 @@ const EMPTY_QUESTION: Omit<QuizQuestion, 'id' | 'bab_id' | 'sub_bab_key' | 'is_r
   explanation_en: '',
   sort_order: 0,
 };
+
+// Jumlah opsi yang dipakai: Pilihan Ganda = 4, Benar/Salah = 2
+function getVisibleOptionCount(q: QuizQuestion): number {
+  return q.question_type === 'true_false' ? 2 : 4;
+}
 
 export default function QuizV2Page() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -151,8 +158,9 @@ export default function QuizV2Page() {
 
   const handleSaveQuestion = async (globalIdx: number) => {
     const q = questions[globalIdx];
+    const visibleCount = getVisibleOptionCount(q);
     if (!q.question_id.trim()) return showToast('Teks soal (ID) wajib diisi');
-    if (q.options_id.some((o) => !o.trim())) return showToast('Semua pilihan (ID) wajib diisi');
+    if (q.options_id.slice(0, visibleCount).some((o) => !(o || '').trim())) return showToast('Semua pilihan (ID) wajib diisi');
 
     setSaving(true);
     try {
@@ -164,8 +172,9 @@ export default function QuizV2Page() {
         question_id: q.question_id,
         question_en: q.question_en,
         question_image_url: q.question_image_url,
-        options_id: q.options_id,
-        options_en: q.options_en,
+        question_type: q.question_type || 'single',
+        options_id: q.options_id.slice(0, visibleCount),
+        options_en: q.options_en.slice(0, visibleCount),
         correct_answer: q.correct_answer,
         explanation_id: q.explanation_id,
         explanation_en: q.explanation_en,
@@ -194,12 +203,13 @@ export default function QuizV2Page() {
     setSaving(true);
     let success = 0;
     for (const q of unsaved) {
-      if (!q.question_id.trim() || q.options_id.some((o) => !o.trim())) continue;
+      const visibleCount = getVisibleOptionCount(q);
+      if (!q.question_id.trim() || q.options_id.slice(0, visibleCount).some((o) => !(o || '').trim())) continue;
       try {
         const res = await adminFetch('/api/admin/quiz-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(q),
+          body: JSON.stringify({ ...q, question_type: q.question_type || 'single' }),
         });
         if (res.ok) success++;
       } catch { /* skip */ }
@@ -419,6 +429,35 @@ export default function QuizV2Page() {
                         placeholder="URL gambar atau upload"
                       />
 
+                      {/* Tipe Soal */}
+                      <div>
+                        <label className="block text-xs font-medium text-ink mb-1">📝 Tipe Soal</label>
+                        <select
+                          value={q.question_type || 'single'}
+                          onChange={(e) => {
+                            const t = e.target.value;
+                            if (t === 'true_false') {
+                              updateQuestion(globalIdx, {
+                                question_type: t,
+                                options_id: [q.options_id[0] || 'Benar', q.options_id[1] || 'Salah'],
+                                options_en: [q.options_en[0] || 'True', q.options_en[1] || 'False'],
+                                correct_answer: q.correct_answer > 1 ? 0 : q.correct_answer,
+                              });
+                            } else {
+                              updateQuestion(globalIdx, {
+                                question_type: t,
+                                options_id: [...q.options_id, '', '', '', ''].slice(0, 4),
+                                options_en: [...q.options_en, '', '', '', ''].slice(0, 4),
+                              });
+                            }
+                          }}
+                          className="w-full sm:w-64 px-3 py-2 border border-border rounded-xl bg-bg-alt text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+                        >
+                          <option value="single">Pilihan Ganda (A–D)</option>
+                          <option value="true_false">Benar / Salah (2 opsi)</option>
+                        </select>
+                      </div>
+
                       {/* Options */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
@@ -440,7 +479,7 @@ export default function QuizV2Page() {
                           />
                         </div>
                         <div className="space-y-3">
-                          {optionLabels.map((label, optIdx) => (
+                          {optionLabels.slice(0, getVisibleOptionCount(q)).map((label, optIdx) => (
                             <div key={optIdx} className="flex items-start gap-2">
                               <button
                                 type="button"
@@ -461,7 +500,7 @@ export default function QuizV2Page() {
                               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <input
                                   type="text"
-                                  value={q.options_id[optIdx]}
+                                  value={q.options_id[optIdx] || ''}
                                   onChange={(e) => {
                                     const opts = [...q.options_id];
                                     opts[optIdx] = e.target.value;
@@ -475,7 +514,7 @@ export default function QuizV2Page() {
                                 <div className="relative">
                                   <input
                                     type="text"
-                                    value={q.options_en[optIdx]}
+                                    value={q.options_en[optIdx] || ''}
                                     onChange={(e) => {
                                       const opts = [...q.options_en];
                                       opts[optIdx] = e.target.value;
@@ -490,7 +529,7 @@ export default function QuizV2Page() {
                                     <TranslateButton
                                       source="id"
                                       target="en"
-                                      text={q.options_id[optIdx]}
+                                      text={q.options_id[optIdx] || ''}
                                       onTranslated={(t) => {
                                         const opts = [...q.options_en];
                                         opts[optIdx] = t;

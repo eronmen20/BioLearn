@@ -5,6 +5,18 @@ import { requireAdmin } from "@/lib/admin-guard";
 
 export const dynamic = "force-dynamic";
 
+// Jenis soal yang didukung. Nilai selain ini dinormalisasi ke 'single'.
+function normalizeQuestionType(v: unknown): string {
+  return v === "true_false" ? "true_false" : "single";
+}
+
+// Error karena kolom question_type belum ada (migrasi belum dijalankan)?
+function isMissingColumnError(error: { message?: string; code?: string; details?: string } | null): boolean {
+  if (!error) return false;
+  const text = `${error.message || ""} ${error.code || ""} ${error.details || ""}`;
+  return /question_type/i.test(text);
+}
+
 // GET - List quiz-v2 (optionally filtered by bab_id or sub_bab_key)
 export async function GET(req: NextRequest) {
   try {
@@ -44,24 +56,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "bab_id wajib diisi" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const insertRow = {
+      bab_id: body.bab_id,
+      sub_bab_key: body.sub_bab_key || null,
+      is_reflection: body.is_reflection || false,
+      question_id: body.question_id || "",
+      question_en: body.question_en || "",
+      question_image_url: body.question_image_url || "",
+      question_type: normalizeQuestionType(body.question_type),
+      options_id: body.options_id || ["", "", "", ""],
+      options_en: body.options_en || ["", "", "", ""],
+      correct_answer: body.correct_answer ?? 0,
+      explanation_id: body.explanation_id || "",
+      explanation_en: body.explanation_en || "",
+      sort_order: body.sort_order || 0,
+    };
+
+    let { data, error } = await supabase
       .from("sub_bab_quiz")
-      .insert({
-        bab_id: body.bab_id,
-        sub_bab_key: body.sub_bab_key || null,
-        is_reflection: body.is_reflection || false,
-        question_id: body.question_id || "",
-        question_en: body.question_en || "",
-        question_image_url: body.question_image_url || "",
-        options_id: body.options_id || ["", "", "", ""],
-        options_en: body.options_en || ["", "", "", ""],
-        correct_answer: body.correct_answer ?? 0,
-        explanation_id: body.explanation_id || "",
-        explanation_en: body.explanation_en || "",
-        sort_order: body.sort_order || 0,
-      })
+      .insert(insertRow)
       .select("id")
       .single();
+
+    if (error && isMissingColumnError(error)) {
+      // Kolom question_type belum dimigrasi — ulangi tanpa kolom itu
+      const fallbackRow = { ...insertRow };
+      delete (fallbackRow as Record<string, unknown>).question_type;
+      const retry = await supabase.from("sub_bab_quiz").insert(fallbackRow).select("id").single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw error;
 
@@ -104,6 +128,7 @@ export async function PUT(req: NextRequest) {
     if (body.question_id !== undefined) updateData.question_id = body.question_id;
     if (body.question_en !== undefined) updateData.question_en = body.question_en;
     if (body.question_image_url !== undefined) updateData.question_image_url = body.question_image_url;
+    if (body.question_type !== undefined) updateData.question_type = normalizeQuestionType(body.question_type);
     if (body.options_id !== undefined) updateData.options_id = body.options_id;
     if (body.options_en !== undefined) updateData.options_en = body.options_en;
     if (body.correct_answer !== undefined) updateData.correct_answer = body.correct_answer;
@@ -111,7 +136,15 @@ export async function PUT(req: NextRequest) {
     if (body.explanation_en !== undefined) updateData.explanation_en = body.explanation_en;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
 
-    const { error } = await supabase.from("sub_bab_quiz").update(updateData).eq("id", body.id);
+    let { error } = await supabase.from("sub_bab_quiz").update(updateData).eq("id", body.id);
+
+    if (error && isMissingColumnError(error)) {
+      // Kolom question_type belum dimigrasi — ulangi tanpa kolom itu
+      const fallbackData = { ...updateData };
+      delete fallbackData.question_type;
+      const retry = await supabase.from("sub_bab_quiz").update(fallbackData).eq("id", body.id);
+      error = retry.error;
+    }
 
     if (error) throw error;
 

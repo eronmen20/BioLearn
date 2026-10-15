@@ -40,6 +40,32 @@ interface QuizV2Question {
   correct_answer: number;
   explanation_id: string;
   explanation_en: string;
+  // Jenis soal: 'single' (Pilihan Ganda, default) | 'true_false' (Benar/Salah).
+  // NULL/kolom-belum-ada = 'single' (kompatibel dengan data lama).
+  question_type?: string | null;
+}
+
+type QuizQuestionType = "single" | "true_false";
+
+function getQuestionType(q: QuizV2Question): QuizQuestionType {
+  return q.question_type === "true_false" ? "true_false" : "single";
+}
+
+function getQuestionTypeLabel(type: QuizQuestionType, lang: string): string {
+  if (type === "true_false") return lang === "en" ? "True / False" : "Benar / Salah";
+  return lang === "en" ? "Multiple Choice" : "Pilihan Ganda";
+}
+
+// Opsi yang ditampilkan: pakai yang tersimpan di DB; khusus Benar/Salah yang
+// opsinya kosong/belum diisi → fallback ke Benar/Salah (True/False).
+function getDisplayOptions(q: QuizV2Question, lang: string): string[] {
+  const stored = (lang === "en" ? q.options_en || q.options_id : q.options_id) || [];
+  if (getQuestionType(q) === "true_false") {
+    const filled = stored.filter((o) => o && o.trim());
+    if (filled.length >= 2) return filled.slice(0, 2);
+    return lang === "en" ? ["True", "False"] : ["Benar", "Salah"];
+  }
+  return stored;
 }
 
 /* ───────── BabContent ───────── */
@@ -442,7 +468,8 @@ function SubBabQuiz({
 
   const q = questions[currentQ];
   const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
-  const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+  const qType = getQuestionType(q);
+  const options = getDisplayOptions(q, lang);
   const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
   const isCorrect = selected === q.correct_answer;
 
@@ -521,6 +548,9 @@ function SubBabQuiz({
           <h3 className="font-bold text-sm flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-accent" />
             {t("quiz.title")}
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+              {getQuestionTypeLabel(qType, lang)}
+            </span>
           </h3>
           <span className="text-xs text-muted">
             {currentQ + 1}/{questions.length}
@@ -533,7 +563,7 @@ function SubBabQuiz({
           <img
             src={q.question_image_url}
             alt={t("image")}
-            className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
+            className="mb-4 rounded-xl max-h-48 object-contain block mx-auto"
             loading="lazy"
           />
         )}
@@ -725,15 +755,21 @@ function ReflectionQuiz({
           <div className="space-y-4">
             {questions.map((q, qi) => {
               const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
-              const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+              const qType = getQuestionType(q);
+              const options = getDisplayOptions(q, lang);
               const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
               const userAnswer = reviewAnswers[String(qi)];
 
               return (
                 <div key={q.id} className="bg-surface rounded-xl border border-border/50 p-4">
-                  <p className="text-xs font-semibold text-muted mb-2">
-                    Soal {qi + 1}/{questions.length}
-                  </p>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <p className="text-xs font-semibold text-muted">
+                      Soal {qi + 1}/{questions.length}
+                    </p>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                      {getQuestionTypeLabel(qType, lang)}
+                    </span>
+                  </div>
 
                   <p className="text-sm font-medium mb-3">{question}</p>
 
@@ -742,7 +778,7 @@ function ReflectionQuiz({
                     <img
                       src={q.question_image_url}
                       alt={t("image")}
-                      className="mb-3 rounded-xl max-h-48 object-contain"
+                      className="mb-3 rounded-xl max-h-48 object-contain block mx-auto"
                       loading="lazy"
                     />
                   )}
@@ -773,9 +809,6 @@ function ReflectionQuiz({
                           )}
                           <span>
                             {opt}
-                            {isCorrectOpt && (
-                              <span className="ml-2 text-[11px] font-semibold">Jawaban yang Tepat</span>
-                            )}
                             {isUserWrong && (
                               <span className="ml-2 text-[11px] font-semibold">Jawabanmu</span>
                             )}
@@ -843,7 +876,8 @@ function ReflectionQuiz({
 
   const q = questions[currentQ];
   const question = lang === "en" ? q.question_en || q.question_id : q.question_id;
-  const options = lang === "en" ? q.options_en || q.options_id : q.options_id;
+  const qType = getQuestionType(q);
+  const options = getDisplayOptions(q, lang);
   const explanation = lang === "en" ? q.explanation_en || q.explanation_id : q.explanation_id;
   const isCorrect = selected === q.correct_answer;
 
@@ -922,6 +956,9 @@ function ReflectionQuiz({
           <h3 className="font-bold text-sm flex items-center gap-2">
             <span className="text-lg">🪞</span>
             Quiz Refleksi
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+              {getQuestionTypeLabel(qType, lang)}
+            </span>
           </h3>
           <span className="text-xs text-muted">
             {currentQ + 1}/{questions.length}
@@ -934,7 +971,7 @@ function ReflectionQuiz({
           <img
             src={q.question_image_url}
             alt={t("image")}
-            className="mb-4 rounded-xl max-h-48 object-contain mx-auto"
+            className="mb-4 rounded-xl max-h-48 object-contain block mx-auto"
             loading="lazy"
           />
         )}
