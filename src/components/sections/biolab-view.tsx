@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { FlaskConical, ArrowRight, ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
 import { useLangStore } from "@/lib/lang-store";
 import { PraktikumViewer } from "@/components/praktikum-viewer";
 
@@ -62,6 +62,10 @@ export function BioLabList() {
     );
   }
 
+  // Modul id=1 (Difusi Cakram) tidak ditampilkan di daftar — ia diwakili
+  // kartu simulasi di atas & tetap bisa dibuka lewat tombol "Prosedur lengkap".
+  const stepModules = modules.filter((m) => m.id !== 1);
+
   return (
     <div className="animate-fade-in-up">
       <div className="mb-6">
@@ -76,16 +80,33 @@ export function BioLabList() {
         </p>
       </div>
 
-      {modules.length === 0 ? (
-        <div className="bg-surface rounded-2xl border border-border/50 p-10 text-center">
-          <FlaskConical className="w-10 h-10 text-muted mx-auto mb-3" />
-          <p className="text-sm text-muted">
-            {lang === "en" ? "No lab modules published yet. Check back soon!" : "Belum ada modul lab yang dipublikasikan. Cek lagi nanti!"}
-          </p>
+      {/* Simulasi interaktif unggulan */}
+      <Link href="/biolab/zona-hambat">
+        <div className="group relative p-5 rounded-2xl text-white overflow-hidden shadow-card hover:-translate-y-0.5 transition-transform mb-3 bg-gradient-to-br from-accent via-accent-dark to-[#4834d4]">
+          <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🧫</div>
+          <div className="absolute bottom-0 left-10 text-4xl opacity-15">🦠</div>
+          <div className="relative z-10">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 mb-2">
+              {lang === "en" ? "Interactive simulation" : "Simulasi interaktif"}
+            </span>
+            <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
+              {lang === "en" ? "Antibiotic Inhibition Zone" : "Zona Hambat Antibiotik"}
+            </p>
+            <p className="text-white/80 text-xs sm:text-sm mb-3 max-w-md">
+              {lang === "en"
+                ? "Place discs on a virtual petri dish, incubate, and flip the resistant strain to see resistance happen."
+                : "Taruh cakram di cawan virtual, inkubasi, dan aktifkan strain resisten untuk melihat resistensi terjadi."}
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-accent px-4 py-2 rounded-full group-hover:gap-2.5 transition-all">
+              {lang === "en" ? "Run simulation" : "Jalankan simulasi"}
+              <ArrowRight className="w-3.5 h-3.5" />
+            </span>
+          </div>
         </div>
-      ) : (
+      </Link>
+      {stepModules.length > 0 && (
         <div className="space-y-3">
-          {modules.map((m, i) => {
+          {stepModules.map((m, i) => {
             const title = lang === "en" ? m.title_en || m.title_id : m.title_id;
             const desc = lang === "en" ? m.description_en || m.description_id : m.description_id;
             return (
@@ -197,6 +218,29 @@ export function BioLabDetail({ id }: { id: string }) {
           lang={lang}
         />
       </div>
+
+      {/* Simulasi pendamping modul pilot (id=1: Difusi Cakram) */}
+      {mod.id === 1 && (
+        <Link href="/biolab/zona-hambat">
+          <div className="group relative p-5 rounded-2xl text-white overflow-hidden shadow-card hover:-translate-y-0.5 transition-transform mb-5 bg-gradient-to-br from-accent via-accent-dark to-[#4834d4]">
+            <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🧫</div>
+            <div className="relative z-10 flex items-center gap-3">
+              <div className="flex-1">
+                <p className="font-extrabold text-sm sm:text-base">
+                  {lang === "en" ? "Run the interactive simulation" : "Jalankan simulasi interaktifnya"}
+                </p>
+                <p className="text-white/80 text-xs">
+                  {lang === "en" ? "Virtual petri dish with resistant-strain toggle" : "Cawan virtual dengan toggle strain resisten"}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-accent px-4 py-2 rounded-full group-hover:gap-2.5 transition-all flex-shrink-0">
+                {lang === "en" ? "Simulate" : "Simulasi"}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </div>
+        </Link>
+      )}
 
       <div className="p-5 rounded-2xl bg-gradient-to-br from-accent to-accent-dark text-white flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0">
