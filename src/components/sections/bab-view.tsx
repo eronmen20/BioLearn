@@ -69,12 +69,15 @@ function getDisplayOptions(q: QuizV2Question, lang: string): string[] {
 }
 
 /* ───────── BabContent ───────── */
-export function BabContent({ babId }: { babId: string }) {
+export function BabContent({ babId, initialSubKey }: { babId: string; initialSubKey?: string | null }) {
   const { lang, t } = useLangStore();
   const progress = useProgressStore();
   const mounted = useIsMounted();
   const { data: content, loading, error } = useBabContent(babId);
   const [subIdx, setSubIdx] = useState(0);
+  // Deep link ?sub=<key> (mis. dari kartu isu di landing) — diterapkan sekali
+  // setelah konten & progress siap, dan tetap menghormati gembok sub-bab.
+  const [appliedDeepLink, setAppliedDeepLink] = useState<string | null>(null);
   const [viewType, setViewType] = useState<"full" | "summary">("summary");
   const [showReflection, setShowReflection] = useState(false);
 
@@ -124,7 +127,17 @@ export function BabContent({ babId }: { babId: string }) {
     return <div className="text-center py-20 text-muted">{t("bab.notfound")}</div>;
   }
 
-  const { bab, summary, full, quiz, subs, subTitles, mediaBySub } = content;
+  const { bab, summary, full, quiz, subs, subTitles, subHooks, mediaBySub } = content;
+
+  // Terapkan deep link ?sub= sekali saja (render-phase update: aman karena
+  // terkondisikan dan hanya berjalan satu kali per nilai param)
+  if (!loading && !error && mounted && initialSubKey && appliedDeepLink !== initialSubKey) {
+    setAppliedDeepLink(initialSubKey);
+    const deepIdx = subs.indexOf(initialSubKey);
+    if (deepIdx >= 0 && progress.isSubUnlocked(babId, initialSubKey, subs)) {
+      setSubIdx(deepIdx);
+    }
+  }
 
   // Current sub-bab's media (from DB, or empty if hardcoded fallback)
   const currentSubKey = subs[subIdx];
@@ -176,6 +189,22 @@ export function BabContent({ babId }: { babId: string }) {
         <ReflectionQuiz babId={babId} allSubKeys={subs} />
       ) : (
         <>
+      {/* Hook "Kenapa penting?" — dari kolom sub_bab.hook_id/hook_en, kosong = sembunyi */}
+      {(() => {
+        const hook = subHooks?.[subIdx];
+        const hookText = lang === "en" ? hook?.en || hook?.id : hook?.id || hook?.en;
+        return hookText ? (
+          <div className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5 flex items-start gap-3">
+            <span className="text-xl leading-none mt-0.5">💡</span>
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700 mb-1">
+                {lang === "en" ? "Why does this matter?" : "Kenapa ini penting?"}
+              </p>
+              <p className="text-sm text-ink leading-relaxed">{hookText}</p>
+            </div>
+          </div>
+        ) : null;
+      })()}
       {/* View Toggle */}
       <div className="flex gap-1 bg-border/40 rounded-full p-[3px] w-fit mb-5">
         <button

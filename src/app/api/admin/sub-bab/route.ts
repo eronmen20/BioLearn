@@ -14,6 +14,20 @@ function isValidSubBabKey(key: string): boolean {
   return /^[a-z0-9._-]{1,80}$/.test(key);
 }
 
+// Kolom hook_* mungkin belum ada (migrasi belum dijalankan)?
+function isMissingHookColumn(error: { message?: string; code?: string; details?: string } | null): boolean {
+  if (!error) return false;
+  const text = `${error.message || ""} ${error.code || ""} ${error.details || ""}`.toLowerCase();
+  return text.includes("hook_id") || text.includes("hook_en");
+}
+
+function stripHookColumns<T extends Record<string, unknown>>(row: T): T {
+  const copy = { ...row };
+  delete copy.hook_id;
+  delete copy.hook_en;
+  return copy;
+}
+
 // Helper: normalize sort_order for a bab (eliminate gaps and duplicates)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function normalizeSortOrder(supabase: any, table: string, babId: string) {
@@ -99,25 +113,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { data, error } = await supabase
+    const insertRow = {
+      bab_id: body.bab_id,
+      key: body.key || "",
+      title_id: body.title_id || "",
+      title_en: body.title_en || "",
+      summary_id: body.summary_id || "",
+      summary_en: body.summary_en || "",
+      content_id: body.content_id || "",
+      content_en: body.content_en || "",
+      hook_id: body.hook_id || "",
+      hook_en: body.hook_en || "",
+      video_url: body.video_url || "",
+      image_url: body.image_url || "",
+      animation_url: body.animation_url || "",
+      animation_type: body.animation_type || "",
+      sort_order: newSortOrder,
+    };
+
+    let { data, error } = await supabase
       .from("sub_bab")
-      .insert({
-        bab_id: body.bab_id,
-        key: body.key || "",
-        title_id: body.title_id || "",
-        title_en: body.title_en || "",
-        summary_id: body.summary_id || "",
-        summary_en: body.summary_en || "",
-        content_id: body.content_id || "",
-        content_en: body.content_en || "",
-        video_url: body.video_url || "",
-        image_url: body.image_url || "",
-        animation_url: body.animation_url || "",
-        animation_type: body.animation_type || "",
-        sort_order: newSortOrder,
-      })
+      .insert(insertRow)
       .select("id")
       .single();
+
+    if (error && isMissingHookColumn(error)) {
+      // Kolom hook_* belum dimigrasi — ulangi tanpa kolom itu
+      const retry = await supabase.from("sub_bab").insert(stripHookColumns(insertRow)).select("id").single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw error;
 
@@ -287,13 +312,21 @@ export async function PUT(req: NextRequest) {
     if (body.summary_en !== undefined) updateData.summary_en = body.summary_en;
     if (body.content_id !== undefined) updateData.content_id = body.content_id;
     if (body.content_en !== undefined) updateData.content_en = body.content_en;
+    if (body.hook_id !== undefined) updateData.hook_id = body.hook_id;
+    if (body.hook_en !== undefined) updateData.hook_en = body.hook_en;
     if (body.video_url !== undefined) updateData.video_url = body.video_url;
     if (body.image_url !== undefined) updateData.image_url = body.image_url;
     if (body.animation_url !== undefined) updateData.animation_url = body.animation_url;
     if (body.animation_type !== undefined) updateData.animation_type = body.animation_type;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
 
-    const { error } = await supabase.from("sub_bab").update(updateData).eq("id", body.id);
+    let { error } = await supabase.from("sub_bab").update(updateData).eq("id", body.id);
+
+    if (error && isMissingHookColumn(error)) {
+      // Kolom hook_* belum dimigrasi — ulangi tanpa kolom itu
+      const retry = await supabase.from("sub_bab").update(stripHookColumns(updateData)).eq("id", body.id);
+      error = retry.error;
+    }
 
     if (error) throw error;
 

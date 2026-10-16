@@ -6,18 +6,21 @@ import { useEffect } from "react";
 import { ShieldAlert } from "lucide-react";
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, _hydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    // Tunggu hidrasi localStorage dulu — kalau tidak, refresh selalu
+    // terlihat "belum login" dan user terlempar dari halaman admin.
+    if (!_hydrated) return;
     if (!isAuthenticated) {
       router.push("/admin/login");
     } else if (user && user.role !== "admin") {
       router.push("/dashboard");
     }
-  }, [isAuthenticated, user, router]);
+  }, [_hydrated, isAuthenticated, user, router]);
 
-  if (!isAuthenticated || (user && user.role !== "admin")) {
+  if (!_hydrated || !isAuthenticated || (user && user.role !== "admin")) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">

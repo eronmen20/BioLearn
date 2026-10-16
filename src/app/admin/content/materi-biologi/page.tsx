@@ -21,6 +21,8 @@ interface MateriBiologiItem {
   sub_bab_key: string;
   title_id: string;
   title_en: string;
+  hook_id: string;
+  hook_en: string;
   // From materi table
   materi_id: number | null;
   type: string;
@@ -58,6 +60,8 @@ export default function MateriBiologiPage() {
     sub_bab_key: '',
     title_id: '',
     title_en: '',
+    hook_id: '',
+    hook_en: '',
     summary_id: '',
     summary_en: '',
     content_id: '',
@@ -103,6 +107,8 @@ export default function MateriBiologiPage() {
           sub_bab_key: key,
           title_id: (sb.title_id as string) || (meta.title_id as string) || '',
           title_en: (sb.title_en as string) || (meta.title_en as string) || '',
+          hook_id: (sb.hook_id as string) || '',
+          hook_en: (sb.hook_en as string) || '',
           materi_id: materi ? (materi.id as number) : null,
           type: (materi?.type as string) || 'html',
           content_id: (materi?.content_id as string) || (sb.content_id as string) || '',
@@ -130,6 +136,8 @@ export default function MateriBiologiPage() {
             sub_bab_key: (m.sub_bab_key as string) || '',
             title_id: (meta.title_id as string) || '',
             title_en: (meta.title_en as string) || '',
+            hook_id: '',
+            hook_en: '',
             materi_id: m.id as number,
             type: (m.type as string) || 'html',
             content_id: (m.content_id as string) || '',
@@ -175,14 +183,15 @@ export default function MateriBiologiPage() {
     }
   };
 
-  const translateField = async (field: 'summary' | 'content' | 'title') => {
-    const source = field === 'summary' ? form.summary_id : field === 'content' ? form.content_id : form.title_id;
+  const translateField = async (field: 'summary' | 'content' | 'title' | 'hook') => {
+    const source = field === 'summary' ? form.summary_id : field === 'content' ? form.content_id : field === 'hook' ? form.hook_id : form.title_id;
     if (!source?.trim()) return showToast(`Isi ${field} dulu`);
     const translated = await translate(source, `${field}_translate`);
     if (translated) {
       const updates: Record<string, string> = {};
       if (field === 'summary') updates.summary_en = translated;
       else if (field === 'content') updates.content_en = translated;
+      else if (field === 'hook') updates.hook_en = translated;
       else updates.title_en = translated;
       setForm((prev) => ({ ...prev, ...updates }));
       showToast(`${field} diterjemahkan!`);
@@ -199,6 +208,8 @@ export default function MateriBiologiPage() {
       sub_bab_key: `sub.${currentBab}${nextIdx}`,
       title_id: '',
       title_en: '',
+      hook_id: '',
+      hook_en: '',
       summary_id: '',
       summary_en: '',
       content_id: '',
@@ -221,6 +232,8 @@ export default function MateriBiologiPage() {
       sub_bab_key: item.sub_bab_key,
       title_id: item.title_id,
       title_en: item.title_en,
+      hook_id: item.hook_id || '',
+      hook_en: item.hook_en || '',
       summary_id: item.summary_id,
       summary_en: item.summary_en,
       content_id: item.content_id,
@@ -248,6 +261,8 @@ export default function MateriBiologiPage() {
         key: form.sub_bab_key,
         title_id: form.title_id,
         title_en: form.title_en,
+        hook_id: form.hook_id,
+        hook_en: form.hook_en,
         summary_id: form.summary_id,
         summary_en: form.summary_en,
         content_id: form.content_id,
@@ -638,6 +653,43 @@ export default function MateriBiologiPage() {
                 className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
+          </div>
+
+          {/* Hook "Kenapa penting?" */}
+          <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">💡 Hook (ID) — Kenapa penting?</label>
+                <textarea
+                  value={form.hook_id}
+                  onChange={(e) => setForm({ ...form, hook_id: e.target.value })}
+                  rows={2}
+                  placeholder="Cth: Di bagian sel mana antibiotik menyerang?"
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 resize-y"
+                />
+              </div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-ink mb-1">💡 Hook (EN)</label>
+                  <button
+                    onClick={() => translateField('hook')}
+                    disabled={translating === 'hook_translate'}
+                    className="text-xs text-blue-500 hover:text-blue-700 disabled:opacity-50"
+                  >
+                    {translating === 'hook_translate' ? <Loader2 className="w-3 h-3 animate-spin inline" /> : <Languages className="w-3 h-3 inline mr-0.5" />}
+                    Auto
+                  </button>
+                </div>
+                <textarea
+                  value={form.hook_en}
+                  onChange={(e) => setForm({ ...form, hook_en: e.target.value })}
+                  rows={2}
+                  placeholder="E.g.: Which part of the cell do antibiotics attack?"
+                  className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 resize-y"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted mt-1">1–2 kalimat pembuka yang mengaitkan materi ke isu nyata. Kosongkan untuk menyembunyikan.</p>
           </div>
 
           {/* Tipe Konten */}

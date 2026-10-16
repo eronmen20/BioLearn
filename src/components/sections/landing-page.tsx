@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { BookOpen, Brain, FlaskConical, Heart, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell } from "lucide-react";
+import { FlaskConical, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell, Eye, Globe } from "lucide-react";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useLangStore } from "@/lib/lang-store";
+import { LearnModes, MiniQuiz, RealWorldIssues, Eyebrow } from "@/components/sections/landing-interactive";
 
 export interface HomepageSettings {
   hero_title: string;
@@ -17,6 +18,52 @@ export interface HomepageSettings {
   show_statistik: boolean;
   meta_title: string;
   meta_description: string;
+  // ── Section konsep (opsional; kosong = pakai teks default) ──
+  pillars_title?: string;
+  pillars_desc?: string;
+  pillar1_title?: string;
+  pillar1_desc?: string;
+  pillar2_title?: string;
+  pillar2_desc?: string;
+  pillar3_title?: string;
+  pillar3_desc?: string;
+  modes_eyebrow?: string;
+  modes_title?: string;
+  modes_desc?: string;
+  tab_lihat_title?: string;
+  tab_lihat_desc?: string;
+  tab_coba_title?: string;
+  tab_coba_desc?: string;
+  tab_isu_title?: string;
+  tab_isu_desc?: string;
+  tab_uji_title?: string;
+  tab_uji_desc?: string;
+  quiz_title?: string;
+  quiz_desc?: string;
+  quiz_q?: string;
+  quiz_opt_true?: string;
+  quiz_opt_false?: string;
+  quiz_explain?: string;
+  quiz_answer?: number;
+  issues_eyebrow?: string;
+  issues_title?: string;
+  issues_desc?: string;
+  issue1_title?: string;
+  issue1_desc?: string;
+  issue2_title?: string;
+  issue2_desc?: string;
+  issue3_title?: string;
+  issue3_desc?: string;
+  issues_cta?: string;
+  cta_ready?: string;
+  cta_desc?: string;
+  cta_register?: string;
+}
+
+// Ambil teks settings (trim); kosong/undefined/bukan-string = "" sehingga fallback ke i18n
+export function settingsText(v: unknown): string {
+  if (typeof v === "number") return String(v);
+  return typeof v === "string" ? v.trim() : "";
 }
 
 // Hero description/subtitle lines — editable via admin settings
@@ -54,38 +101,33 @@ const FLOATING_ITEMS = [
   { emoji: "🍃", x: "40%", y: "90%", delay: 2.8, duration: 5 },
 ];
 
-const FEATURES = [
+const PILLARS = [
   {
-    icon: <BookOpen className="w-6 h-6" />,
-    titleKey: "landing.feature_materi_title",
-    descKey: "landing.feature_materi_desc",
-    color: "from-purple-500 to-indigo-500",
-    bg: "bg-purple-50",
-    iconColor: "text-purple-500",
-  },
-  {
-    icon: <Brain className="w-6 h-6" />,
-    titleKey: "landing.feature_kuis_title",
-    descKey: "landing.feature_kuis_desc",
-    color: "from-pink-500 to-rose-500",
-    bg: "bg-pink-50",
-    iconColor: "text-pink-500",
+    icon: <Eye className="w-6 h-6" />,
+    titleField: "pillar1_title" as const,
+    titleKey: "landing.pillar1_title",
+    descField: "pillar1_desc" as const,
+    descKey: "landing.pillar1_desc",
+    bg: "bg-emerald-50",
+    iconColor: "text-emerald-500",
   },
   {
     icon: <FlaskConical className="w-6 h-6" />,
-    titleKey: "landing.feature_animasi_title",
-    descKey: "landing.feature_animasi_desc",
-    color: "from-cyan-500 to-teal-500",
+    titleField: "pillar2_title" as const,
+    titleKey: "landing.pillar2_title",
+    descField: "pillar2_desc" as const,
+    descKey: "landing.pillar2_desc",
     bg: "bg-cyan-50",
     iconColor: "text-cyan-500",
   },
   {
-    icon: <Heart className="w-6 h-6" />,
-    titleKey: "landing.feature_progress_title",
-    descKey: "landing.feature_progress_desc",
-    color: "from-orange-500 to-amber-500",
-    bg: "bg-orange-50",
-    iconColor: "text-orange-500",
+    icon: <Globe className="w-6 h-6" />,
+    titleField: "pillar3_title" as const,
+    titleKey: "landing.pillar3_title",
+    descField: "pillar3_desc" as const,
+    descKey: "landing.pillar3_desc",
+    bg: "bg-amber-50",
+    iconColor: "text-amber-500",
   },
 ];
 
@@ -209,6 +251,28 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
           {/* Subtitle */}
           <HeroDesc settings={settings} />
 
+          {/* Pillar chips */}
+          <motion.div
+            className="flex flex-wrap items-center justify-center gap-2 mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 1.4 }}
+          >
+            {[
+              { icon: <Eye className="w-3.5 h-3.5" />, label: t("landing.pillar_visual") },
+              { icon: <FlaskConical className="w-3.5 h-3.5" />, label: t("landing.pillar_interactive") },
+              { icon: <Globe className="w-3.5 h-3.5" />, label: t("landing.pillar_issues") },
+            ].map((p, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-surface border border-border/60 shadow-sm text-xs sm:text-sm font-semibold text-ink"
+              >
+                <span className="text-accent">{p.icon}</span>
+                {p.label}
+              </span>
+            ))}
+          </motion.div>
+
           {/* CTA Buttons */}
           <motion.div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
@@ -286,20 +350,20 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
         </motion.div>
       </motion.section>
 
-      {/* Features Section */}
+      {/* Pillars Section */}
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
           <AnimatedSection className="text-center mb-12 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
-              {t("landing.why_title")} <span className="gradient-text">BioLearn</span>?
+              {settingsText(settings?.pillars_title) || t("landing.pillars_title")}
             </h2>
             <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
-              {t("landing.why_desc")}
+              {settingsText(settings?.pillars_desc) || t("landing.pillars_desc")}
             </p>
           </AnimatedSection>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            {FEATURES.map((f, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
+            {PILLARS.map((f, i) => (
               <AnimatedSection key={i} delay={i * 0.1}>
                 <motion.div
                   className="group p-6 rounded-2xl bg-surface border border-border/50 shadow-card h-full"
@@ -312,12 +376,39 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
                   >
                     {f.icon}
                   </motion.div>
-                  <h3 className="font-bold text-ink mb-2">{t(f.titleKey)}</h3>
-                  <p className="text-sm text-muted leading-relaxed">{t(f.descKey)}</p>
+                  <h3 className="font-bold text-ink mb-2">{settingsText(settings?.[f.titleField]) || t(f.titleKey)}</h3>
+                  <p className="text-sm text-muted leading-relaxed">{settingsText(settings?.[f.descField]) || t(f.descKey)}</p>
                 </motion.div>
               </AnimatedSection>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Ways to learn — interactive tabs */}
+      <section id="cara-belajar" className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff] scroll-mt-16">
+        <div className="max-w-4xl mx-auto">
+          <AnimatedSection className="text-center mb-10 sm:mb-12">
+            <Eyebrow>{settingsText(settings?.modes_eyebrow) || t("landing.modes_eyebrow")}</Eyebrow>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
+              {settingsText(settings?.modes_title) || t("landing.modes_title")}
+            </h2>
+            <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
+              {settingsText(settings?.modes_desc) || t("landing.modes_desc")}
+            </p>
+          </AnimatedSection>
+          <AnimatedSection>
+            <LearnModes settings={settings} />
+          </AnimatedSection>
+        </div>
+      </section>
+
+      {/* Mini quiz teaser */}
+      <section id="coba-soal" className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 scroll-mt-16">
+        <div className="max-w-2xl mx-auto">
+          <AnimatedSection>
+            <MiniQuiz settings={settings} />
+          </AnimatedSection>
         </div>
       </section>
 
@@ -424,6 +515,24 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
       </section>
       )}
 
+      {/* Real-world issues */}
+      <section id="isu-nyata" className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-b from-transparent to-[#f8f7ff] scroll-mt-16">
+        <div className="max-w-6xl mx-auto">
+          <AnimatedSection className="text-center mb-12 sm:mb-16">
+            <Eyebrow>{settingsText(settings?.issues_eyebrow) || t("landing.issues_eyebrow")}</Eyebrow>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-ink mb-4">
+              {settingsText(settings?.issues_title) || t("landing.issues_title")}
+            </h2>
+            <p className="text-muted text-sm sm:text-base max-w-xl mx-auto">
+              {settingsText(settings?.issues_desc) || t("landing.issues_desc")}
+            </p>
+          </AnimatedSection>
+          <AnimatedSection>
+            <RealWorldIssues settings={settings} />
+          </AnimatedSection>
+        </div>
+      </section>
+
       {/* Stats Section */}
       {showStatistik && (
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6">
@@ -482,17 +591,17 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
 
               <div className="relative z-10">
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-4">
-                  {t("landing.cta_ready")}
+                  {settingsText(settings?.cta_ready) || t("landing.cta_ready")}
                 </h2>
                 <p className="text-white/80 text-sm sm:text-base mb-8 max-w-lg mx-auto">
-                  {t("landing.cta_desc")}
+                  {settingsText(settings?.cta_desc) || t("landing.cta_desc")}
                 </p>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link
                     href="/login"
                     className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-accent font-bold rounded-full text-base sm:text-lg hover:bg-gray-50 transition-all shadow-xl"
                   >
-                    {t("landing.cta_register")}
+                    {settingsText(settings?.cta_register) || t("landing.cta_register")}
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}

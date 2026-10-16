@@ -9,6 +9,7 @@ interface SupabaseSub {
   title: { id: string; en: string };
   summary: { id: string; en: string };
   full: { id: string; en: string };
+  hook?: { id: string; en: string };
   video_url: string;
   image_url: string;
   animation_url: string;
@@ -37,6 +38,7 @@ interface ContentData {
   quiz: QuizQuestion[];
   subs: string[];
   subTitles: { id: string; en: string }[];
+  subHooks: { id: string; en: string }[];
   mediaBySub: Record<string, SubMedia>;
   source: "supabase";
 }
@@ -105,6 +107,10 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
               id: s.title?.id || "",
               en: s.title?.en || "",
             }));
+            const subHooks = supaData.subs.map((s) => ({
+              id: s.hook?.id || "",
+              en: s.hook?.en || "",
+            }));
 
             const mediaBySub: Record<string, SubMedia> = {};
             for (const s of supaData.subs) {
@@ -124,6 +130,7 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
                 quiz: supaData.quiz.length > 0 ? supaData.quiz : (QUIZ[babId] || []),
                 subs,
                 subTitles,
+                subHooks,
                 mediaBySub,
                 source: "supabase",
               });

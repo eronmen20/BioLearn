@@ -4,26 +4,31 @@ import { getPublicDb } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 // GET - Public list praktikum (only 'published').
-//   ?bab_id (required)
+//   ?bab_id (required, atau "all" untuk semua bab — dipakai halaman BioLab)
 //   ?sub_bab_key (optional) — return rows whose sub_bab_key matches OR is NULL (fallback)
+//   ?id (optional) — satu modul spesifik (diabaikan bila tidak published)
 export async function GET(req: NextRequest) {
   try {
     const supabase = getPublicDb();
     const { searchParams } = new URL(req.url);
     const babId = searchParams.get("bab_id");
     const subBabKey = searchParams.get("sub_bab_key");
+    const modId = searchParams.get("id");
 
-    if (!babId) {
-      return NextResponse.json({ error: "bab_id required" }, { status: 400 });
+    if (!babId && !modId) {
+      return NextResponse.json({ error: "bab_id atau id wajib diisi" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("praktikum")
       .select("id, bab_id, sub_bab_key, title_id, title_en, description_id, description_en, image_url, image_alt, steps, flashcards, difficulty")
-      .eq("bab_id", babId)
       .eq("status", "published")
       .order("id", { ascending: true });
 
+    if (modId) query = query.eq("id", modId);
+    if (babId && babId !== "all") query = query.eq("bab_id", babId);
+
+    const { data, error } = await query;
     if (error) throw error;
 
     let rows = data || [];

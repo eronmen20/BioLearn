@@ -23,3 +23,7 @@ ALTER TABLE praktikum
 
 CREATE INDEX IF NOT EXISTS idx_praktikum_bab_sub ON praktikum(bab_id, sub_bab_key);
 CREATE INDEX IF NOT EXISTS idx_praktikum_status ON praktikum(status);
+
+-- 4. sort_order (dipakai admin list & API ordering)
+ALTER TABLE praktikum
+  ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;

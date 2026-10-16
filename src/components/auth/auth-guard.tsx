@@ -5,16 +5,18 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, _hydrated } = useAuthStore();
   const router = useRouter();
 
   useEffect(() => {
+    // Tunggu hidrasi dulu supaya refresh tidak menendang user ke /login
+    if (!_hydrated) return;
     if (!isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [_hydrated, isAuthenticated, router]);
 
-  if (!isAuthenticated) {
+  if (!_hydrated || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">

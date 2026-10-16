@@ -11,6 +11,8 @@ import {
   Home,
   BookOpen,
   TrendingUp,
+  Newspaper,
+  FlaskConical,
   X,
   ChevronRight,
   GraduationCap,
@@ -142,6 +144,20 @@ export function Sidebar() {
             icon={<TrendingUp className="w-5 h-5" />}
             label={t("sidebar.progress")}
             active={pathname.startsWith("/progress")}
+          />
+
+          <NavItem
+            href="/bionow"
+            icon={<Newspaper className="w-5 h-5" />}
+            label={t("sidebar.bionow")}
+            active={pathname.startsWith("/bionow")}
+          />
+
+          <NavItem
+            href="/biolab"
+            icon={<FlaskConical className="w-5 h-5" />}
+            label={t("sidebar.biolab")}
+            active={pathname.startsWith("/biolab")}
           />
 
         </div>

@@ -99,6 +99,7 @@ export async function GET(req: NextRequest) {
       title: { id: string; en: string };
       summary: { id: string; en: string };
       full: { id: string; en: string };
+      hook: { id: string; en: string };
       video_url: string;
       image_url: string;
       animation_url: string;
@@ -134,6 +135,7 @@ export async function GET(req: NextRequest) {
         title: { id: titleId, en: titleEn },
         summary: { id: summaryId, en: summaryEn },
         full: { id: fullId, en: fullEn },
+        hook: { id: (sb.hook_id as string) || "", en: (sb.hook_en as string) || "" },
         video_url: (sb.video_url as string) || "",
         image_url: (sb.image_url as string) || "",
         animation_url: (sb.animation_url as string) || "",
@@ -169,6 +171,7 @@ export async function GET(req: NextRequest) {
           id: m.content_id || "",
           en: m.content_en || "",
         },
+        hook: { id: "", en: "" },
         video_url: (meta.video_url as string) || "",
         image_url: (meta.image_url as string) || "",
         animation_url: (meta.animation_url as string) || "",
