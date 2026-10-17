@@ -108,6 +108,8 @@ run("media allowlist: dev-only hosts excluded in production", () => {
   assert.equal(isHostAllowed("raw.githubusercontent.com", "production"), true);
   assert.equal(isHostAllowed("cdn.jsdelivr.net", "production"), true);
   assert.equal(isHostAllowed("supabase.co", "production"), true);
+  assert.equal(isHostAllowed("rsudpftbckyrwtnekmaa.supabase.co", "production"), true, "supabase project subdomain must be allowed");
+  assert.equal(isHostAllowed("evilsupabase.co", "production"), false, "suffix trick with bare host must be rejected");
   assert.equal(isHostAllowed("evil.example.com", "production"), false);
   assert.equal(isHostAllowed("169.254.169.254", "production"), false);
   assert.equal(isHostAllowed("localhost", "production"), false, "SSRF hardening: localhost must be rejected in prod");
