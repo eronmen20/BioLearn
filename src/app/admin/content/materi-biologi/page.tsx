@@ -11,6 +11,7 @@ import {
   Layers, Sparkles, Plus, Languages, Eye, EyeOff,
 } from 'lucide-react';
 import { adminFetch } from "@/lib/admin-fetch";
+import { BabSelect } from '@/components/admin/bab-select';
 
 interface BabItem { id: string; icon: string; color: string; kelas_id?: string; }
 
@@ -501,30 +502,15 @@ export default function MateriBiologiPage() {
       />
 
       {/* Filter Bab */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setFilterBab('')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            !filterBab
-              ? 'bg-accent text-white'
-              : 'bg-surface border border-border text-muted hover:text-ink'
-          }`}
-        >
-          Semua
-        </button>
-        {babList.map((bab) => (
-          <button
-            key={bab.id}
-            onClick={() => setFilterBab(bab.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filterBab === bab.id
-                ? 'bg-accent text-white'
-                : 'bg-surface border border-border text-muted hover:text-ink'
-            }`}
-          >
-            {bab.icon} {bab.id}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-end justify-between">
+        <BabSelect
+          label="Filter Bab"
+          value={filterBab}
+          onChange={setFilterBab}
+          items={babList}
+          includeAll
+          className="w-full sm:w-64"
+        />
       </div>
 
       {/* Stats */}
@@ -586,17 +572,11 @@ export default function MateriBiologiPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Bab</label>
-              <select
+              <BabSelect
                 value={form.bab_id}
-                onChange={(e) => setForm({ ...form, bab_id: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                {babList.map((bab) => (
-                  <option key={bab.id} value={bab.id}>
-                    {bab.icon} {bab.id}
-                  </option>
-                ))}
-              </select>
+                onChange={(id) => setForm({ ...form, bab_id: id })}
+                items={babList}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Sub Bab Key</label>

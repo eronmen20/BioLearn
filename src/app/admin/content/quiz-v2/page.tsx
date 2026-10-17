@@ -12,6 +12,7 @@ import {
   ChevronDown, ChevronRight, Edit3, BookOpen, RefreshCw,
 } from 'lucide-react';
 import { adminFetch } from "@/lib/admin-fetch";
+import { BabSelect } from '@/components/admin/bab-select';
 
 interface QuizQuestion {
   id?: number;
@@ -234,31 +235,12 @@ export default function QuizV2Page() {
       />
 
       {/* Filter Bab */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => { setFilterBab(''); setActiveTab(''); }}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            !filterBab
-              ? 'bg-accent text-white'
-              : 'bg-surface border border-border text-muted hover:text-ink'
-          }`}
-        >
-          Semua
-        </button>
-        {BAB.map((bab) => (
-          <button
-            key={bab.id}
-            onClick={() => { setFilterBab(bab.id); setActiveTab(''); }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filterBab === bab.id
-                ? 'bg-accent text-white'
-                : 'bg-surface border border-border text-muted hover:text-ink'
-            }`}
-          >
-            {bab.icon} {bab.id}
-          </button>
-        ))}
-      </div>
+      <BabSelect
+        label="Pilih Bab"
+        value={filterBab}
+        onChange={(id) => { setFilterBab(id); setActiveTab(''); }}
+        className="w-full sm:w-64"
+      />
 
       {/* Sub-bab tabs + Quiz Refleksi */}
       {filterBab && tabs.length > 0 && (

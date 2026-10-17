@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 340" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGradAMR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="pillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="500" height="340" rx="16" fill="url(#bgGradAMR)"/>
+
+  <!-- Title Badge -->
+  <rect x="24" y="20" width="220" height="28" rx="14" fill="#3f1d1d" opacity="0.9"/>
+  <text x="134" y="38" text-anchor="middle" fill="#fca5a5" font-family="system-ui, sans-serif" font-size="12" font-weight="700">RESISTENSI ANTIBIOTIK</text>
+
+  <!-- Antibiotic Pill (left, arriving) -->
+  <g transform="translate(70,80) rotate(-25)">
+    <rect x="0" y="0" width="110" height="46" rx="23" fill="url(#pillGrad)" stroke="#0ea5e9" stroke-width="2"/>
+    <line x1="55" y1="2" x2="55" y2="44" stroke="#0f172a" stroke-width="3" opacity="0.5"/>
+    <text x="27" y="29" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="10" font-weight="bold">ATB</text>
+    <text x="83" y="29" text-anchor="middle" fill="#0f172a" font-family="system-ui, sans-serif" font-size="10" font-weight="bold">ATB</text>
+  </g>
+  <!-- Motion lines: pill can't reach -->
+  <line x1="165" y1="120" x2="210" y2="120" stroke="#22d3ee" stroke-width="3" stroke-dasharray="7,5" opacity="0.6"/>
+  <line x1="175" y1="105" x2="215" y2="140" stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="6,5" opacity="0.5"/>
+  <line x1="175" y1="135" x2="215" y2="100" stroke="#22d3ee" stroke-width="2.5" stroke-dasharray="6,5" opacity="0.5"/>
+
+  <!-- Bacterium (right, defending with shield) -->
+  <g transform="translate(240,65)">
+    <!-- Body -->
+    <ellipse cx="80" cy="90" rx="78" ry="58" fill="#00b894" opacity="0.18" stroke="#00b894" stroke-width="3"/>
+    <!-- Cell wall pattern -->
+    <circle cx="45" cy="70" r="5" fill="#00b894"/>
+    <circle cx="70" cy="58" r="4" fill="#00b894"/>
+    <circle cx="105" cy="66" r="5" fill="#00b894"/>
+    <circle cx="120" cy="95" r="4" fill="#00b894"/>
+    <circle cx="55" cy="112" r="4" fill="#00b894"/>
+    <circle cx="85" cy="125" r="5" fill="#00b894"/>
+    <!-- Label inside -->
+    <text x="80" y="88" text-anchor="middle" fill="#7fe7cf" font-family="system-ui, sans-serif" font-size="13" font-weight="extrabold">BAKTERI</text>
+    <text x="80" y="105" text-anchor="middle" fill="#86d9c6" font-family="system-ui, sans-serif" font-size="9.5">resisten — masih hidup</text>
+    <!-- Flagella -->
+    <path d="M 158,80 q 30,-14 46,4" fill="none" stroke="#00b894" stroke-width="3"/>
+    <path d="M 160,110 q 34,10 44,-10" fill="none" stroke="#00b894" stroke-width="3"/>
+    <!-- Pili -->
+    <line x1="30" y1="50" x2="12" y2="36" stroke="#00b894" stroke-width="2.5"/>
+    <line x1="55" y1="38" x2="42" y2="22" stroke="#00b894" stroke-width="2.5"/>
+    <line x1="105" y1="35" x2="112" y2="18" stroke="#00b894" stroke-width="2.5"/>
+    <!-- Shield blocking the pill -->
+    <g transform="translate(8,55)">
+      <path d="M 0,0 L 34,-12 L 34,26 L 17,44 L 0,26 Z" fill="url(#shieldGrad)" stroke="#fca5a5" stroke-width="2"/>
+      <text x="17" y="30" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="9" font-weight="bold">GEN R</text>
+    </g>
+  </g>
+
+  <!-- Bottom info: how resistance spreads -->
+  <rect x="24" y="256" width="452" height="64" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="42" y="278" fill="#f1f5f9" font-family="system-ui, sans-serif" font-size="10.5" font-weight="bold">🛡️ Cara bakteri jadi kebal — dua jalan utama:</text>
+  <text x="42" y="296" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="9.5">1. <tspan fill="#e2e8f0" font-weight="bold">Mutasi</tspan> — keturunannya kebetulan tahan saat berkembang biak</text>
+  <text x="42" y="312" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="9.5">2. <tspan fill="#e2e8f0" font-weight="bold">Konjugasi</tspan> — tukar plasmid berisi gen resistensi antar bakteri</text>
+</svg>

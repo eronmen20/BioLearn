@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { BAB } from '@/lib/bab-data';
 import { adminFetch } from "@/lib/admin-fetch";
+import { BabSelect } from '@/components/admin/bab-select';
 
 interface PraktikumCard {
   name: string;
@@ -396,27 +397,13 @@ export default function PraktikumPage() {
       />
 
       {/* Filter BAB */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setFilterBab('')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-            !filterBab ? 'bg-accent text-white' : 'bg-surface border border-border text-muted hover:text-ink'
-          }`}
-        >
-          Semua ({items.length})
-        </button>
-        {BAB.map((bab) => (
-          <button
-            key={bab.id}
-            onClick={() => setFilterBab(bab.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              filterBab === bab.id ? 'bg-accent text-white' : 'bg-surface border border-border text-muted hover:text-ink'
-            }`}
-          >
-            {bab.icon} {bab.id}
-          </button>
-        ))}
-      </div>
+      <BabSelect
+        label="Filter Bab"
+        value={filterBab}
+        onChange={setFilterBab}
+        includeAll
+        className="w-full sm:w-64"
+      />
 
       <DataTable
         columns={columns}
@@ -444,17 +431,13 @@ export default function PraktikumPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Bab</label>
-              <select
+              <BabSelect
                 value={form.bab_id}
-                onChange={(e) => {
-                  const newBab = e.target.value;
-                  setForm({ ...form, bab_id: newBab, sub_bab_key: '' });
-                  loadSubBabs(newBab);
+                onChange={(id) => {
+                  setForm({ ...form, bab_id: id, sub_bab_key: '' });
+                  loadSubBabs(id);
                 }}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                {BAB.map((bab) => <option key={bab.id} value={bab.id}>{bab.icon} {bab.id}</option>)}
-              </select>
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Sub-BAB target</label>

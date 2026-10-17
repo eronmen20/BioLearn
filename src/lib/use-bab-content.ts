@@ -22,6 +22,8 @@ interface SupabaseContent {
   subs: SupabaseSub[];
   quiz: QuizQuestion[];
   has_content: boolean;
+  capaian?: { id: string; en: string };
+  tujuan?: { id: string; en: string };
 }
 
 interface SubMedia {
@@ -38,8 +40,9 @@ interface ContentData {
   quiz: QuizQuestion[];
   subs: string[];
   subTitles: { id: string; en: string }[];
-  subHooks: { id: string; en: string }[];
+  subHooks?: { id: string; en: string }[];
   mediaBySub: Record<string, SubMedia>;
+  objectives?: { capaian: { id: string; en: string }; tujuan: { id: string; en: string } };
   source: "supabase";
 }
 
@@ -132,6 +135,12 @@ export function useBabContent(babId: string): { data: ContentData | null; loadin
                 subTitles,
                 subHooks,
                 mediaBySub,
+                objectives: supaData.capaian || supaData.tujuan
+                  ? {
+                      capaian: { id: supaData.capaian?.id || "", en: supaData.capaian?.en || "" },
+                      tujuan: { id: supaData.tujuan?.id || "", en: supaData.tujuan?.en || "" },
+                    }
+                  : undefined,
                 source: "supabase",
               });
               setLoading(false);

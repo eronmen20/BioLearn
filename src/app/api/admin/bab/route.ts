@@ -49,6 +49,10 @@ export async function POST(req: NextRequest) {
       video_title_id: body.video_title_id || null,
       video_title_en: body.video_title_en || null,
       hotspotted: body.hotspotted || null,
+      capaian_id: body.capaian_id || '',
+      capaian_en: body.capaian_en || '',
+      tujuan_id: body.tujuan_id || '',
+      tujuan_en: body.tujuan_en || '',
     });
 
     if (error) throw error;
@@ -92,6 +96,11 @@ export async function PUT(req: NextRequest) {
     if (body.video_title_id !== undefined) updateFields.video_title_id = body.video_title_id;
     if (body.video_title_en !== undefined) updateFields.video_title_en = body.video_title_en;
     if (body.hotspotted !== undefined) updateFields.hotspotted = body.hotspotted;
+    // Capaian & Tujuan Pembelajaran (teks; baris terpisah = item list untuk TP)
+    if (body.capaian_id !== undefined) updateFields.capaian_id = body.capaian_id;
+    if (body.capaian_en !== undefined) updateFields.capaian_en = body.capaian_en;
+    if (body.tujuan_id !== undefined) updateFields.tujuan_id = body.tujuan_id;
+    if (body.tujuan_en !== undefined) updateFields.tujuan_en = body.tujuan_en;
     if (body.is_archived !== undefined) {
       updateFields.is_archived = body.is_archived;
       updateFields.archived_at = body.is_archived ? new Date().toISOString() : null;

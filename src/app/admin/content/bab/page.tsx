@@ -25,6 +25,10 @@ interface BabItem {
   video_title_id: string | null;
   video_title_en: string | null;
   hotspotted: string | null;
+  capaian_id: string | null;
+  capaian_en: string | null;
+  tujuan_id: string | null;
+  tujuan_en: string | null;
   is_archived: boolean;
   archived_at: string | null;
   created_at: string;
@@ -43,6 +47,10 @@ const DEFAULT_FORM = {
   video_title_id: '',
   video_title_en: '',
   hotspotted: '',
+  capaian_id: '',
+  capaian_en: '',
+  tujuan_id: '',
+  tujuan_en: '',
   is_archived: false,
 };
 
@@ -105,6 +113,10 @@ export default function BabPage() {
       video_title_id: item.video_title_id || '',
       video_title_en: item.video_title_en || '',
       hotspotted: item.hotspotted || '',
+      capaian_id: item.capaian_id || '',
+      capaian_en: item.capaian_en || '',
+      tujuan_id: item.tujuan_id || '',
+      tujuan_en: item.tujuan_en || '',
       is_archived: item.is_archived || false,
     });
     setShowEditor(true);
@@ -126,6 +138,10 @@ export default function BabPage() {
         video_title_id: form.video_title_id || null,
         video_title_en: form.video_title_en || null,
         hotspotted: form.hotspotted || null,
+        capaian_id: form.capaian_id || null,
+        capaian_en: form.capaian_en || null,
+        tujuan_id: form.tujuan_id || null,
+        tujuan_en: form.tujuan_en || null,
       };
 
       // Archive flag handled here too (for editing); POST sets default archived=false
@@ -196,7 +212,7 @@ export default function BabPage() {
     }
   };
 
-  const ICONS = ['🔬', '🍽️', '🌿', '🧬', '🦎', '🌱', '🫀', '🦠', '📚', '🧪', '🔬', '🧫', '🧮', '📐', '🌍', '🔬'];
+  const ICONS = ['🔬', '🍽️', '🌿', '🧬', '🦎', '🌱', '🫀', '🦠', '📚', '🧪', '🧫', '🧮', '📐', '🌍', '🦴', '🍄'];
   const COLORS = ['#6c5ce7', '#00b894', '#00cec9', '#e17055', '#fdcb6e', '#55a3f5', '#ff7675', '#a29bfe', '#636e72', '#74b9ff'];
 
   const columns: Column<BabItem>[] = [
@@ -467,6 +483,71 @@ export default function BabPage() {
                 onChange={(e) => setForm({ ...form, video_title_en: e.target.value })}
                 placeholder="Video title in English"
                 className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+          </div>
+
+          {/* Capaian & Tujuan Pembelajaran */}
+          <div className="border border-border rounded-xl p-4 bg-bg-alt/50 space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="capaian-id">🎯 Capaian Pembelajaran (ID)</label>
+                <TranslateButton
+                  source="id"
+                  target="en"
+                  text={form.capaian_id}
+                  onTranslated={(t) => setForm({ ...form, capaian_en: t })}
+                />
+              </div>
+              <textarea
+                id="capaian-id"
+                value={form.capaian_id}
+                onChange={(e) => setForm({ ...form, capaian_id: e.target.value })}
+                rows={2}
+                placeholder="Satu paragraf besar: kemampuan yang dihasilkan setelah belajar bab ini"
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+            <div>
+              <label htmlFor="capaian-en">🎯 Capaian Pembelajaran (EN)</label>
+              <textarea
+                id="capaian-en"
+                value={form.capaian_en}
+                onChange={(e) => setForm({ ...form, capaian_en: e.target.value })}
+                rows={2}
+                placeholder="English version of the learning outcome"
+                className="mt-1 w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label htmlFor="tujuan-id">✅ Tujuan Pembelajaran (ID)</label>
+                <TranslateButton
+                  source="id"
+                  target="en"
+                  text={form.tujuan_id}
+                  onTranslated={(t) => setForm({ ...form, tujuan_en: t })}
+                />
+              </div>
+              <textarea
+                id="tujuan-id"
+                value={form.tujuan_id}
+                onChange={(e) => setForm({ ...form, tujuan_id: e.target.value })}
+                rows={4}
+                placeholder={'Satu tujuan per baris, mis:\nMenjelaskan struktur bakteri.\nMenganalisis reproduksi bakteri.'}
+                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+              <p className="text-[11px] text-muted mt-1">💡 Tiap baris jadi satu bullet di halaman materi.</p>
+            </div>
+            <div>
+              <label htmlFor="tujuan-en">✅ Tujuan Pembelajaran (EN)</label>
+              <textarea
+                id="tujuan-en"
+                value={form.tujuan_en}
+                onChange={(e) => setForm({ ...form, tujuan_en: e.target.value })}
+                rows={4}
+                placeholder="One objective per line (English)"
+                className="mt-1 w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
           </div>

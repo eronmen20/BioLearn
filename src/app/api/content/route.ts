@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     // Get all sub_bab for this bab (source of truth for sub-bab list)
     const { data: babRow, error: babError } = await supabase
       .from("bab")
-      .select("is_archived, archived_at")
+      .select("is_archived, archived_at, capaian_id, capaian_en, tujuan_id, tujuan_en")
       .eq("id", babId)
       .maybeSingle();
 
@@ -222,6 +222,9 @@ export async function GET(req: NextRequest) {
         bab_id: babId,
         is_archived: babRow?.is_archived || false,
         archived_at: babRow?.archived_at || null,
+        // Capaian & Tujuan Pembelajaran — teks; baris terpisah = item list
+        capaian: { id: (babRow?.capaian_id as string) || "", en: (babRow?.capaian_en as string) || "" },
+        tujuan: { id: (babRow?.tujuan_id as string) || "", en: (babRow?.tujuan_en as string) || "" },
         subs,
         quiz: quizData,
         has_content: subs.length > 0,
