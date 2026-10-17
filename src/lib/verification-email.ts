@@ -35,6 +35,8 @@ export async function sendCodeEmail(opts: SendCodeEmailOptions): Promise<void> {
   const intro = escapeHtml(opts.intro);
   const footnote = escapeHtml(opts.footNote);
   const preheader = `${intro} Kode: ${opts.code}`;
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://biolearn.nyrea.xyz";
+  const logoUrl = `${SITE_URL}/images/nyrea-logo.png`;
   const html = `<!DOCTYPE html>
 <html lang="id">
 <head>
@@ -49,9 +51,9 @@ export async function sendCodeEmail(opts: SendCodeEmailOptions): Promise<void> {
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:440px;">
           <!-- Header -->
           <tr>
-            <td align="center" style="background-color:#6c5ce7;border-radius:20px 20px 0 0;padding:28px 20px 22px;">
-              <div style="font-size:34px;line-height:1;">&#129517;</div>
-              <div style="margin-top:8px;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:1px;">BioLearn</div>
+            <td align="center" style="background-color:#6c5ce7;border-radius:20px 20px 0 0;padding:26px 20px 20px;">
+              <img src="${logoUrl}" width="76" height="56" alt="NYREA x BioLearn" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;max-width:100%;" />
+              <div style="margin-top:6px;color:#ffffff;font-size:20px;font-weight:800;letter-spacing:1px;">BioLearn</div>
               <div style="margin-top:4px;color:rgba(255,255,255,0.75);font-size:11px;letter-spacing:2px;text-transform:uppercase;">Belajar Biologi Jadi Seru</div>
             </td>
           </tr>
