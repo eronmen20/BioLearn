@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <radialGradient id="stomaLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="80%" stop-color="#dcfce7"/>
+      <stop offset="100%" stop-color="#bbf7d0"/>
+    </radialGradient>
+    <filter id="chloroplastGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="#14532d" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Latar Belakang -->
+  <rect width="1000" height="1000" fill="url(#stomaLight)"/>
+
+  <!-- Sel-Sel Epidermis Daun (Bentuk Lekuk-Lekuk Puzzle Gelombang Khas Daun Dikotil/Monokotil) -->
+  <g stroke="#15803d" stroke-width="5" fill="#f0fdf4" fill-opacity="0.6">
+    <path d="M0,0 Q120,60 220,20 Q320,-20 450,40 Q580,100 700,30 Q820,-40 1000,20 L1000,260 Q860,320 740,240 Q620,160 480,260 Q340,360 200,280 Q80,200 0,260 Z"/>
+    <path d="M0,260 Q80,200 200,280 Q340,360 480,260 Q620,160 740,240 Q860,320 1000,260 L1000,520 Q840,460 720,560 Q600,660 440,540 Q280,420 160,540 Q60,620 0,540 Z"/>
+    <path d="M0,540 Q60,620 160,540 Q280,420 440,540 Q600,660 720,560 Q840,460 1000,520 L1000,800 Q880,740 760,820 Q640,900 480,800 Q320,700 180,820 Q80,900 0,820 Z"/>
+    <path d="M0,820 Q80,900 180,820 Q320,700 480,800 Q640,900 760,820 Q880,740 1000,800 L1000,1000 L0,1000 Z"/>
+  </g>
+
+  <!-- Nukleus Sel Epidermis Daun -->
+  <g fill="#166534" opacity="0.7">
+    <circle cx="280" cy="120" r="16"/>
+    <circle cx="820" cy="140" r="17"/>
+    <circle cx="120" cy="420" r="16"/>
+    <circle cx="880" cy="400" r="18"/>
+    <circle cx="260" cy="680" r="17"/>
+    <circle cx="840" cy="680" r="16"/>
+    <circle cx="160" cy="920" r="15"/>
+    <circle cx="780" cy="920" r="17"/>
+  </g>
+
+  <!-- ================= STOMATA UTAMA (TENGAH PREPARAT - 500, 500) ================= -->
+  <g id="stomata-center" transform="translate(500, 480)">
+    <!-- Sel Tetangga (Subsidiary Cells) -->
+    <path d="M-140,-130 C-200,-50 -200,50 -140,130 C-90,180 -40,190 0,190 C40,190 90,180 140,130 C200,50 200,-50 140,-130 C90,-180 40,-190 0,-190 C-40,-190 -90,-180 -140,-130 Z"
+          fill="#dcfce7" stroke="#16a34a" stroke-width="4" opacity="0.8"/>
+
+    <!-- Sepasang Sel Penjaga (Guard Cells) - Bentuk Ginjal Khas -->
+    <!-- Sel Penjaga Kiri -->
+    <path d="M-10,-120 C-90,-90 -95,90 -10,120 C-35,80 -40,-80 -10,-120 Z"
+          fill="#86efac" stroke="#15803d" stroke-width="6"/>
+
+    <!-- Sel Penjaga Kanan -->
+    <path d="M10,-120 C90,-90 95,90 10,120 C35,80 40,-80 10,-120 Z"
+          fill="#86efac" stroke="#15803d" stroke-width="6"/>
+
+    <!-- Porus Stoma (Celah Terbuka Tengah) -->
+    <ellipse cx="0" cy="0" rx="14" ry="70" fill="#052e16"/>
+
+    <!-- Penebalan Dinding Bagian Dalam Sel Penjaga -->
+    <path d="M-6,-90 C-24,-60 -24,60 -6,90" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round"/>
+    <path d="M6,-90 C24,-60 24,60 6,90" fill="none" stroke="#14532d" stroke-width="6" stroke-linecap="round"/>
+
+    <!-- Nukleus Sel Penjaga -->
+    <circle cx="-45" cy="0" r="14" fill="#14532d"/>
+    <circle cx="45" cy="0" r="14" fill="#14532d"/>
+
+    <!-- Kloroplas Melimpah di Sel Penjaga (Khas: Epidermis biasa tidak punya kloroplas, hanya sel penjaga yang punya) -->
+    <g fill="#15803d" stroke="#14532d" stroke-width="1.5">
+      <ellipse cx="-40" cy="-70" rx="7" ry="11" transform="rotate(-15 -40 -70)"/>
+      <ellipse cx="-55" cy="-45" rx="7" ry="10" transform="rotate(-25 -55 -45)"/>
+      <ellipse cx="-60" cy="-20" rx="8" ry="11"/>
+      <ellipse cx="-60" cy="20" rx="8" ry="11"/>
+      <ellipse cx="-55" cy="45" rx="7" ry="10" transform="rotate(25 -55 45)"/>
+      <ellipse cx="-40" cy="70" rx="7" ry="11" transform="rotate(15 -40 70)"/>
+
+      <ellipse cx="40" cy="-70" rx="7" ry="11" transform="rotate(15 40 -70)"/>
+      <ellipse cx="55" cy="-45" rx="7" ry="10" transform="rotate(25 55 -45)"/>
+      <ellipse cx="60" cy="-20" rx="8" ry="11"/>
+      <ellipse cx="60" cy="20" rx="8" ry="11"/>
+      <ellipse cx="55" cy="45" rx="7" ry="10" transform="rotate(-25 55 45)"/>
+      <ellipse cx="40" cy="70" rx="7" ry="11" transform="rotate(-15 40 70)"/>
+    </g>
+  </g>
+
+  <!-- ================= STOMATA KEDUA (KIRI ATAS) ================= -->
+  <g id="stomata-left-top" transform="translate(240, 260) scale(0.65) rotate(-20)">
+    <path d="M-10,-120 C-90,-90 -95,90 -10,120 C-35,80 -40,-80 -10,-120 Z" fill="#86efac" stroke="#15803d" stroke-width="6"/>
+    <path d="M10,-120 C90,-90 95,90 10,120 C35,80 40,-80 10,-120 Z" fill="#86efac" stroke="#15803d" stroke-width="6"/>
+    <ellipse cx="0" cy="0" rx="8" ry="60" fill="#052e16"/>
+    <circle cx="-42" cy="0" r="12" fill="#14532d"/>
+    <circle cx="42" cy="0" r="12" fill="#14532d"/>
+    <ellipse cx="-40" cy="-50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="-50" cy="0" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="-40" cy="50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="40" cy="-50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="50" cy="0" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="40" cy="50" rx="6" ry="9" fill="#15803d"/>
+  </g>
+
+  <!-- ================= STOMATA KETIGA (KANAN BAWAH) ================= -->
+  <g id="stomata-right-bottom" transform="translate(760, 720) scale(0.7) rotate(25)">
+    <path d="M-10,-120 C-90,-90 -95,90 -10,120 C-35,80 -40,-80 -10,-120 Z" fill="#86efac" stroke="#15803d" stroke-width="6"/>
+    <path d="M10,-120 C90,-90 95,90 10,120 C35,80 40,-80 10,-120 Z" fill="#86efac" stroke="#15803d" stroke-width="6"/>
+    <ellipse cx="0" cy="0" rx="10" ry="65" fill="#052e16"/>
+    <circle cx="-42" cy="0" r="12" fill="#14532d"/>
+    <circle cx="42" cy="0" r="12" fill="#14532d"/>
+    <ellipse cx="-40" cy="-50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="-50" cy="0" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="-40" cy="50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="40" cy="-50" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="50" cy="0" rx="6" ry="9" fill="#15803d"/>
+    <ellipse cx="40" cy="50" rx="6" ry="9" fill="#15803d"/>
+  </g>
+</svg>

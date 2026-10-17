@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" role="img" aria-label="Siklus Lisogenik">
+  <style>
+    .t { font: 700 12px 'Segoe UI', Arial, sans-serif; fill: #2d3436; }
+    .n { font: 400 10px 'Segoe UI', Arial, sans-serif; fill: #636e72; }
+  </style>
+  <rect x="0" y="0" width="560" height="420" fill="#ffffff"/>
+  <text x="280" y="26" text-anchor="middle" font-weight="bold" font-size="16" fill="#00b894">Siklus Lisogenik — sel inang tetap hidup</text>
+
+  <g transform="translate(40,70)">
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e7f2fb" stroke="#0984e3" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">1. Adsorbsi</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Menempel pada</text>
+    <text x="60" y="60" text-anchor="middle" class="n">reseptor sel inang</text>
+  </g>
+  <g transform="translate(400,70)">
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e7f2fb" stroke="#0984e3" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">2. Penetrasi</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Materi genetik</text>
+    <text x="60" y="60" text-anchor="middle" class="n">menembus sel inang</text>
+  </g>
+  <g transform="translate(400,220)">
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e0fbf4" stroke="#00b894" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">3. Penggabungan</text>
+    <text x="60" y="46" text-anchor="middle" class="n">DNA virus menyatu</text>
+    <text x="60" y="60" text-anchor="middle" class="n">dengan DNA inang</text>
+  </g>
+  <g transform="translate(220,320)">
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e0fbf4" stroke="#00b894" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">4. Pembelahan sel</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Sel membelah;</text>
+    <text x="60" y="60" text-anchor="middle" class="n">profag ikut diwariskan</text>
+  </g>
+  <g transform="translate(40,220)">
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#fdf6e3" stroke="#b25e00" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">5. Induksi</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Profag aktif →</text>
+    <text x="60" y="60" text-anchor="middle" class="n">masuk siklus litik</text>
+  </g>
+
+  <defs>
+    <marker id="ad" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6" fill="none" stroke="#636e72" stroke-width="1.2"/>
+    </marker>
+  </defs>
+  <path d="M170,105 H385" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ad)"/>
+  <path d="M460,145 V215" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ad)"/>
+  <path d="M395,255 H180" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ad)"/>
+  <path d="M100,215 V145" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ad)"/>
+  <text x="265" y="402" text-anchor="middle" class="n">DNA virus tergabung (profag) — sel inang hidup &amp; membelah normal. Virus temperat: dapat litik &amp; lisogenik (fag λ)</text>
+</svg>

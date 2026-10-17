@@ -15,7 +15,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   _hydrated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
+  login: (email: string, password: string, portal?: "user" | "admin") => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
   logout: () => void;
   register: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; needsVerification?: boolean }>;
 }
@@ -48,14 +48,14 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   isLoading: false,
   _hydrated: false,
 
-  login: async (email, password) => {
+  login: async (email, password, portal = "user") => {
     set({ isLoading: true });
 
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, portal }),
       });
 
       const data = await res.json();

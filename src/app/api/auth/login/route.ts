@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Terlalu banyak percobaan. Coba lagi nanti." }, { status: 429 });
     }
 
-    const { email, password } = await req.json();
+    const { email, password, portal = "user" } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email dan password wajib diisi" }, { status: 400 });
@@ -32,6 +32,10 @@ export async function POST(req: NextRequest) {
     if (typeof email !== "string" || typeof password !== "string" || email.length > 254) {
       return NextResponse.json({ error: "Email dan password tidak valid" }, { status: 400 });
     }
+
+    // Portal separation: admin bukan user-app login; user bukan admin-portal
+    // login. Verifikasi role dulu TANPA menggugah token apapun.
+    const normalizedPortal = portal === "admin" ? "admin" : "user";
 
     // Per-account lockout so rotating the (spoofable) IP header can't
     // brute-force a single mailbox forever. Keyed on the submitted email only
@@ -48,6 +52,20 @@ export async function POST(req: NextRequest) {
     const user = await verifyPassword(email, password);
     if (!user) {
       return NextResponse.json({ error: "Email atau password salah" }, { status: 401 });
+    }
+
+    if (normalizedPortal === "user" && user.role === "admin") {
+      return NextResponse.json(
+        { error: "Akun admin hanya bisa login dari halaman Admin Panel." },
+        { status: 403 }
+      );
+    }
+
+    if (normalizedPortal === "admin" && user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Akun ini bukan admin. Gunakan halaman login siswa." },
+        { status: 403 }
+      );
     }
 
     // SECURITY: email verification is now real (register no longer sets

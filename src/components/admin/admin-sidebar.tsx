@@ -38,6 +38,7 @@ import {
   X,
   ChevronDown,
   FileQuestion,
+  Microscope,
 } from "lucide-react";
 
 interface MenuGroup {
@@ -69,6 +70,7 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/admin/content/bionow", icon: <Newspaper className="w-[18px] h-[18px]" />, label: "BioNow" },
       { href: "/admin/content/struktur", icon: <FlaskConical className="w-[18px] h-[18px]" />, label: "Struktur & Fungsi" },
       { href: "/admin/content/praktikum", icon: <FlaskConical className="w-[18px] h-[18px]" />, label: "Praktikum" },
+      { href: "/admin/content/mikroskop", icon: <Microscope className="w-[18px] h-[18px]" />, label: "Preparat Mikroskop" },
       { href: "/admin/content/media", icon: <Image className="w-[18px] h-[18px]" />, label: "Media" },
     ],
   },

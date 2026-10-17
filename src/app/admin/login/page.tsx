@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError("");
 
-    const result = await login(email, password);
+    const result = await login(email, password, "admin");
     if (!result.success) {
       setError(result.error || "Login gagal");
       return;

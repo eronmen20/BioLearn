@@ -286,6 +286,51 @@ export const BAB: BabSub[] = [
     videoId: "qPix_X-9t7E",
   },
   {
+    id: "virus",
+    icon: "🧫",
+    color: "#a29bfe",
+    subs: ["sub.virus1", "sub.virus2", "sub.virus3", "sub.virus4", "sub.virus5", "sub.virus6"],
+    summary: {
+      id: [
+        "Sejarah penemuan virus diawali dari penelitian penyakit bercak mosaik tembakau (1883) oleh Adolf Mayer, Ivanovsky, Beijerinck, hingga Stanley yang mengkristalkan TMV.",
+        "Virus berukuran sangat renik (20–300 nm), aseluler (bukan sel), parasit intraseluler obligat, memiliki satu jenis asam nukleat (DNA atau RNA), dan kebal antibiotik.",
+        "Struktur virion bakteriofag T terdiri atas kapsid polihedral (kapsomer), genom asam nukleat, selubung ekor, lempeng dasar dengan jarum penusuk, dan serabut ekor.",
+        "Parasit intraseluler obligat yang menginfeksi inang spesifik (lock and key). Replikasi melalui siklus litik (sel lisis) atau siklus lisogenik (membentuk profag).",
+        "Klasifikasi didasarkan pada asam nukleat (DNA/RNA), ukuran, morfologi simetri (heliks, ikosahedral, kompleks), dan sistem taksonomi ICTV (-viridae, -virus).",
+        "Peranan menguntungkan: terapi gen (vektor Retrovirus), vaksin, dan bioinsektisida (Baculovirus). Merugikan: patogen pada manusia, hewan (rabies, PMK, tetelo), dan tumbuhan.",
+      ],
+      en: [
+        "Virus discovery began with tobacco mosaic disease research (1883) by Mayer, Ivanovsky, Beijerinck, and Stanley crystallizing TMV.",
+        "Viruses are submicroscopic (20–300 nm), acellular, obligate intracellular parasites, carrying one nucleic acid type (DNA or RNA), and resistant to antibiotics.",
+        "A complete T-phage virion comprises an icosahedral capsid (capsomeres), nucleic acid genome, tail sheath, base plate with pins, and tail fibers.",
+        "Obligate intracellular parasites engaging specific hosts (lock and key). Reproduction proceeds via lytic (host lysis) or lysogenic (prophage) cycles.",
+        "Classified by nucleic acid (DNA/RNA), dimensions, symmetry morphology (helical, icosahedral, complex), and ICTV taxonomy (-viridae, -virus).",
+        "Beneficial roles: gene therapy (Retroviruses), vaccines, and bioinsecticides (Baculovirus). Harmful roles: diseases in humans, animals (rabies, FMD, NCD), and crops.",
+      ],
+    },
+    full: {
+      id: [
+        '<h3>Sejarah Virus</h3><p>Penelitian virus dimulai 1883 saat Adolf Mayer meneliti penyakit mosaik tembakau. Dmitri Ivanovsky (1892) membuktikan penyebabnya lolos saringan bakteri — lebih kecil dari bakteri. Martinus Beijerinck (1897) menemukan agen itu mampu berkembang biak di sel hidup dan menyebutnya <em>virus lolos saring</em>. Wendell Stanley (1935) berhasil mengkristalkan <em>tobacco mosaic virus</em> (TMV).</p>',
+        '<h3>Ciri-Ciri Virus</h3><p>Berukuran 0,02–0,3 μm, terlihat dengan mikroskop elektron. Tubuh terdiri atas kapsid dan materi genetik tunggal (DNA atau RNA). Tidak bermembran dan organel sel. Hanya berreproduksi di sel/jaringan hidup — <em>parasit intraseluler obligat</em>. Dapat mengkristal seperti benda mati. Bentuk: batang, bola, mulut, peluru, huruf T. Antibiotik tidak berpengaruh; dinonaktifkan oleh sinar UV dan sinar X.</p>',
+        '<h3>Struktur dan Fungsi Virus</h3><p>Partikel lengkap disebut <strong>virion</strong>. <strong>Kapsid:</strong> selubung protein dari subunit <em>kapsomer</em>; melindungi materi genetik dan membantu perlekatan ke sel inang. <strong>Asam nukleat:</strong> satu jenis saja — DNA atau RNA — sebagai genom/informasi genetik. <strong>Sampul membran:</strong> lipid, karbohidrat, atau glikoprotein (virus Sindbis); virus tanpa sampul = virus telanjang. <strong>Ekor:</strong> serabut ekor & lempeng dasar dengan jarum penusuk untuk menginjeksi DNA, seperti bakteriofag bentuk T.</p>',
+        '<h3>Cara Hidup dan Reproduksi</h3><p>Virus mengenali sel inang dengan prinsip <em>lock and key</em> (kesesuaian reseptor). Penularan langsung (udara, air, darah, lendir) dan tidak langsung melalui vektor (nyamuk <em>Aedes aegypti</em> untuk Flavivirus).</p><p><strong>Siklus litik</strong> (virus virulen): adsorbsi → penetrasi → sintesis → pematangan → lisis; sel inang pecah dan mati.</p><p><strong>Siklus lisogenik:</strong> DNA virus menyatu dengan kromosom inang membentuk <em>profag</em>; diwariskan saat sel membelah tanpa membunuh sel. Virus yang dapat keduanya disebut <em>virus temperat</em> (fag λ).</p>',
+        '<h3>Bentuk dan Klasifikasi</h3><p>Klasifikasi berdasar: jenis asam nukleat (DNA/RNA), ukuran, morfologi, jenis simetri, jumlah kapsomer, sampul, kerentanan kimia-fisika, enzim, sifat imunologis, sel inang, cara penularan, dan simtomatologi. Menurut ICTV: <strong>famili</strong> berakhiran -viridae (Poxviridae), <strong>genus</strong> berakhiran -virus (Orthopoxvirus), <strong>spesies</strong> dalam bahasa Inggris berakhiran -virus (Variola virus).</p>',
+        '<h3>Peranan Virus</h3><p><strong>Menguntungkan:</strong> vektor terapi gen (Retrovirus), pembuatan vaksin, pengobatan biologis, bioinsektisida (Baculovirus sejak 1950).</p><p><strong>Merugikan:</strong> Penyakit manusia — gondongan (Paramyxovirus), herpes (HSV), cacar (Variola), cacar air (varisela), hepatitis, influenza, campak (Morbillivirus), AIDS (HIV), demam berdarah (Flavivirus/dengue), Ebola, flu burung (H5N1), SARS.</p><p><strong>Hewan:</strong> rabies (Rhabdovirus), PMK (Aphthovirus), tetelo (virus NCD).</p><p><strong>Tumbuhan:</strong> TYLC pada tomat, tungro pada padi (vektor wereng cokelat & hijau), mosaik pada tembakau-kacang tanah-papaya-cabai-tomat-kentang.</p>',
+      ],
+      en: [
+        '<h3>History of Viruses</h3><p>Virus research began in 1883 when Adolf Mayer studied tobacco mosaic disease. Dmitri Ivanovsky (1892) proved the agent passed bacteria-retaining filters — smaller than bacteria. Martinus Beijerinck (1897) showed it could reproduce inside living cells, naming it a <em>filterable virus</em>. Wendell Stanley (1935) crystallized <em>tobacco mosaic virus</em> (TMV).</p>',
+        '<h3>Virus Traits</h3><p>Virus particles are tiny, 0.02–0.3 μm, visible only by electron microscope. Body consists of a capsid plus a single genetic material (DNA or RNA). No membrane or organelles. They reproduce only inside living cells — obligate intracellular parasites — and can crystallize. Antibiotics fail against them; UV and X-rays inactivate them.</p>',
+        '<h3>Virus Structure</h3><p>A complete particle is a <strong>virion</strong>. <strong>Capsid:</strong> protein shell made of <em>capsomeres</em>, protecting genetic material and aiding attachment. <strong>Nucleic acid:</strong> one kind only — DNA or RNA. <strong>Membrane envelope:</strong> lipids, carbohydrates, or glycoproteins; envelope-less viruses are naked. <strong>Tail:</strong> tail fibers and base plate with a needle that injects DNA (T-shaped bacteriophage).</p>',
+        '<h3>Life Cycle & Reproduction</h3><p>Viruses recognize host cells via <em>lock and key</em> receptor matching. Direct transmission (air, water, blood, mucus) and indirect vectors (Aedes aegypti for Flavivirus).</p><p><strong>Lytic cycle</strong> (virulent): adsorption → penetration → synthesis → maturation → lysis; host cell bursts.</p><p><strong>Lysogenic cycle:</strong> viral DNA integrates as a <em>prophage</em>, inherited during cell division. Temperate phages (phage λ) switch between both.</p>',
+        '<h3>Shape & Classification</h3><p>Basis: nucleic acid type (DNA/RNA), size, morphology, symmetry, capsomere count, envelope, chemical/physical susceptibility, enzymes, immunological traits, host type, transmission, symptomatology. ICTV: <strong>family</strong> ends in -viridae (Poxviridae), <strong>genus</strong> ends in -virus (Orthopoxvirus), <strong>species</strong> ends in -virus (Variola virus).</p>',
+        '<h3>Roles</h3><p><strong>Beneficial:</strong> gene therapy vectors (Retrovirus), vaccine production, biological therapy, bioinsecticide (Baculovirus since 1950).</p><p><strong>Harmful:</strong> Human diseases — mumps (Paramyxovirus), herpes (HSV), smallpox (Variola), chickenpox, hepatitis, influenza, measles (Morbillivirus), AIDS (HIV), dengue (Flavivirus), Ebola, bird flu (H5N1), SARS.</p><p><strong>Animal:</strong> rabies (Rhabdovirus), foot-and-mouth (Aphthovirus), Newcastle (NCD virus).</p><p><strong>Plant:</strong> tomato yellow leaf curl (TYLC), rice tungro, and mosaic on tobacco, peanut, papaya, chili, tomato, potato.</p>',
+      ],
+    },
+    hotspotted: "virus",
+    video: { id: "Virus & Mikroorganisme", en: "Viruses & Microorganisms" },
+    videoId: "",
+  },
+  {
     id: "bakteri",
     icon: "🦠",
     color: "#00b894",
@@ -327,7 +372,7 @@ export const KELAS = [
   {
     id: "x",
     nama: "Kelas X",
-    materi: ["bakteri"],
+    materi: ["bakteri", "virus"],
   },
   {
     id: "xi",

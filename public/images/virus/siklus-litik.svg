@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" role="img" aria-label="Siklus Litik">
+  <style>
+    .t { font: 700 12px 'Segoe UI', Arial, sans-serif; fill: #2d3436; }
+    .n { font: 400 10px 'Segoe UI', Arial, sans-serif; fill: #636e72; }
+  </style>
+  <rect x="0" y="0" width="560" height="420" fill="#ffffff"/>
+  <text x="280" y="26" text-anchor="middle" font-weight="bold" font-size="16" fill="#0984e3">Siklus Litik — sel inang pecah</text>
+
+  <g transform="translate(40,70)">
+    <!-- 1 Adsorbsi -->
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e7f2fb" stroke="#0984e3" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">1. Adsorbsi</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Serabut ekor menempel</text>
+    <text x="60" y="60" text-anchor="middle" class="n">reseptor sel inang</text>
+  </g>
+  <g transform="translate(400,70)">
+    <!-- 2 Penetrasi -->
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#e7f2fb" stroke="#0984e3" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">2. Penetrasi</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Materi genetik</text>
+    <text x="60" y="60" text-anchor="middle" class="n">diinjeksikan ke sel</text>
+  </g>
+  <g transform="translate(400,220)">
+    <!-- 3 Sintesis -->
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#fbe9e7" stroke="#e17055" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">3. Sintesis</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Asam nukleat &amp; protein</text>
+    <text x="60" y="60" text-anchor="middle" class="n">virus dibuat oleh sel</text>
+  </g>
+  <g transform="translate(220,320)">
+    <!-- 4 Pematangan -->
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#fbe9e7" stroke="#e17055" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">4. Pematangan</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Perakitan virion baru</text>
+    <text x="60" y="60" text-anchor="middle" class="n">(kapsid + asam nukleat)</text>
+  </g>
+  <g transform="translate(40,220)">
+    <!-- 5 Lisis -->
+    <rect x="0" y="0" width="120" height="70" rx="12" fill="#ffe0e6" stroke="#d63031" stroke-width="2"/>
+    <text x="60" y="28" text-anchor="middle" class="t">5. Lisis</text>
+    <text x="60" y="46" text-anchor="middle" class="n">Sel inang pecah,</text>
+    <text x="60" y="60" text-anchor="middle" class="n">virion menyebar</text>
+  </g>
+
+  <!-- panah lingkaran -->
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L6,3 L0,6" fill="none" stroke="#636e72" stroke-width="1.2"/>
+    </marker>
+  </defs>
+  <path d="M170,105 H385" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M460,145 V215" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M395,255 H180" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M100,215 V145" fill="none" stroke="#636e72" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="265" y="352" text-anchor="middle" class="n">Ciri: sel inang mati — disebut virus virulen</text>
+</svg>

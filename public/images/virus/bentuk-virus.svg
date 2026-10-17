@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 320" role="img" aria-label="Bentuk-bentuk Virus">
+  <style>
+    .t { font: 700 11px 'Segoe UI', Arial, sans-serif; fill: #2d3436; }
+  </style>
+  <rect x="0" y="0" width="560" height="320" fill="#ffffff"/>
+  <text x="280" y="28" text-anchor="middle" font-weight="bold" font-size="15" fill="#6c5ce7">Bentuk Morfologi Virus</text>
+
+  <!-- 1 Bulat / sferis -->
+  <g transform="translate(70,110)">
+    <circle cx="0" cy="0" r="38" fill="#ffeaa7" stroke="#e17055" stroke-width="3"/>
+    <circle cx="-12" cy="-10" r="4" fill="#e17055"/><circle cx="10" cy="12" r="4" fill="#e17055"/>
+    <circle cx="12" cy="-14" r="4" fill="#e17055"/><circle cx="-14" cy="14" r="4" fill="#e17055"/>
+    <text x="0" y="62" text-anchor="middle" class="t">Bulat (sferis)</text>
+    <text x="0" y="78" text-anchor="middle" class="n" font-size="9" fill="#636e72">Influenza</text>
+  </g>
+  <!-- 2 Batang -->
+  <g transform="translate(170,110)">
+    <rect x="-12" y="-38" width="26" height="76" rx="8" fill="#ffeaa7" stroke="#0984e3" stroke-width="3"/>
+    <text x="2" y="62" text-anchor="middle" class="t">Batang</text>
+    <text x="2" y="78" text-anchor="middle" class="n" font-size="9" fill="#636e72">TMV</text>
+  </g>
+  <!-- 3 Filamen -->
+  <g transform="translate(268,110)">
+    <path d="M-4,-40 q-26,20 -2,38 q24,18 -2,38" fill="none" stroke="#0984e3" stroke-width="4" stroke-linecap="round"/>
+    <path d="M6,-42 q26,20 2,38 q-24,18 2,38" fill="none" stroke="#0984e3" stroke-width="4" stroke-linecap="round"/>
+    <text x="2" y="62" text-anchor="middle" class="t">Filamen</text>
+    <text x="2" y="78" text-anchor="middle" class="n" font-size="9" fill="#636e72">Ebola</text>
+  </g>
+  <!-- 4 Peluru -->
+  <g transform="translate(362,110)">
+    <path d="M-34,20 a34,32 0 0 1 34,-32 a34,32 0 0 1 34,32 z" fill="#ffeaa7" stroke="#00b894" stroke-width="3"/>
+    <text x="0" y="62" text-anchor="middle" class="t">Peluru</text>
+    <text x="0" y="78" text-anchor="middle" class="n" font-size="9" fill="#636e72">Rabies</text>
+  </g>
+  <!-- 5 Kompleks T -->
+  <g transform="translate(462,100)">
+    <polygon points="0,-34 20,-20 20,10 0,24 -20,10 -20,-20" fill="#ffeaa7" stroke="#6c5ce7" stroke-width="3"/>
+    <rect x="-6" y="24" width="12" height="26" rx="4" fill="#74b9ff" stroke="#6c5ce7" stroke-width="2.5"/>
+    <path d="M-6,52 L-18,66 M0,52 L0,72 M6,52 L18,66" stroke="#6c5ce7" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <text x="0" y="92" text-anchor="middle" class="t">Kompleks (bentuk T)</text>
+    <text x="0" y="108" text-anchor="middle" class="n" font-size="9" fill="#636e72">Bakteriofag</text>
+  </g>
+  <text x="280" y="300" text-anchor="middle" style="font:400 10px 'Segoe UI';" fill="#636e72">Bentuk kapsid menentukan morfologi virus — polihedral, batang, bulat, oval, dll.</text>
+</svg>

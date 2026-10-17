@@ -81,29 +81,65 @@ export function BioLabList() {
       </div>
 
       {/* Simulasi interaktif unggulan */}
-      <Link href="/biolab/zona-hambat">
-        <div className="group relative p-5 rounded-2xl text-white overflow-hidden shadow-card hover:-translate-y-0.5 transition-transform mb-3 bg-gradient-to-br from-accent via-accent-dark to-[#4834d4]">
-          <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🧫</div>
-          <div className="absolute bottom-0 left-10 text-4xl opacity-15">🦠</div>
-          <div className="relative z-10">
-            <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/20 mb-2">
-              {lang === "en" ? "Interactive simulation" : "Simulasi interaktif"}
-            </span>
-            <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
-              {lang === "en" ? "Antibiotic Inhibition Zone" : "Zona Hambat Antibiotik"}
-            </p>
-            <p className="text-white/80 text-xs sm:text-sm mb-3 max-w-md">
-              {lang === "en"
-                ? "Place discs on a virtual petri dish, incubate, and flip the resistant strain to see resistance happen."
-                : "Taruh cakram di cawan virtual, inkubasi, dan aktifkan strain resisten untuk melihat resistensi terjadi."}
-            </p>
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-accent px-4 py-2 rounded-full group-hover:gap-2.5 transition-all">
-              {lang === "en" ? "Run simulation" : "Jalankan simulasi"}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {/* Card 1: Zona Hambat */}
+        <Link href="/biolab/zona-hambat">
+          <div className="group relative p-5 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all h-full bg-gradient-to-br from-accent via-accent-dark to-[#4834d4]">
+            <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🧫</div>
+            <div className="absolute bottom-0 left-10 text-4xl opacity-15">🦠</div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 mb-2">
+                  {lang === "en" ? "Interactive Dry-Lab" : "Simulasi Interaktif"}
+                </span>
+                <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
+                  {lang === "en" ? "Antibiotic Inhibition Zone" : "Zona Hambat Antibiotik"}
+                </p>
+                <p className="text-white/80 text-xs sm:text-sm mb-4">
+                  {lang === "en"
+                    ? "Place discs on a virtual petri dish, incubate, and flip the resistant strain to see resistance happen."
+                    : "Taruh cakram di cawan virtual, inkubasi, dan aktifkan strain resisten untuk melihat resistensi terjadi."}
+                </p>
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-accent px-4 py-2 rounded-full group-hover:gap-2.5 transition-all shadow-sm">
+                  {lang === "en" ? "Run simulation" : "Jalankan simulasi"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-      </Link>
+        </Link>
+
+        {/* Card 2: Mikroskop Virtual */}
+        <Link href="/biolab/mikroskop">
+          <div className="group relative p-5 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all h-full bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700">
+            <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🔬</div>
+            <div className="absolute bottom-0 left-10 text-4xl opacity-15">🌿</div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 mb-2">
+                  {lang === "en" ? "Optical Dry-Lab" : "Lab Optik Virtual"}
+                </span>
+                <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
+                  {lang === "en" ? "Virtual Microscope Lab" : "Laboratorium Mikroskop Virtual"}
+                </p>
+                <p className="text-white/80 text-xs sm:text-sm mb-4">
+                  {lang === "en"
+                    ? "Observe stomata, onion cells, chick embryos, and upload your own microscope photo slides."
+                    : "Amati stomata, sel epidermis bawang, embrio ayam, darah, serta unggah foto preparat Anda sendiri."}
+                </p>
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-teal-700 px-4 py-2 rounded-full group-hover:gap-2.5 transition-all shadow-sm">
+                  {lang === "en" ? "Open microscope" : "Buka mikroskop"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
       {stepModules.length > 0 && (
         <div className="space-y-3">
           {stepModules.map((m, i) => {

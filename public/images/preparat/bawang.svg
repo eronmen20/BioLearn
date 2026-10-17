@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <radialGradient id="bgLight" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fdf2f8"/>
+      <stop offset="70%" stop-color="#fae8ff"/>
+      <stop offset="100%" stop-color="#f5d0fe"/>
+    </radialGradient>
+    <filter id="cellTexture">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.15 0"/>
+      <feComposite in2="SourceGraphic" in="glare" operator="in"/>
+    </filter>
+  </defs>
+
+  <!-- Latar Belakang Cahaya Mikroskop -->
+  <rect width="1000" height="1000" fill="url(#bgLight)"/>
+
+  <!-- Pola Dinding Sel Epidermis Bawang Merah (Bentuk Bata Memanjang Khas) -->
+  <g stroke="#9333ea" stroke-width="6" fill="#fdf4ff" opacity="0.92">
+    <!-- Baris 1 -->
+    <path d="M-50,60 L240,60 L240,220 L-50,220 Z"/>
+    <path d="M240,60 L580,60 L580,220 L240,220 Z"/>
+    <path d="M580,60 L920,60 L920,220 L580,220 Z"/>
+    <path d="M920,60 L1080,60 L1080,220 L920,220 Z"/>
+
+    <!-- Baris 2 (Selang-seling) -->
+    <path d="M-80,220 L120,220 L120,380 L-80,380 Z"/>
+    <path d="M120,220 L480,220 L480,380 L120,380 Z"/>
+    <path d="M480,220 L840,220 L840,380 L480,380 Z"/>
+    <path d="M840,220 L1080,220 L1080,380 L840,380 Z"/>
+
+    <!-- Baris 3 -->
+    <path d="M-40,380 L280,380 L280,540 L-40,540 Z"/>
+    <path d="M280,380 L640,380 L640,540 L280,540 Z"/>
+    <path d="M640,380 L980,380 L980,540 L640,540 Z"/>
+    <path d="M980,380 L1100,380 L1100,540 L980,540 Z"/>
+
+    <!-- Baris 4 -->
+    <path d="M-60,540 L160,540 L160,700 L-60,700 Z"/>
+    <path d="M160,540 L520,540 L520,700 L160,700 Z"/>
+    <path d="M520,540 L880,540 L880,700 L520,700 Z"/>
+    <path d="M880,540 L1080,540 L1080,700 L880,700 Z"/>
+
+    <!-- Baris 5 -->
+    <path d="M-50,700 L300,700 L300,860 L-50,860 Z"/>
+    <path d="M300,700 L660,700 L660,860 L300,860 Z"/>
+    <path d="M660,700 L1020,700 L1020,860 L660,860 Z"/>
+
+    <!-- Baris 6 -->
+    <path d="M-70,860 L180,860 L180,1020 L-70,1020 Z"/>
+    <path d="M180,860 L540,860 L540,1020 L180,1020 Z"/>
+    <path d="M540,860 L900,860 L900,1020 L540,1020 Z"/>
+    <path d="M900,860 L1080,860 L1080,1020 L900,1020 Z"/>
+  </g>
+
+  <!-- Dinding ganda (lamela tengah & dinding sel primer) -->
+  <g stroke="#a855f7" stroke-width="2" fill="none" opacity="0.6">
+    <rect x="246" y="66" width="328" height="148" rx="4"/>
+    <rect x="586" y="66" width="328" height="148" rx="4"/>
+    <rect x="126" y="226" width="348" height="148" rx="4"/>
+    <rect x="486" y="226" width="348" height="148" rx="4"/>
+    <rect x="286" y="386" width="348" height="148" rx="4"/>
+    <rect x="646" y="386" width="328" height="148" rx="4"/>
+    <rect x="166" y="546" width="348" height="148" rx="4"/>
+    <rect x="526" y="546" width="348" height="148" rx="4"/>
+    <rect x="306" y="706" width="348" height="148" rx="4"/>
+    <rect x="666" y="706" width="348" height="148" rx="4"/>
+  </g>
+
+  <!-- Sitoplasma dan Vakuola Transparan Antosianin Bawang -->
+  <g opacity="0.25">
+    <ellipse cx="410" cy="140" rx="140" ry="60" fill="#c084fc"/>
+    <ellipse cx="750" cy="140" rx="140" ry="60" fill="#e879f9"/>
+    <ellipse cx="300" cy="300" rx="150" ry="60" fill="#d8b4fe"/>
+    <ellipse cx="660" cy="300" rx="150" ry="60" fill="#f0abfc"/>
+    <ellipse cx="460" cy="460" rx="150" ry="60" fill="#c084fc"/>
+    <ellipse cx="810" cy="460" rx="140" ry="60" fill="#e879f9"/>
+    <ellipse cx="340" cy="620" rx="150" ry="60" fill="#d8b4fe"/>
+    <ellipse cx="700" cy="620" rx="150" ry="60" fill="#f0abfc"/>
+    <ellipse cx="480" cy="780" rx="150" ry="60" fill="#c084fc"/>
+    <ellipse cx="840" cy="780" rx="150" ry="60" fill="#e879f9"/>
+  </g>
+
+  <!-- Nukleus / Inti Sel (Bulatan Gelap di Tepi Dinding Sel Khas Sel Tumbuhan) -->
+  <g fill="#6b21a8" stroke="#581c87" stroke-width="3">
+    <!-- Sel 1 -->
+    <circle cx="490" cy="120" r="22"/>
+    <circle cx="493" cy="118" r="6" fill="#3b0764"/>
+
+    <!-- Sel 2 -->
+    <circle cx="820" cy="170" r="20"/>
+    <circle cx="822" cy="168" r="5" fill="#3b0764"/>
+
+    <!-- Sel 3 -->
+    <circle cx="210" cy="330" r="23"/>
+    <circle cx="212" cy="328" r="6" fill="#3b0764"/>
+
+    <!-- Sel 4 (Tengah Fokus) -->
+    <circle cx="730" cy="270" r="24"/>
+    <circle cx="733" cy="268" r="7" fill="#3b0764"/>
+
+    <!-- Sel 5 (Tengah Fokus) -->
+    <circle cx="370" cy="480" r="23"/>
+    <circle cx="373" cy="477" r="7" fill="#3b0764"/>
+
+    <!-- Sel 6 -->
+    <circle cx="740" cy="500" r="21"/>
+    <circle cx="742" cy="498" r="6" fill="#3b0764"/>
+
+    <!-- Sel 7 -->
+    <circle cx="430" cy="650" r="24"/>
+    <circle cx="433" cy="648" r="6" fill="#3b0764"/>
+
+    <!-- Sel 8 -->
+    <circle cx="800" cy="670" r="22"/>
+    <circle cx="802" cy="668" r="5" fill="#3b0764"/>
+
+    <!-- Sel 9 -->
+    <circle cx="380" cy="800" r="20"/>
+    <circle cx="382" cy="798" r="5" fill="#3b0764"/>
+  </g>
+
+  <!-- Butiran Granula Sitoplasma Halus -->
+  <g fill="#a855f7" opacity="0.4">
+    <circle cx="390" cy="115" r="3"/><circle cx="420" cy="160" r="2.5"/><circle cx="460" cy="150" r="3"/>
+    <circle cx="720" cy="130" r="3"/><circle cx="780" cy="165" r="2.5"/><circle cx="830" cy="135" r="3"/>
+    <circle cx="270" cy="280" r="3"/><circle cx="340" cy="320" r="2.5"/><circle cx="200" cy="290" r="3"/>
+    <circle cx="610" cy="290" r="3"/><circle cx="670" cy="340" r="2.5"/><circle cx="760" cy="310" r="3"/>
+    <circle cx="410" cy="440" r="3"/><circle cx="490" cy="510" r="2.5"/><circle cx="330" cy="450" r="3"/>
+    <circle cx="700" cy="460" r="3"/><circle cx="790" cy="520" r="2.5"/><circle cx="850" cy="480" r="3"/>
+  </g>
+</svg>

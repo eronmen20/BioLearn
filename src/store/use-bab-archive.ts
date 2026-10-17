@@ -70,5 +70,5 @@ export function useBabArchiveIds() {
 //
 // To keep a bab visible permanently, list it here. To remove it once
 // fully-handled, leave it absent here and rely on DB-backed hide.
-export const ALWAYS_VISIBLE_BABS = ["bakteri"];
+export const ALWAYS_VISIBLE_BABS = ["bakteri", "virus"];
 

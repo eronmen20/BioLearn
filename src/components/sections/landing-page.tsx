@@ -133,6 +133,7 @@ const PILLARS = [
 
 const SUBJECTS = [
   { id: "bakteri", icon: "🧫", name: "Bakteri", kelas: "X", color: "from-emerald-400 to-green-500", subs: 4 },
+  { id: "virus", icon: "🧫", name: "Virus", kelas: "X", color: "from-purple-400 to-indigo-500", subs: 6 },
   { id: "sel", icon: "🔬", name: "Sel", kelas: "XI", color: "from-blue-400 to-cyan-500", subs: 4 },
   { id: "pencernaan", icon: "🍽️", name: "Pencernaan", kelas: "XI", color: "from-orange-400 to-amber-500", subs: 4 },
   { id: "sirkulasi", icon: "🫀", name: "Sirkulasi", kelas: "XI", color: "from-red-400 to-rose-500", subs: 4 },
