@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: isProd,
       sameSite: "strict",
-      path: "/api/admin",
+      path: "/",
       maxAge: 15 * 60,
     });
 

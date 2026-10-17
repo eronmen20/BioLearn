@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { createVerificationCode, findUserByEmail } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendCodeEmail } from "@/lib/verification-email";
 
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const ip = req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim() || "unknown";
     const { allowed } = await checkRateLimit(`auth:verify-send:${ip}`, 3, 10 * 60 * 1000);
     if (!allowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi dalam beberapa menit." }, { status: 429 });
@@ -26,46 +15,39 @@ export async function POST(req: NextRequest) {
 
     const { email } = await req.json();
 
-    if (!email) {
+    if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
       return NextResponse.json({ error: "Email wajib diisi" }, { status: 400 });
     }
 
-    const { allowed: emailAllowed } = await checkRateLimit(`auth:verify-send:email:${email}`, 3, 10 * 60 * 1000);
+    const normalized = email.trim().toLowerCase();
+
+    const { allowed: emailAllowed } = await checkRateLimit(`auth:verify-send:email:${normalized}`, 3, 10 * 60 * 1000);
     if (!emailAllowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan untuk email ini. Coba lagi dalam beberapa menit." }, { status: 429 });
     }
 
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return NextResponse.json({ error: "Email belum terdaftar" }, { status: 404 });
+    // ANTI-ENUMERATION: the response body is identical whether or not the
+    // email exists — previously a 404 "belum terdaftar" told attackers which
+    // addresses are registered. We simply pretend success.
+    const user = await findUserByEmail(normalized);
+    if (user && !user.email_verified) {
+      try {
+        const code = await createVerificationCode(normalized);
+        await sendCodeEmail({
+          email: normalized,
+          name: user.name || "",
+          code,
+          subject: "Kode Verifikasi BioLearn",
+          intro: "Gunakan kode berikut untuk memverifikasi email kamu:",
+          footNote: "Jika kamu tidak mendaftar, abaikan email ini.",
+        });
+      } catch (e) {
+        console.error("[VerifySend] failed to send verification email:", e);
+      }
     }
-
-    if (user.email_verified) {
-      return NextResponse.json({ error: "Email sudah terverifikasi" }, { status: 400 });
-    }
-
-    const code = await createVerificationCode(email);
-
-    await getResend().emails.send({
-      from: "BioLearn <onboarding@resend.dev>",
-      to: email,
-      subject: "Kode Verifikasi BioLearn",
-      html: `
-        <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #6c5ce7; text-align: center;">🧬 BioLearn</h2>
-          <p style="font-size: 14px; color: #333;">Halo <b>${escapeHtml(user.name || "")}</b>,</p>
-          <p style="font-size: 14px; color: #333;">Gunakan kode berikut untuk memverifikasi email kamu:</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #6c5ce7; background: #f0edff; padding: 12px 24px; border-radius: 12px;">${code}</span>
-          </div>
-          <p style="font-size: 12px; color: #999; text-align: center;">Kode ini berlaku selama 10 menit.</p>
-          <p style="font-size: 12px; color: #999; text-align: center;">Jika kamu tidak mendaftar, abaikan email ini.</p>
-        </div>
-      `,
-    });
 
     return NextResponse.json({ success: true });
   } catch (e) {
-    return NextResponse.json({ error: "Gagal mengirim kode verifikasi" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

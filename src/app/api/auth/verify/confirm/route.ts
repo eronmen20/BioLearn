@@ -12,11 +12,16 @@ export async function POST(req: NextRequest) {
 
     const { email, code } = await req.json();
 
-    if (!email || !code) {
+    if (
+      typeof email !== "string" ||
+      typeof code !== "string" ||
+      !email.trim() ||
+      code.length !== 6
+    ) {
       return NextResponse.json({ error: "Email dan kode wajib diisi" }, { status: 400 });
     }
 
-    const success = await verifyCode(email, code);
+    const success = await verifyCode(email.trim().toLowerCase(), code);
     if (!success) {
       return NextResponse.json({ error: "Kode verifikasi salah atau sudah kedaluwarsa" }, { status: 400 });
     }

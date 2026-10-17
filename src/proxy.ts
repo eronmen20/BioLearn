@@ -1,46 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "@/lib/tokens";
 
-const SECRET = process.env.ADMIN_TOKEN_SECRET || "biolearn-fallback-secret-2024";
-
-interface AdminTokenPayload {
-  email: string;
-  role: string;
-  exp: number;
-  type: "access" | "refresh";
-}
-
-async function verifyToken(token: string): Promise<AdminTokenPayload | null> {
-  if (!SECRET) return null;
-  try {
-    const [payloadB64, signature] = token.split(".");
-    if (!payloadB64 || !signature) return null;
-
-    const key = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(SECRET),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-
-    const sigBuffer = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payloadB64));
-    const expectedSig = btoa(String.fromCharCode(...new Uint8Array(sigBuffer)))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
-
-    if (signature !== expectedSig) return null;
-
-    const payload: AdminTokenPayload = JSON.parse(atob(payloadB64.replace(/-/g, "+").replace(/_/g, "/")));
-    if (!payload.email || !payload.role || !payload.exp || !payload.type) return null;
-    if (payload.type !== "access") return null;
-    if (Date.now() > payload.exp) return null;
-
-    return payload;
-  } catch {
-    return null;
-  }
-}
+// SECURITY: fail closed — the shared verifier has NO fallback secret, so if
+// ADMIN_TOKEN_SECRET is unset every admin request is rejected instead of
+// accepting tokens forged with a known default.
 
 export async function proxy(req: NextRequest) {
   if (!req.nextUrl.pathname.startsWith("/api/admin")) {
@@ -65,7 +28,7 @@ export async function proxy(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized: Missing token" }, { status: 401 });
   }
 
-  const payload = await verifyToken(token);
+  const payload = await verifyToken(token, ["access"]);
 
   if (!payload) {
     return NextResponse.json({ error: "Unauthorized: Invalid or expired token" }, { status: 401 });

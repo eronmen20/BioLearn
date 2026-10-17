@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { logActivity } from "@/lib/activity-log";
 import { requireAdmin } from "@/lib/admin-guard";
+import { isValidUserRole } from "@/lib/user-roles";
 
 function sanitizeSearch(s: string): string {
   return s.replace(/[%()]/g, "").replace(/[*,]/g, " ");
@@ -65,13 +66,42 @@ export async function PUT(req: NextRequest) {
     const supabase = getDb();
     const { id, role, name } = await req.json();
 
-    if (!id) {
+    if (!id || typeof id !== "string") {
       return NextResponse.json({ error: "ID user wajib diisi" }, { status: 400 });
     }
 
+    // Whitelist the role — previously any attacker-controlled string could
+    // become a "role" via mass assignment, and an admin could typo/lock
+    // themselves (and every admin) out of /admin entirely.
     const updates: Record<string, unknown> = {};
-    if (role) updates.role = role;
-    if (name) updates.name = name;
+    if (role !== undefined) {
+      if (!isValidUserRole(role)) {
+        return NextResponse.json({ error: "Role tidak valid. Gunakan 'user' atau 'admin'." }, { status: 400 });
+      }
+      updates.role = role;
+    }
+    if (name !== undefined) {
+      if (typeof name !== "string" || !name.trim() || name.length > 100) {
+        return NextResponse.json({ error: "Nama tidak valid" }, { status: 400 });
+      }
+      updates.name = name.trim();
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "Tidak ada perubahan" }, { status: 400 });
+    }
+
+    // Guard-rail: an admin cannot lock every admin out by demoting the last
+    // remaining one.
+    if (updates.role === "user") {
+      const { count } = await supabase
+        .from("users")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      if ((count ?? 0) <= 1) {
+        return NextResponse.json({ error: "Minimal harus ada 1 admin" }, { status: 400 });
+      }
+    }
 
     const { error } = await supabase
       .from("users")

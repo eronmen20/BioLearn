@@ -14,16 +14,26 @@ export async function checkRateLimit(
     });
 
     if (error || !data || !data[0]) {
-      // If RPC fails (table doesn't exist yet), allow the request
-      return { allowed: true, remaining: maxRequests - 1 };
+      // SECURITY (fail closed): the rate limiter previously allowed every
+      // request when the RPC/table was missing, which silently disabled all
+      // brute-force protection. Deny instead and log loudly so the operator
+      // runs supabase-ratelimit-migration.sql.
+      console.error(
+        `[rate-limit] RPC check_rate_limit failed for key=${key} — denying request. ` +
+          `Run supabase-ratelimit-migration.sql on the database. Detail:`,
+        error?.message || "no row"
+      );
+      return { allowed: false, remaining: 0 };
     }
 
     return {
       allowed: data[0].allowed,
       remaining: data[0].remaining,
     };
-  } catch {
-    // Fail open — allow request if rate limiter errors
-    return { allowed: true, remaining: maxRequests - 1 };
+  } catch (e) {
+    // SECURITY (fail closed): infrastructure errors deny the request rather
+    // than silently turning off brute-force protection.
+    console.error(`[rate-limit] checkRateLimit threw for key=${key} — denying request. Detail:`, e);
+    return { allowed: false, remaining: 0 };
   }
 }

@@ -8,7 +8,7 @@ export async function POST() {
     httpOnly: true,
     secure: isProd,
     sameSite: "strict",
-    path: "/api/admin",
+    path: "/",
     maxAge: 0,
   });
 
@@ -17,6 +17,14 @@ export async function POST() {
     secure: isProd,
     sameSite: "strict",
     path: "/api/auth/refresh",
+    maxAge: 0,
+  });
+
+  response.cookies.set("biolearn_token", "", {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "strict",
+    path: "/",
     maxAge: 0,
   });
 

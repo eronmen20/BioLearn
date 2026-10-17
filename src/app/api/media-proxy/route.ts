@@ -6,19 +6,7 @@
 //
 // Use: GET /api/media-proxy?url=<encoded remote URL>
 import { NextRequest, NextResponse } from "next/server";
-
-// Public CDN allowlist — anything outside this list is rejected to prevent
-// SSRF (Server-Side Request Forgery) abuse of our Vercel compute.
-const ALLOWED_HOSTS = [
-  "raw.githubusercontent.com",
-  "cdn.jsdelivr.net",
-  "unpkg.com",
-  "lottie.host",
-  "assets.biolearn.id",
-  "supabase.co", // supabase storage signed URLs
-  "localhost", // local dev
-  "127.0.0.1",
-];
+import { isHostAllowed } from "@/lib/media-allowlist";
 
 // Hard cap so proxy can't be used to exfiltrate huge files.
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -84,9 +72,9 @@ export async function GET(req: NextRequest) {
 
   // SSRF guard: only proxy approved hosts. Production deployments should
   // extend this list or load from env.
-  if (!ALLOWED_HOSTS.includes(target.hostname)) {
+  if (!isHostAllowed(target.hostname)) {
     return NextResponse.json(
-      { error: `Host '${target.hostname}' not allowed. Allowed: ${ALLOWED_HOSTS.join(", ")}` },
+      { error: `Host '${target.hostname}' not allowed` },
       { status: 403 }
     );
   }
@@ -120,6 +108,21 @@ export async function GET(req: NextRequest) {
     );
   }
   clearTimeout(timeoutId);
+
+  // SECURITY: fetch follows redirects, and a redirect can escape the
+  // allowlist (e.g. an allowlisted host 302-ing to attacker infrastructure).
+  // Re-validate the FINAL URL against the allowlist before proxying bytes.
+  try {
+    const finalUrl = new URL(upstream.url);
+    if (!isHostAllowed(finalUrl.hostname)) {
+      return NextResponse.json(
+        { error: `Redirect target host '${finalUrl.hostname}' not allowed` },
+        { status: 502 }
+      );
+    }
+  } catch {
+    return NextResponse.json({ error: "Invalid final URL" }, { status: 502 });
+  }
 
   if (!upstream.ok) {
     return NextResponse.json(

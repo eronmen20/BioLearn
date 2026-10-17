@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   RefreshCw,
   ArrowLeft,
+  ArrowUp,
   Eye,
 } from "lucide-react";
 
@@ -153,6 +154,29 @@ export function BabContent({ babId, initialSubKey }: { babId: string; initialSub
   const prog = mounted ? progress.getProgress(babId) : null;
   const doneCount = subs.filter((s) => prog?.subs[s]?.done).length;
 
+  // Ganti sub-bab selalu disertai scroll ke atas supaya pembaca mulai dari judul
+  const scrollToTop = () => {
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+  const handleSelectSub = (i: number) => {
+    setShowReflection(false);
+    setSubIdx(i);
+    scrollToTop();
+  };
+
+  const nextSubTitle = (() => {
+    const nextIdx = subIdx + 1;
+    if (nextIdx >= subs.length) return null;
+    const fromDb = subTitles?.[nextIdx];
+    if (fromDb) {
+      const titleForLang = lang === "en" ? fromDb.en || fromDb.id : fromDb.id || fromDb.en;
+      if (titleForLang && titleForLang.trim()) return titleForLang;
+    }
+    return subs[nextIdx];
+  })();
+
   return (
     <div className="animate-fade-in-up">
       {/* Page Header */}
@@ -179,12 +203,12 @@ export function BabContent({ babId, initialSubKey }: { babId: string; initialSub
         subTitles={subTitles}
         babId={babId}
         subIdx={showReflection ? -1 : subIdx}
-        onSelect={(i) => {
-          setShowReflection(false);
-          setSubIdx(i);
-        }}
+        onSelect={handleSelectSub}
         reflectionActive={showReflection}
-        onSelectReflection={() => setShowReflection(true)}
+        onSelectReflection={() => {
+          setShowReflection(true);
+          scrollToTop();
+        }}
       />
 
       {/* Quiz Refleksi sebagai "sub-bab" sendiri — tampilan mandiri di posisi nav terakhir */}
@@ -277,11 +301,53 @@ export function BabContent({ babId, initialSubKey }: { babId: string; initialSub
       {/* Praktikum */}
       <PraktikumSection babId={babId} subBabKey={currentSubKey} lang={lang} />
 
-      {/* Sub-bab Quiz (quiz-v2) */}
-      <SubBabQuiz babId={babId} subKey={subs[subIdx]} allSubKeys={subs} />
+      {/* Sub-bab Quiz (quiz-v2) — saat lulus, tombol lanjut ke sub-bab berikutnya */}
+      <SubBabQuiz
+        babId={babId}
+        subKey={subs[subIdx]}
+        allSubKeys={subs}
+        onContinue={subIdx < subs.length - 1 ? () => handleSelectSub(subIdx + 1) : undefined}
+        nextSubTitle={nextSubTitle}
+      />
         </>
       )}
+
+      {/* Tombol melayang kembali ke atas */}
+      <ScrollToTopButton />
     </div>
+  );
+}
+
+/* ───────── ScrollToTopButton (tombol melayang ke atas) ─────────
+ * Muncul setelah pembaca men-scroll melewati bagian atas halaman;
+ * sekali klik langsung kembali paling atas. Hanya after-mount agar
+ * aman terhadap hydration mismatch.
+ */
+function ScrollToTopButton() {
+  const [visible, setVisible] = useState(false);
+  const mounted = useIsMounted();
+
+  useEffect(() => {
+    // rAF supaya sinkronisasi awal tidak memicu setState sinkron di body effect
+    const rafId = requestAnimationFrame(() => setVisible(window.scrollY > 400));
+    const onScroll = () => setVisible(window.scrollY > 400);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
+  if (!mounted || !visible) return null;
+
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      title="Kembali ke atas"
+      className="fixed right-4 bottom-4 z-40 w-11 h-11 rounded-full bg-accent text-white shadow-card flex items-center justify-center hover:bg-accent-dark active:scale-95 transition-all"
+    >
+      <ArrowUp className="w-5 h-5" />
+    </button>
   );
 }
 
@@ -532,10 +598,16 @@ function SubBabQuiz({
   babId,
   subKey,
   allSubKeys,
+  onContinue,
+  nextSubTitle,
 }: {
   babId: string;
   subKey: string;
   allSubKeys: string[];
+  // Tabirkan tombol "Lanjut ke Sub Bab Berikutnya" pada kartu hasil saat lulus.
+  onContinue?: () => void;
+  // Judul sub-bab berikutnya untuk label tombol (opsional).
+  nextSubTitle?: string | null;
 }) {
   const { lang, t } = useLangStore();
   const progress = useProgressStore();
@@ -609,7 +681,7 @@ function SubBabQuiz({
     } else {
       setShowResult(true);
       const score = Math.round(((correctCount + (isCorrect ? 1 : 0)) / questions.length) * 100);
-      progress.recordSubQuiz(babId, subKey, score, questions.length);
+      progress.recordSubQuiz(babId, subKey, score, questions.length, allSubKeys);
     }
   };
 
@@ -650,14 +722,28 @@ function SubBabQuiz({
             ❌ {t("quiz.wrong")} {t("bab.locked_hint")}
           </p>
         )}
-        {!passed && (
+        {passed && onContinue ? (
           <button
-            onClick={handleRetry}
-            className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+            onClick={onContinue}
+            className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
           >
-            <RotateCcw className="w-4 h-4 inline mr-2" />
-            {t("quiz.again")}
+            {nextSubTitle
+              ? `${lang === "en" ? "Continue" : "Lanjut"}: ${nextSubTitle}`
+              : lang === "en"
+              ? "Continue to next sub-chapter"
+              : "Lanjut ke Sub Bab Berikutnya"}
+            <ChevronRight className="w-4 h-4" />
           </button>
+        ) : (
+          !passed && (
+            <button
+              onClick={handleRetry}
+              className="px-6 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
+            >
+              <RotateCcw className="w-4 h-4 inline mr-2" />
+              {t("quiz.again")}
+            </button>
+          )
         )}
       </div>
     );
@@ -1021,7 +1107,7 @@ function ReflectionQuiz({
       const finalAnswers: Record<string, number> = { ...answers };
       if (selected !== null) finalAnswers[String(currentQ)] = selected;
       // Jawaban ikut disimpan hanya jika skor ≥80 (lihat recordReflection)
-      progress.recordReflection(babId, score, questions.length, finalAnswers);
+      progress.recordReflection(babId, score, questions.length, finalAnswers, allSubKeys);
     }
   };
 

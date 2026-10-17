@@ -13,7 +13,7 @@ export function Dashboard() {
   const mounted = useIsMounted();
   const hydrated = useProgressReady();
   const progress = useProgressStore();
-  const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
+  const { archivedIds, subKeysByBab, loaded: archiveLoaded } = useBabArchiveIds();
   const ready = mounted && hydrated;
   // Apply whitelist filter: only ALWAYS_VISIBLE babs by default; after
   // archiveLoaded, also exclude babs explicitly archived in DB.
@@ -28,14 +28,20 @@ export function Dashboard() {
   const totalQuizzes = ready ? progress.getTotalQuizzes() : 0;
   const totalCorrect = ready ? progress.getTotalCorrect() : 0;
   const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + p.total, 0) : 0;
+  // Live per-bab completion (sama rumusnya dengan halaman bab: sub-bab done +
+  // refleksi dibagi TOTAL sub-bab). Key sub-bab dipakai dari DB (sub_bab)
+  // supaya identik dengan key yang direkam quiz di halaman bab.
+  const pctForBab = (babId: string): number => {
+    if (!ready) return 0;
+    const keys =
+      archiveLoaded && subKeysByBab[babId]?.length
+        ? subKeysByBab[babId]
+        : (BAB.find((b) => b.id === babId)?.subs ?? []);
+    return progress.getCompletionPct(babId, keys);
+  };
   // Count of fully completed visible babs
   const visibleBabIds = visibleBabs.map((b) => b.id);
-  const completedBabs = ready
-    ? visibleBabIds.filter((id) => {
-        const p = progress.progress[id];
-        return p && (p.completion_pct || 0) >= 100;
-      }).length
-    : 0;
+  const completedBabs = visibleBabIds.filter((id) => pctForBab(id) >= 100).length;
 
   return (
     <div className="animate-fade-in-up">
@@ -87,9 +93,9 @@ export function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
         {visibleBabs.map((b) => {
           const p = progress.getProgress(b.id);
-          // Use completion_pct (bab done based) instead of quiz score.
-          // completion_pct = sub-bab done + reflection done, in 0-100.
-          const rawPct = mounted ? p.completion_pct || 0 : 0;
+          // Live same-formula completion (bab SELESAI berdasarkan total sub-bab
+          // + refleksi), konsisten dengan halaman bab.
+          const rawPct = pctForBab(b.id);
           const pct = Math.max(0, Math.min(100, rawPct));
           const quizzes = mounted ? p.quizzes : 0;
           return (

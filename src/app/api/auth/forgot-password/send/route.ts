@@ -1,24 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import { createVerificationCode, findUserByEmail } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { sendCodeEmail } from "@/lib/verification-email";
 
-function getResend() {
-  return new Resend(process.env.RESEND_API_KEY);
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const ip = req.headers.get("x-real-ip") || (req.headers.get("x-forwarded-for") || "unknown").split(",")[0].trim() || "unknown";
     const { allowed } = await checkRateLimit(`auth:forgot-send:${ip}`, 3, 10 * 60 * 1000);
     if (!allowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan. Coba lagi dalam beberapa menit." }, { status: 429 });
@@ -26,39 +15,35 @@ export async function POST(req: NextRequest) {
 
     const { email } = await req.json();
 
-    if (!email) {
+    if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
       return NextResponse.json({ error: "Email wajib diisi" }, { status: 400 });
     }
 
-    const { allowed: emailAllowed } = await checkRateLimit(`auth:forgot-send:email:${email}`, 3, 10 * 60 * 1000);
+    const normalized = email.trim().toLowerCase();
+
+    const { allowed: emailAllowed } = await checkRateLimit(`auth:forgot-send:email:${normalized}`, 3, 10 * 60 * 1000);
     if (!emailAllowed) {
       return NextResponse.json({ error: "Terlalu banyak permintaan untuk email ini. Coba lagi dalam beberapa menit." }, { status: 429 });
     }
 
-    const user = await findUserByEmail(email);
-    if (!user) {
-      return NextResponse.json({ error: "Email belum terdaftar" }, { status: 404 });
+    // ANTI-ENUMERATION: same generic response whether or not the email is
+    // registered — previously a 404 leaked which addresses have accounts.
+    const user = await findUserByEmail(normalized);
+    if (user) {
+      try {
+        const code = await createVerificationCode(normalized, "reset_password");
+        await sendCodeEmail({
+          email: normalized,
+          name: user.name || "",
+          code,
+          subject: "Reset Password BioLearn",
+          intro: "Kami menerima permintaan reset password untuk akun kamu. Gunakan kode berikut:",
+          footNote: "Jika kamu tidak meminta reset password, abaikan email ini.",
+        });
+      } catch (e) {
+        console.error("[ForgotSend] failed to send reset email:", e);
+      }
     }
-
-    const code = await createVerificationCode(email, "reset_password");
-
-    await getResend().emails.send({
-      from: "BioLearn <onboarding@resend.dev>",
-      to: email,
-      subject: "Reset Password BioLearn",
-      html: `
-        <div style="font-family: sans-serif; max-width: 400px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #6c5ce7; text-align: center;">🧬 BioLearn</h2>
-          <p style="font-size: 14px; color: #333;">Halo <b>${escapeHtml(user.name || "")}</b>,</p>
-          <p style="font-size: 14px; color: #333;">Kami menerima permintaan reset password untuk akun kamu. Gunakan kode berikut:</p>
-          <div style="text-align: center; margin: 24px 0;">
-            <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #6c5ce7; background: #f0edff; padding: 12px 24px; border-radius: 12px;">${code}</span>
-          </div>
-          <p style="font-size: 12px; color: #999; text-align: center;">Kode ini berlaku selama 10 menit.</p>
-          <p style="font-size: 12px; color: #999; text-align: center;">Jika kamu tidak meminta reset password, abaikan email ini.</p>
-        </div>
-      `,
-    });
 
     return NextResponse.json({ success: true });
   } catch (e) {

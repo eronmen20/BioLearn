@@ -26,12 +26,13 @@ interface ProgressState {
   progress: Record<string, BabProgress>;
   _hydrated: boolean;
   getProgress: (babId: string) => BabProgress;
-  recordSubQuiz: (babId: string, subKey: string, score: number, totalQuestions: number) => void;
+  recordSubQuiz: (babId: string, subKey: string, score: number, totalQuestions: number, allSubKeys?: string[]) => void;
   recordReflection: (
     babId: string,
     score: number,
     totalQuestions: number,
-    answers?: Record<string, number>
+    answers?: Record<string, number>,
+    allSubKeys?: string[]
   ) => void;
   isSubUnlocked: (babId: string, subKey: string, allSubKeys: string[]) => boolean;
   isReflectionUnlocked: (babId: string, allSubKeys: string[]) => boolean;
@@ -114,7 +115,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     return get().progress[babId] || defaultProgress();
   },
 
-  recordSubQuiz: (babId, subKey, score, totalQuestions) => {
+  recordSubQuiz: (babId, subKey, score, totalQuestions, allSubKeys?) => {
     const email = getCurrentEmail();
     if (!email) return;
 
@@ -133,8 +134,13 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       };
 
       // Calculate completion %
-      const totalSubs = Object.keys(newSubs).length;
-      const doneSubs = Object.values(newSubs).filter((s) => s.done).length;
+      // BUGFIX: penyebut harus TOTAL sub-bab pada bab (allSubKeys), bukan hanya
+      // yang sudah pernah dikerjakan — dulu 1 sub selesai di bab 6 sub-bab
+      // menghasilkan 50%, padahal seharusnya ~17%.
+      const totalSubs = Array.isArray(allSubKeys) && allSubKeys.length > 0 ? allSubKeys.length : Object.keys(newSubs).length;
+      const doneSubs = Array.isArray(allSubKeys) && allSubKeys.length > 0
+        ? allSubKeys.filter((key) => newSubs[key]?.done ?? false).length
+        : Object.values(newSubs).filter((s) => s.done).length;
       const reflectionPct = p.reflection_done ? 1 : 0;
       const totalItems = totalSubs + 1; // +1 for reflection
       const doneItems = doneSubs + reflectionPct;
@@ -188,7 +194,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     });
   },
 
-  recordReflection: (babId, score, totalQuestions, answers) => {
+  recordReflection: (babId, score, totalQuestions, answers, allSubKeys?) => {
     const email = getCurrentEmail();
     if (!email) return;
 
@@ -211,9 +217,11 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         correct: p.correct,
       };
 
-      // Recalculate completion
-      const totalSubs = Object.keys(newP.subs).length;
-      const doneSubs = Object.values(newP.subs).filter((s) => s.done).length;
+      // Recalculate completion — BUGFIX: penyebut = total sub-bab bab (allSubKeys)
+      const totalSubs = Array.isArray(allSubKeys) && allSubKeys.length > 0 ? allSubKeys.length : Object.keys(newP.subs).length;
+      const doneSubs = Array.isArray(allSubKeys) && allSubKeys.length > 0
+        ? allSubKeys.filter((key) => newP.subs[key]?.done ?? false).length
+        : Object.values(newP.subs).filter((s) => s.done).length;
       const reflectionPct = newP.reflection_done ? 1 : 0;
       newP.completion_pct = totalSubs + 1 > 0 ? Math.round(((doneSubs + reflectionPct) / (totalSubs + 1)) * 100) : 0;
 

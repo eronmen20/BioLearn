@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 //
 export function useBabArchiveIds() {
   const [archivedIds, setArchivedIds] = useState<Set<string>>(new Set());
+  const [subKeysByBab, setSubKeysByBab] = useState<Record<string, string[]>>({});
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -34,10 +35,16 @@ export function useBabArchiveIds() {
         // Only mark bab as archived if API explicitly says is_archived === true
         // AND is a boolean (guards against missing column case where row returned)
         const ids = new Set<string>();
+        const keys: Record<string, string[]> = {};
         for (const b of json.bab || []) {
           if (b.is_archived === true) ids.add(b.id);
+          if (Array.isArray(b.sub_keys) && b.sub_keys.length > 0) {
+            const list: string[] = b.sub_keys.filter((k: unknown) => typeof k === "string" && k.length > 0);
+            if (list.length > 0) keys[b.id] = list;
+          }
         }
         setArchivedIds(ids);
+        setSubKeysByBab(keys);
       } catch {
         // Soft fail — keep empty set, all bab visible (safe default)
       } finally {
@@ -48,7 +55,7 @@ export function useBabArchiveIds() {
     return () => { alive = false; };
   }, []);
 
-  return { archivedIds, loaded };
+  return { archivedIds, subKeysByBab, loaded };
 }
 
 // Defensive whitelist — the only bab that BioLearn guarantees is live
