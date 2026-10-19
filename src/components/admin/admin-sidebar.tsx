@@ -39,6 +39,7 @@ import {
   ChevronDown,
   FileQuestion,
   Microscope,
+  MessageSquareHeart,
 } from "lucide-react";
 
 interface MenuGroup {
@@ -96,6 +97,7 @@ const MENU_GROUPS: MenuGroup[] = [
       { href: "/admin/website/banner", icon: <Megaphone className="w-[18px] h-[18px]" />, label: "Banner" },
       { href: "/admin/website/pengumuman", icon: <ScrollText className="w-[18px] h-[18px]" />, label: "Pengumuman" },
       { href: "/admin/website/homepage", icon: <Globe className="w-[18px] h-[18px]" />, label: "Homepage" },
+      { href: "/admin/website/feedback", icon: <MessageSquareHeart className="w-[18px] h-[18px]" />, label: "Feedback" },
     ],
   },
   {
