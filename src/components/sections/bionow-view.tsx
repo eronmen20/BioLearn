@@ -99,8 +99,8 @@ export function BioNowList() {
         </div>
         <p className="text-muted text-xs sm:text-sm">
           {lang === "en"
-            ? "Real-world phenomena and current issues, explained with science — and linked to your lessons."
-            : "Fenomena dan isu terkini dunia nyata, dijelaskan dengan sains — dan terhubung ke materimu."}
+            ? "Real-world phenomena and current issues, explained scientifically and linked directly to your lessons."
+            : "Fenomena dan isu terkini dunia nyata yang dijelaskan secara ilmiah dan terhubung langsung ke materimu."}
         </p>
       </div>
 

@@ -8,10 +8,10 @@ import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useDashboardSettings } from "@/store/use-dashboard-settings";
 import { useActiveBanners } from "@/store/use-active-banners";
 import Link from "next/link";
-import { BookOpen, CheckCircle, TrendingUp, Library, Loader2, Sparkles, Megaphone } from "lucide-react";
+import { BookOpen, CheckCircle, TrendingUp, Library, Loader2, Sparkles, Megaphone, ArrowRight } from "lucide-react";
 
 export function Dashboard() {
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
   const mounted = useIsMounted();
   const hydrated = useProgressReady();
   const progress = useProgressStore();
@@ -136,6 +136,85 @@ export function Dashboard() {
         <StatCard icon={<CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />} num={totalQuizzes} label={t("stat.quiz")} sub={`${totalQs} ${t("stat.questions").toLowerCase()}`} color="green" />
         <StatCard icon={<TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />} num={`${completedBabs}/${visibleBabCount}`} label={t("stat.mastery")} sub={completedBabs === visibleBabCount && visibleBabCount > 0 ? t("dashboard.complete") : `${Math.round((completedBabs / Math.max(1, visibleBabCount)) * 100)}%`} color="amber" />
         <StatCard icon={<Library className="w-4 h-4 sm:w-5 sm:h-5" />} num="24" label={t("stat.glossary")} sub={t("stat.bilingual")} color="blue" />
+      </div>
+
+      {/* Fitur Unggulan Interaktif (BioLab & BioNow) */}
+      <div className="mb-8 sm:mb-10">
+        <div className="flex items-center gap-3 mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-ink flex items-center gap-2">
+            <span>✨</span>
+            <span>{lang === "en" ? "Explore Interactive Features" : "Eksplor Fitur Interaktif"}</span>
+          </h2>
+          <div className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Card 1: BioLab */}
+          <Link href="/biolab" className="group">
+            <div className="relative p-5 sm:p-6 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all duration-300 h-full bg-gradient-to-br from-teal-600 via-emerald-600 to-cyan-700 flex flex-col justify-between">
+              <div className="absolute top-2 right-4 text-7xl opacity-15 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 pointer-events-none select-none">
+                🔬
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20">
+                    {lang === "en" ? "Virtual Laboratory" : "Laboratorium Virtual"}
+                  </span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-300 text-emerald-950 shadow-xs">
+                    {lang === "en" ? "Interactive" : "Simulasi Aktif"}
+                  </span>
+                </div>
+                <h3 className="font-extrabold text-lg sm:text-xl leading-snug mb-1.5">
+                  BioLab
+                </h3>
+                <p className="text-white/85 text-xs sm:text-sm leading-relaxed mb-4 max-w-sm">
+                  {lang === "en"
+                    ? "Experiment with virtual microscopes, petri dish antibiotic zones, and procedural lab guides."
+                    : "Uji coba mikroskop virtual, simulasi zona hambat antibiotik, dan panduan langkah praktikum nyata."}
+                </p>
+              </div>
+              <div className="relative z-10 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-emerald-800 px-4 py-2 rounded-full group-hover:gap-2.5 transition-all shadow-sm">
+                  {lang === "en" ? "Enter BioLab" : "Buka BioLab"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          {/* Card 2: BioNow */}
+          <Link href="/bionow" className="group">
+            <div className="relative p-5 sm:p-6 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all duration-300 h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex flex-col justify-between">
+              <div className="absolute top-2 right-4 text-7xl opacity-15 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300 pointer-events-none select-none">
+                🧬
+              </div>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-2.5 flex-wrap">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20">
+                    {lang === "en" ? "Science Insights" : "Wawasan Sains"}
+                  </span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-pink-300 text-pink-950 shadow-xs">
+                    {lang === "en" ? "Latest Issues" : "Isu Terkini"}
+                  </span>
+                </div>
+                <h3 className="font-extrabold text-lg sm:text-xl leading-snug mb-1.5">
+                  BioNow
+                </h3>
+                <p className="text-white/85 text-xs sm:text-sm leading-relaxed mb-4 max-w-sm">
+                  {lang === "en"
+                    ? "Discover real-world biology articles, superbug phenomena, breakthroughs, and scientific infographics."
+                    : "Eksplor artikel sains biologi dunia nyata, infografis terkini, fenomena resistensi, dan fakta menarik."}
+                </p>
+              </div>
+              <div className="relative z-10 pt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-purple-800 px-4 py-2 rounded-full group-hover:gap-2.5 transition-all shadow-sm">
+                  {lang === "en" ? "Read BioNow" : "Jelajahi BioNow"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          </Link>
+        </div>
       </div>
 
       {/* Chapter Cards */}

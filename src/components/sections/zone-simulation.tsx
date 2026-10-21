@@ -81,8 +81,8 @@ export function ZoneSimulation() {
   const T = {
     title: lang === "en" ? "Antibiotic Inhibition Zone" : "Zona Hambat Antibiotik",
     subtitle: lang === "en"
-      ? "Virtual petri dish — place discs, incubate, and see which antibiotic still works."
-      : "Cawan petri virtual — taruh cakram, inkubasi, dan lihat antibiotik mana yang masih mempan.",
+      ? "Virtual petri dish: place discs, incubate, and observe which antibiotic still works."
+      : "Cawan petri virtual: letakkan cakram, inkubasi, lalu amati antibiotik mana yang masih mempan.",
     step1: lang === "en" ? "1. Choose strain" : "1. Pilih strain",
     sensitive: lang === "en" ? "Sensitive" : "Sensitif",
     resistant: lang === "en" ? "Resistant" : "Resisten",
@@ -96,19 +96,19 @@ export function ZoneSimulation() {
     needDisc: lang === "en" ? "Place at least 1 disc first" : "Taruh minimal 1 cakram dulu",
     step4: lang === "en" ? "4. Observe & measure" : "4. Amati & ukur",
     zoneLabel: lang === "en" ? "zone" : "zona",
-    noZone: lang === "en" ? "overgrown — no zone" : "tertutup bakteri — tak ada zona",
+    noZone: lang === "en" ? "overgrown (no zone)" : "tertutup bakteri (tak ada zona)",
     step5: lang === "en" ? "5. Conclude" : "5. Simpulkan",
     question: lang === "en" ? "Which antibiotic is most effective on this strain?" : "Antibiotik mana yang paling efektif untuk strain ini?",
     noneEffective: lang === "en" ? "None are effective" : "Tidak ada yang efektif",
     check: lang === "en" ? "Check conclusion" : "Cek simpulan",
     correct: lang === "en" ? "Correct! 🎉" : "Tepat! 🎉",
-    wrong: lang === "en" ? "Not quite — compare the diameters again." : "Belum tepat — bandingkan lagi diameternya.",
+    wrong: lang === "en" ? "Not quite. Compare the diameters again." : "Belum tepat. Coba bandingkan lagi diameternya ya.",
     explainResistant: lang === "en"
-      ? "On the resistant strain the zones shrink or vanish: its genes defeat the antibiotic. This is why unfinished courses are dangerous — survivors pass on resistance."
-      : "Pada strain resisten, zona menyusut atau hilang: gennya mengalahkan antibiotik. Inilah bahaya obat yang tidak dihabiskan — yang selamat mewariskan resistensi.",
+      ? "On the resistant strain the zones shrink or vanish because its genes defeat the antibiotic. This is why unfinished courses are dangerous, as surviving bacteria pass on resistance."
+      : "Pada strain resisten, zona menyusut atau hilang karena gennya mengalahkan antibiotik. Inilah bahaya jika obat tidak dihabiskan, bakteri yang bertahan akan mewariskan sifat resisten.",
     explainSensitive: lang === "en"
-      ? "The widest zone wins — the antibiotic diffuses and kills bacteria around the disc. Different walls need different weapons."
-      : "Zona terlebar menang — antibiotik berdifusi dan membunuh bakteri di sekitar cakram. Dinding sel berbeda butuh senjata berbeda.",
+      ? "The widest zone shows the highest effectiveness because the antibiotic diffuses and kills bacteria around the disc. Different cell walls need different weapons."
+      : "Zona terlebar menunjukkan efektivitas tertinggi karena antibiotik berdifusi dan membunuh bakteri di sekitar cakram. Dinding sel yang berbeda membutuhkan senjata yang berbeda.",
     reset: lang === "en" ? "Repeat simulation" : "Ulangi simulasi",
     openLesson: lang === "en" ? "Open lesson" : "Buka materi",
     mm: "mm",
@@ -367,7 +367,7 @@ export function ZoneSimulation() {
                         <span className="font-semibold text-ink">{lang === "en" ? ab.labelEn : ab.labelId}</span>
                         <span className="text-muted">Ø {dmm} {T.mm}</span>
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${cat.cls}`}>{cat.label}</span>
-                        {dmm < 6 && <span className="text-[11px] text-muted">— {T.noZone}</span>}
+                        {dmm < 6 && <span className="text-[11px] text-muted">({T.noZone})</span>}
                       </div>
                     );
                   })}

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { FlaskConical, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell, Eye, Globe, Megaphone } from "lucide-react";
+import { FlaskConical, ArrowRight, Sparkles, ChevronRight, ChevronDown, Dna, Clock, Bell, Eye, Globe, Megaphone } from "lucide-react";
 import { useActiveBanners } from "@/store/use-active-banners";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useLangStore } from "@/lib/lang-store";
@@ -98,7 +98,7 @@ const FLOATING_ITEMS = [
   { emoji: "🧪", x: "15%", y: "75%", delay: 0.5, duration: 8 },
   { emoji: "🌿", x: "90%", y: "45%", delay: 1.5, duration: 6 },
   { emoji: "🫀", x: "5%", y: "50%", delay: 3, duration: 7 },
-  { emoji: "🧠", x: "50%", y: "10%", delay: 2.5, duration: 9 },
+  { emoji: "🧠", x: "22%", y: "18%", delay: 2.5, duration: 9 },
   { emoji: "💉", x: "30%", y: "85%", delay: 0.8, duration: 6 },
   { emoji: "🐛", x: "65%", y: "25%", delay: 1.2, duration: 8 },
   { emoji: "🍃", x: "40%", y: "90%", delay: 2.8, duration: 5 },
@@ -283,7 +283,7 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
 
           {/* CTA Buttons */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 sm:mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 1.5 }}
@@ -312,50 +312,81 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
             </motion.div>
           </motion.div>
 
-          {/* Hero Illustration - DNA Helix */}
+          {/* Elegant Biological Nexus & Scroll Cue */}
           <motion.div
-            className="relative w-full max-w-md mx-auto h-[200px]"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 1.7 }}
+            className="flex flex-col items-center mt-2 sm:mt-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.7 }}
           >
-            <div className="absolute left-1/2 top-0 w-[4px] h-full bg-gradient-to-b from-transparent via-accent to-transparent opacity-30" />
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            {/* Bioluminescent Glass Core */}
+            <div className="relative flex items-center justify-center w-24 h-24 sm:w-28 sm:h-28 mb-1.5">
+              {/* Ambient radial blur aura */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-accent/25 via-teal-400/20 to-purple-400/20 blur-xl animate-pulse-slow pointer-events-none" />
+
+              {/* Orbital Ring 1: Counter-clockwise subtle dash */}
               <motion.div
-                className="relative w-[120px] h-[120px]"
+                className="absolute inset-0 rounded-full border border-dashed border-accent/30 pointer-events-none"
                 animate={{ rotate: 360 }}
+                transition={{ duration: 28, repeat: Infinity, ease: "linear" }}
+              />
+
+              {/* Orbital Ring 2: Clockwise with luminous particle */}
+              <motion.div
+                className="absolute inset-2 sm:inset-2.5 rounded-full border border-accent/20 pointer-events-none"
+                animate={{ rotate: -360 }}
                 transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
               >
-                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent/20 to-accent-2/20" />
-                <div className="absolute inset-4 rounded-full bg-gradient-to-br from-accent/30 to-accent-2/30" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Dna className="w-16 h-16 text-accent" />
-                </div>
+                {/* Luminous satellite particle */}
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-teal-400 shadow-[0_0_8px_#2dd4bf]" />
+              </motion.div>
+
+              {/* Center Glass Sphere */}
+              <motion.div
+                className="relative w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-surface/85 border border-white/80 dark:border-white/15 shadow-[0_8px_25px_rgba(108,92,231,0.18)] backdrop-blur-md flex items-center justify-center group"
+                whileHover={{ scale: 1.08 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                {/* Gentle floating DNA Helix (Smooth breathing motion, not a 2D windmill) */}
+                <motion.div
+                  animate={{
+                    y: [-2.5, 2.5, -2.5],
+                    rotate: [-5, 5, -5],
+                  }}
+                  transition={{
+                    duration: 3.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                  className="text-accent flex items-center justify-center"
+                >
+                  <Dna className="w-8 h-8 sm:w-9 sm:h-9 text-accent group-hover:text-accent-dark transition-colors drop-shadow-xs" />
+                </motion.div>
               </motion.div>
             </div>
+
+            {/* Connecting subtle gradient light beam */}
+            <div className="w-[1.5px] h-5 bg-gradient-to-b from-accent/40 via-accent/20 to-transparent" />
+
+            {/* Modern Glass Mouse & Scroll Cue */}
+            <Link
+              href="#cara-belajar"
+              className="group flex flex-col items-center gap-1 pt-1 text-muted hover:text-accent transition-colors cursor-pointer"
+            >
+              <div className="w-5 h-8 rounded-full border-[1.5px] border-accent/40 bg-white/70 dark:bg-surface/70 backdrop-blur-xs flex justify-center pt-1.5 shadow-xs group-hover:border-accent transition-colors">
+                <motion.div
+                  className="w-1 h-2 bg-accent rounded-full"
+                  animate={{ y: [0, 8, 0], opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              <div className="flex items-center gap-0.5 text-[10px] font-extrabold tracking-[0.2em] uppercase text-muted-2 group-hover:text-accent transition-colors mt-0.5">
+                <span>{t("landing.scroll") || "Scroll"}</span>
+                <ChevronDown className="w-3 h-3 text-accent group-hover:translate-y-0.5 transition-transform" />
+              </div>
+            </Link>
           </motion.div>
         </div>
-
-        {/* Scroll Indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.2 }}
-        >
-          <span className="text-xs text-muted-2 font-medium">{t("landing.scroll")}</span>
-          <motion.div
-            className="w-5 h-8 border-2 border-muted-2/30 rounded-full flex justify-center pt-1.5"
-            animate={{ opacity: [0.5, 1, 0.5] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <motion.div
-              className="w-1 h-2 bg-muted-2/50 rounded-full"
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            />
-          </motion.div>
-        </motion.div>
       </motion.section>
 
       {/* Pillars Section */}

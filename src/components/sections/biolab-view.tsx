@@ -83,8 +83,8 @@ export function BioLabList() {
         </div>
         <p className="text-muted text-xs sm:text-sm">
           {lang === "en"
-            ? "Virtual practicum: follow the steps, observe, and conclude — like a real lab."
-            : "Praktikum virtual: ikuti langkahnya, amati, dan simpulkan — seperti lab sungguhan."}
+            ? "Virtual practicum: follow the steps, observe, and conclude just like in a real laboratory."
+            : "Praktikum virtual: ikuti langkahnya, amati, lalu simpulkan seperti di laboratorium sungguhan."}
         </p>
       </div>
 

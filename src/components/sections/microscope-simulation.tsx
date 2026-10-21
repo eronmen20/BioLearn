@@ -696,7 +696,7 @@ export function VirtualMicroscopeSimulation() {
                     <option key={spec.id} value={spec.id} className="bg-surface text-ink py-1">
                       {isLocked ? "🔒 " : ""}{name}
                       {spec.latinName ? ` (${spec.latinName})` : ""}
-                      {isLocked ? (lang === "en" ? " [Locked - Members Only]" : " [Terkunci - Khusus Akun]") : ""}
+                      {isLocked ? (lang === "en" ? " [Members Only]" : " [Khusus Akun Siswa]") : ""}
                     </option>
                   );
                 })}
