@@ -7,6 +7,8 @@ import { FlaskConical, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell, Eye
 import { useActiveBanners } from "@/store/use-active-banners";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useLangStore } from "@/lib/lang-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 import { LearnModes, MiniQuiz, RealWorldIssues, Eyebrow } from "@/components/sections/landing-interactive";
 
 export interface HomepageSettings {
@@ -190,6 +192,9 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
   const { banners: activeBanners } = useActiveBanners();
   const { t } = useLangStore();
+  const { isAuthenticated } = useAuthStore();
+  const mounted = useIsMounted();
+  const isGuest = mounted && !isAuthenticated;
   const showMateri = settings?.show_materi_terbaru !== false;
   const showStatistik = settings?.show_statistik !== false;
   const heroCta = settings?.hero_cta?.trim() || t("landing.cta_start");
@@ -522,6 +527,15 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
                     <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${s.color}`} />
                     {/* Hover glow */}
                     <div className={`absolute inset-0 bg-gradient-to-b ${s.color} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300`} />
+
+                    {/* Free Preview Hook Tag */}
+                    {s.id === "bakteri" && isGuest && (
+                      <div className="absolute top-2.5 right-2.5 z-20">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-accent text-white shadow-sm tracking-wider animate-pulse">
+                          ✨ Akses Bebas
+                        </span>
+                      </div>
+                    )}
                     
                     <motion.div
                       className="text-3xl sm:text-4xl mb-2 relative z-10"

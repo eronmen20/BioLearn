@@ -3,14 +3,20 @@
 import { useState, useEffect } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 import { useLangStore } from "@/lib/lang-store";
-import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, Loader2, Sparkles } from "lucide-react";
 
 export function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLangStore();
   const { login, register, isLoading, isAuthenticated } = useAuthStore();
-  const [mode, setMode] = useState<"login" | "register">("login");
+
+  const initialMode = searchParams.get("mode") === "register" ? "register" : "login";
+  const redirectUrl = searchParams.get("redirect") || "";
+  const safeRedirect = redirectUrl.startsWith("/") && !redirectUrl.startsWith("//") ? redirectUrl : "";
+
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -19,6 +25,10 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
+      if (safeRedirect) {
+        router.push(safeRedirect);
+        return;
+      }
       const currentUser = useAuthStore.getState().user;
       if (currentUser?.role === "admin") {
         router.push("/admin");
@@ -26,7 +36,7 @@ export function LoginPage() {
         router.push("/dashboard");
       }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, safeRedirect]);
 
   if (isAuthenticated) {
     return (
@@ -46,6 +56,10 @@ export function LoginPage() {
     if (mode === "login") {
       const result = await login(email, password);
       if (result.success) {
+        if (safeRedirect) {
+          router.push(safeRedirect);
+          return;
+        }
         const currentUser = useAuthStore.getState().user;
         if (currentUser?.role === "admin") {
           router.push("/admin");
@@ -62,6 +76,10 @@ export function LoginPage() {
       if (result.success && result.needsVerification) {
         router.push(`/verify?email=${encodeURIComponent(email)}`);
       } else if (result.success) {
+        if (safeRedirect) {
+          router.push(safeRedirect);
+          return;
+        }
         router.push("/dashboard");
       } else {
         setError(result.error || t("auth.error"));
@@ -70,10 +88,10 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="bg-surface rounded-3xl shadow-xl border border-border p-8">
-          <div className="text-center mb-8">
+        <div className="bg-surface rounded-3xl shadow-xl border border-border p-6 sm:p-8">
+          <div className="text-center mb-6">
             <div className="text-4xl mb-3">🧬</div>
             <h1 className="text-2xl font-extrabold">
               <span className="gradient-text">Bio</span>
@@ -82,6 +100,13 @@ export function LoginPage() {
             <p className="text-muted text-sm mt-1">
               {mode === "login" ? t("auth.subtitle_login") : t("auth.subtitle_register")}
             </p>
+
+            {safeRedirect && (
+              <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
+                <Sparkles className="w-3.5 h-3.5" />
+                {mode === "register" ? "Daftar untuk lanjut belajar" : "Masuk untuk lanjut belajar"}
+              </div>
+            )}
           </div>
 
           {error && (
@@ -138,7 +163,7 @@ export function LoginPage() {
                 </button>
               </div>
               {mode === "login" && (
-                <div className="text-right">
+                <div className="text-right mt-1">
                   <button type="button" onClick={() => router.push("/forgot-password")} className="text-xs text-accent font-semibold hover:underline">
                     Lupa password?
                   </button>
@@ -149,7 +174,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-accent hover:bg-accent-dark text-white font-semibold rounded-xl text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {mode === "login" ? t("auth.submit_login") : t("auth.submit_register")}

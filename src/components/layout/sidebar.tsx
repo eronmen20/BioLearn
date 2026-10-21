@@ -7,6 +7,8 @@ import { useLangStore } from "@/lib/lang-store";
 import { BAB, KELAS } from "@/lib/bab-data";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useSidebarStore } from "@/lib/sidebar-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 import {
   Home,
   BookOpen,
@@ -23,6 +25,9 @@ export function Sidebar() {
   const pathname = usePathname();
   const { open, mobileOpen, setOpen, setMobileOpen } = useSidebarStore();
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
+  const { isAuthenticated } = useAuthStore();
+  const mounted = useIsMounted();
+  const isGuest = mounted && !isAuthenticated;
   // Conservative visible set:
   //   - Before mounted: only ALWAYS_VISIBLE_BABS (whitelist, default = ["bakteri"])
   //   - After mounted: only babs in ALL_VISIBLE that are NOT in archivedIds
@@ -209,6 +214,8 @@ export function Sidebar() {
                     // Hide bab outside permanent visible whitelist
                     if (!visibleBabIds.has(bab.id)) return null;
 
+                    const isFreeHook = bab.id === "bakteri" && isGuest;
+
                     return (
                       <NavItem
                         key={bab.id}
@@ -220,6 +227,13 @@ export function Sidebar() {
                         }
                         label={t(`bab.${bab.id}`)}
                         active={pathname === `/bab/${bab.id}`}
+                        badge={
+                          isFreeHook ? (
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider text-accent bg-accent/15 px-2 py-0.5 rounded-full ml-auto">
+                              Free
+                            </span>
+                          ) : undefined
+                        }
                       />
                     );
 
@@ -233,6 +247,23 @@ export function Sidebar() {
 
         </div>
 
+        {/* Guest conversion teaser at bottom of sidebar */}
+        {isGuest && (
+          <div className="mx-4 mb-6 p-4 rounded-2xl bg-gradient-to-br from-accent/15 to-purple-500/10 border border-accent/20 text-center">
+            <div className="text-xl mb-1">🧬</div>
+            <p className="text-xs font-bold text-ink mb-1">BioLearn Akun Siswa</p>
+            <p className="text-[11px] text-muted mb-3 leading-snug">
+              Daftar gratis untuk buka semua materi & simpan progres belajarmu.
+            </p>
+            <Link
+              href="/login?mode=register&redirect=/bab/bakteri"
+              className="block w-full py-2 bg-accent text-white text-xs font-bold rounded-xl hover:bg-accent-dark transition-colors shadow-sm"
+            >
+              Daftar Gratis
+            </Link>
+          </div>
+        )}
+
       </nav>
     </>
   );
@@ -243,11 +274,13 @@ function NavItem({
   icon,
   label,
   active,
+  badge,
 }: {
   href: string;
   icon: React.ReactNode;
   label: string;
   active: boolean;
+  badge?: React.ReactNode;
 }) {
   return (
     <Link
@@ -262,7 +295,8 @@ function NavItem({
         {icon}
       </span>
 
-      <span>{label}</span>
+      <span className="truncate">{label}</span>
+      {badge}
     </Link>
   );
 }

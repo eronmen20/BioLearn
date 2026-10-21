@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { motion } from "motion/react";
-import { ArrowLeft, ArrowRight, BookOpen, FlaskConical, RotateCcw, Play, Ruler } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookOpen, FlaskConical, RotateCcw, Play, Ruler, Sparkles } from "lucide-react";
 import { useLangStore } from "@/lib/lang-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 
 /* ───────── Model simulasi (disederhanakan untuk pembelajaran) ───────── */
 
@@ -59,6 +61,9 @@ function zoneCategory(dmm: number, lang: string): { label: string; cls: string }
 
 export function ZoneSimulation() {
   const { lang } = useLangStore();
+  const { isAuthenticated } = useAuthStore();
+  const mounted = useIsMounted();
+  const isGuest = mounted && !isAuthenticated;
 
   const [strain, setStrain] = useState<"sensitif" | "resisten">("sensitif");
   const [selectedAb, setSelectedAb] = useState<string>("penisilin");
@@ -455,6 +460,34 @@ export function ZoneSimulation() {
             </div>
             <ArrowRight className="w-4 h-4 text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
           </Link>
+
+          {/* Guest conversion teaser */}
+          {isGuest && (
+            <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-accent/10 via-purple-500/5 to-surface border border-accent/20 text-center">
+              <p className="text-xs font-bold text-ink mb-1">
+                {lang === "en" ? "Enjoyed the BioLab Experiment?" : "Suka Eksperimen Praktikum BioLab?"}
+              </p>
+              <p className="text-[11px] text-muted mb-3 leading-relaxed">
+                {lang === "en"
+                  ? "Sign up for a free account to unlock all lab modules, the virtual microscope, and save your observations."
+                  : "Buat akun gratis untuk membuka semua modul praktikum, mikroskop virtual, dan simpan catatan belajarmu."}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2 max-w-xs mx-auto">
+                <Link
+                  href="/login?mode=register&redirect=/biolab/zona-hambat"
+                  className="w-full sm:w-auto px-4 py-2 bg-accent text-white text-xs font-semibold rounded-xl hover:bg-accent-dark transition-colors shadow-xs whitespace-nowrap"
+                >
+                  ✨ {lang === "en" ? "Sign Up Free" : "Daftar Gratis"}
+                </Link>
+                <Link
+                  href="/login?mode=login&redirect=/biolab/zona-hambat"
+                  className="w-full sm:w-auto px-4 py-2 bg-surface text-ink border border-border rounded-xl text-xs font-semibold hover:bg-bg-alt transition-colors whitespace-nowrap"
+                >
+                  {lang === "en" ? "Log In" : "Masuk"}
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

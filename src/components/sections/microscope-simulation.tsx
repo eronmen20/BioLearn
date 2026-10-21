@@ -23,8 +23,12 @@ import {
   AlertCircle,
   HelpCircle,
   ChevronDown,
+  Lock,
+  X,
 } from "lucide-react";
 import { useLangStore } from "@/lib/lang-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 
 export interface SpecimenHotspot {
   id: string;
@@ -261,6 +265,12 @@ const OBJECTIVES = [
 
 export function VirtualMicroscopeSimulation() {
   const { lang } = useLangStore();
+  const { isAuthenticated } = useAuthStore();
+  const mounted = useIsMounted();
+  const isGuest = mounted && !isAuthenticated;
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [lockedSpecimenTitle, setLockedSpecimenTitle] = useState("");
 
   // State Preparat
   const [specimens, setSpecimens] = useState<Specimen[]>(DEFAULT_SPECIMENS);
@@ -360,6 +370,13 @@ export function VirtualMicroscopeSimulation() {
 
   // Reset stage & fokus saat ganti preparat (dimulai dari kondisi belum fokus agar siswa memutar knob)
   const handleSelectSpecimen = (id: string) => {
+    const idx = specimens.findIndex((s) => s.id === id);
+    if (isGuest && idx >= 2) {
+      const target = specimens[idx];
+      setLockedSpecimenTitle(lang === "en" ? target?.nameEn || "Specimen" : target?.nameId || "Preparat");
+      setShowAuthModal(true);
+      return;
+    }
     setActiveSpecimenId(id);
     const target = specimens.find((s) => s.id === id);
     if (target) {
@@ -672,12 +689,17 @@ export function VirtualMicroscopeSimulation() {
                 onChange={(e) => handleSelectSpecimen(e.target.value)}
                 className="w-full appearance-none px-3.5 py-3 pr-10 rounded-2xl border border-border-light bg-surface text-ink text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all cursor-pointer shadow-xs"
               >
-                {specimens.map((spec) => (
-                  <option key={spec.id} value={spec.id} className="bg-surface text-ink py-1">
-                    {lang === "en" ? spec.nameEn : spec.nameId}
-                    {spec.latinName ? ` (${spec.latinName})` : ""}
-                  </option>
-                ))}
+                {specimens.map((spec, idx) => {
+                  const isLocked = isGuest && idx >= 2;
+                  const name = lang === "en" ? spec.nameEn : spec.nameId;
+                  return (
+                    <option key={spec.id} value={spec.id} className="bg-surface text-ink py-1">
+                      {isLocked ? "🔒 " : ""}{name}
+                      {spec.latinName ? ` (${spec.latinName})` : ""}
+                      {isLocked ? (lang === "en" ? " [Locked - Members Only]" : " [Terkunci - Khusus Akun]") : ""}
+                    </option>
+                  );
+                })}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted">
                 <ChevronDown className="w-4 h-4" />
@@ -700,6 +722,31 @@ export function VirtualMicroscopeSimulation() {
                 {lang === "en" ? activeSpecimen.descriptionEn : activeSpecimen.descriptionId}
               </p>
             </div>
+
+            {/* Guest Teaser Banner for Microscope */}
+            {isGuest && (
+              <div className="p-3 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-between gap-2.5">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-teal-700 dark:text-teal-400 flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>2 Preparat Sampel Gratis</span>
+                  </p>
+                  <p className="text-[11px] text-muted leading-tight mt-0.5 truncate">
+                    Daftar akun gratis untuk membuka seluruh preparat.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLockedSpecimenTitle(lang === "en" ? "Full Specimen Collection" : "Semua Preparat Lanjutan");
+                    setShowAuthModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-xl shrink-0 hover:bg-accent-dark transition-colors shadow-xs"
+                >
+                  Daftar
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 2. Revolver Lensa Objektif (4x, 10x, 40x, 100x) */}
@@ -861,6 +908,87 @@ export function VirtualMicroscopeSimulation() {
           </div>
         </div>
       </div>
+
+      {/* Modal Ajakan Daftar untuk Tamu saat memilih preparat terkunci */}
+      {showAuthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowAuthModal(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-surface rounded-3xl shadow-2xl border border-border/80 overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-1.5 w-full bg-gradient-to-r from-teal-500 via-emerald-500 to-cyan-500" />
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full text-muted hover:text-ink hover:bg-bg-alt transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-600 text-xl shadow-inner">
+                  🔬
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-500/10 px-2 py-0.5 rounded-full">
+                    Khusus Akun Siswa
+                  </span>
+                  <h3 className="text-lg font-bold text-ink mt-0.5">
+                    Buka Semua Preparat Mikroskop
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted leading-relaxed mb-4">
+                Spesimen <strong className="text-ink">{lockedSpecimenTitle}</strong> dan preparat mikroskopis lainnya memerlukan akun BioLearn. Buat akun gratis sekarang untuk membuka semua preparat!
+              </p>
+
+              <div className="space-y-2 p-3.5 rounded-2xl bg-bg-alt/70 border border-border/60 mb-5 text-xs text-ink">
+                <div className="flex items-center gap-2">
+                  <span>🔬</span>
+                  <span>Akses seluruh preparat tumbuhan, hewan, embrio, & bakteri</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>🔍</span>
+                  <span>Eksplorasi organel sel dengan perbesaran hingga 100x</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>🧪</span>
+                  <span>Akses seluruh modul praktikum interaktif BioLab</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Link
+                  href="/login?mode=register&redirect=/biolab/mikroskop"
+                  className="w-full py-3 px-4 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2 text-center"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Daftar Akun Gratis Sekarang (30 Detik)
+                </Link>
+                <Link
+                  href="/login?mode=login&redirect=/biolab/mikroskop"
+                  className="w-full py-2.5 px-4 bg-surface hover:bg-bg-alt border border-border text-ink font-semibold rounded-xl text-xs sm:text-sm transition-all text-center block"
+                >
+                  Sudah Memiliki Akun? Masuk di Sini
+                </Link>
+              </div>
+
+              <div className="mt-3 text-center">
+                <button
+                  onClick={() => setShowAuthModal(false)}
+                  className="text-[11px] text-muted hover:text-ink underline transition-colors"
+                >
+                  Nanti saja, tetap amati preparat gratis
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,11 +21,23 @@ export default function BabPage({ params }: { params: Promise<{ slug: string }> 
   }, [params]);
 
   if (!mounted || !slug) return <div className="min-h-[80vh]" />;
+
+  // Bab 'bakteri' adalah hook publik (sub-bab 1 dapat diakses gratis tanpa login)
+  const isPublicHook = slug === "bakteri";
+
+  const content = (
+    <Suspense fallback={<div className="min-h-[80vh]" />}>
+      <BabContentWithSub slug={slug} />
+    </Suspense>
+  );
+
+  if (isPublicHook) {
+    return content;
+  }
+
   return (
     <AuthGuard>
-      <Suspense fallback={<div className="min-h-[80vh]" />}>
-        <BabContentWithSub slug={slug} />
-      </Suspense>
+      {content}
     </AuthGuard>
   );
 }

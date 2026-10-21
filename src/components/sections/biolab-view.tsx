@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { ArrowRight, ArrowLeft, BookOpen, ChevronRight } from "lucide-react";
+import { ArrowRight, ArrowLeft, BookOpen, ChevronRight, Lock, Sparkles, X } from "lucide-react";
 import { useLangStore } from "@/lib/lang-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { useIsMounted } from "@/lib/use-is-mounted";
 import { PraktikumViewer } from "@/components/praktikum-viewer";
 
 interface LabModule {
@@ -32,8 +34,14 @@ const DIFF_STYLE: Record<string, string> = {
 
 export function BioLabList() {
   const { lang } = useLangStore();
+  const { isAuthenticated } = useAuthStore();
+  const mounted = useIsMounted();
+  const isGuest = mounted && !isAuthenticated;
+
   const [modules, setModules] = useState<LabModule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [targetModuleTitle, setTargetModuleTitle] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -89,9 +97,16 @@ export function BioLabList() {
             <div className="absolute bottom-0 left-10 text-4xl opacity-15">🦠</div>
             <div className="relative z-10 flex flex-col h-full justify-between">
               <div>
-                <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 mb-2">
-                  {lang === "en" ? "Interactive Dry-Lab" : "Simulasi Interaktif"}
-                </span>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20">
+                    {lang === "en" ? "Interactive Dry-Lab" : "Simulasi Interaktif"}
+                  </span>
+                  {isGuest && (
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-400 text-emerald-950 shadow-xs">
+                      ✨ {lang === "en" ? "Open Access" : "Akses Bebas"}
+                    </span>
+                  )}
+                </div>
                 <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
                   {lang === "en" ? "Antibiotic Inhibition Zone" : "Zona Hambat Antibiotik"}
                 </p>
@@ -118,16 +133,23 @@ export function BioLabList() {
             <div className="absolute bottom-0 left-10 text-4xl opacity-15">🌿</div>
             <div className="relative z-10 flex flex-col h-full justify-between">
               <div>
-                <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20 mb-2">
-                  {lang === "en" ? "Optical Dry-Lab" : "Lab Optik Virtual"}
-                </span>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20">
+                    {lang === "en" ? "Optical Dry-Lab" : "Lab Optik Virtual"}
+                  </span>
+                  {isGuest && (
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-300 text-amber-950 shadow-xs">
+                      ✨ {lang === "en" ? "2 Free Samples" : "2 Preparat Gratis"}
+                    </span>
+                  )}
+                </div>
                 <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
                   {lang === "en" ? "Virtual Microscope Lab" : "Laboratorium Mikroskop Virtual"}
                 </p>
                 <p className="text-white/80 text-xs sm:text-sm mb-4">
                   {lang === "en"
-                    ? "Observe stomata, onion cells, chick embryos, and upload your own microscope photo slides."
-                    : "Amati stomata, sel epidermis bawang, embrio ayam, darah, serta unggah foto preparat Anda sendiri."}
+                    ? "Observe stomata, onion cells, chick embryos, and other microscopic specimens interactively."
+                    : "Amati stomata daun, sel epidermis bawang, embrio ayam, hingga preparat mikroskopis lainnya secara interaktif."}
                 </p>
               </div>
               <div>
@@ -152,27 +174,138 @@ export function BioLabList() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: Math.min(i * 0.06, 0.3) }}
               >
-                <Link href={`/biolab/${m.id}`}>
-                  <div className="group flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-border/50 shadow-card hover:-translate-y-0.5 transition-transform">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white flex items-center justify-center font-extrabold flex-shrink-0">
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${DIFF_STYLE[m.difficulty] || DIFF_STYLE.sedang}`}>
-                          {m.difficulty || "sedang"}
-                        </span>
-                        <span className="text-[11px] text-muted">{m.bab_id}</span>
+                {isGuest ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTargetModuleTitle(title);
+                      setShowAuthModal(true);
+                    }}
+                    className="w-full text-left cursor-pointer"
+                  >
+                    <div className="group flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-dashed border-accent/40 shadow-card hover:-translate-y-0.5 transition-transform">
+                      <div className="w-12 h-12 rounded-2xl bg-accent/5 border border-accent/20 text-accent flex items-center justify-center font-extrabold flex-shrink-0">
+                        <Lock className="w-5 h-5 text-accent" />
                       </div>
-                      <p className="font-bold text-ink leading-snug group-hover:text-accent transition-colors">{title}</p>
-                      {desc && <p className="text-xs text-muted line-clamp-1 mt-0.5">{desc}</p>}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                            Khusus Akun Siswa
+                          </span>
+                          <span className="text-[11px] text-muted">{m.bab_id}</span>
+                        </div>
+                        <p className="font-bold text-ink leading-snug group-hover:text-accent transition-colors">{title}</p>
+                        {desc && <p className="text-xs text-muted line-clamp-1 mt-0.5">{desc}</p>}
+                      </div>
+                      <span className="text-xs text-accent font-semibold px-3 py-1.5 rounded-xl bg-accent/10 group-hover:bg-accent group-hover:text-white transition-colors shrink-0">
+                        Daftar
+                      </span>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                  </div>
-                </Link>
+                  </button>
+                ) : (
+                  <Link href={`/biolab/${m.id}`}>
+                    <div className="group flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-border/50 shadow-card hover:-translate-y-0.5 transition-transform">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white flex items-center justify-center font-extrabold flex-shrink-0">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${DIFF_STYLE[m.difficulty] || DIFF_STYLE.sedang}`}>
+                            {m.difficulty || "sedang"}
+                          </span>
+                          <span className="text-[11px] text-muted">{m.bab_id}</span>
+                        </div>
+                        <p className="font-bold text-ink leading-snug group-hover:text-accent transition-colors">{title}</p>
+                        {desc && <p className="text-xs text-muted line-clamp-1 mt-0.5">{desc}</p>}
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                    </div>
+                  </Link>
+                )}
               </motion.div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal Ajakan Daftar untuk Modul BioLab */}
+      {showAuthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowAuthModal(false)}
+        >
+          <div
+            className="relative w-full max-w-md bg-surface rounded-3xl shadow-2xl border border-border/80 overflow-hidden animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="h-1.5 w-full bg-gradient-to-r from-accent via-purple-500 to-pink-500" />
+            <button
+              onClick={() => setShowAuthModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full text-muted hover:text-ink hover:bg-bg-alt transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-11 h-11 rounded-2xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent text-xl shadow-inner">
+                  🧪
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                    Khusus Akun Siswa
+                  </span>
+                  <h3 className="text-lg font-bold text-ink mt-0.5">
+                    Buka Modul Praktikum BioLab
+                  </h3>
+                </div>
+              </div>
+
+              <p className="text-xs text-muted leading-relaxed mb-4">
+                Modul praktikum <strong className="text-ink">{targetModuleTitle}</strong> dan panduan langkah kerja interaktif hanya tersedia untuk akun terdaftar BioLearn. Daftar akun gratis sekarang!
+              </p>
+
+              <div className="space-y-2 p-3.5 rounded-2xl bg-bg-alt/70 border border-border/60 mb-5 text-xs text-ink">
+                <div className="flex items-center gap-2">
+                  <span>📋</span>
+                  <span>Panduan langkah demi langkah prosedur praktikum riil</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>🎴</span>
+                  <span>Flashcard identifikasi alat, bahan, dan keselamatan kerja</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>📊</span>
+                  <span>Catat dan pantau lembar kerja hasil pengamatan</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Link
+                  href="/login?mode=register&redirect=/biolab"
+                  className="w-full py-3 px-4 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2 text-center"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Daftar Akun Gratis (30 Detik)
+                </Link>
+                <Link
+                  href="/login?mode=login&redirect=/biolab"
+                  className="w-full py-2.5 px-4 bg-surface hover:bg-bg-alt border border-border text-ink font-semibold rounded-xl text-xs sm:text-sm transition-all text-center block"
+                >
+                  Sudah Memiliki Akun? Masuk di Sini
+                </Link>
+              </div>
+
+              <div className="mt-3 text-center">
+                <button
+                  onClick={() => setShowAuthModal(false)}
+                  className="text-[11px] text-muted hover:text-ink underline transition-colors"
+                >
+                  Nanti saja, tetap di halaman BioLab
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

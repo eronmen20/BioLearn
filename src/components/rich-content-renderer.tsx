@@ -162,12 +162,12 @@ function SectionCard({
           border border-border/70
           rounded-2xl
           overflow-hidden
-          mb-4
+          mb-2.5 sm:mb-3
           bg-surface
           transition-all duration-300 ease-out
           hover:border-accent/40
-          hover:shadow-[0_8px_30px_rgb(0,0,0,0.06),0_2px_8px_rgb(0,0,0,0.04)]
-          ${isOpen ? "shadow-[0_4px_20px_rgb(0,0,0,0.05),0_1px_4px_rgb(0,0,0,0.03)] ring-1 ring-accent/15" : "shadow-sm"}
+          hover:shadow-[0_4px_20px_rgb(0,0,0,0.04)]
+          ${isOpen ? "shadow-sm ring-1 ring-accent/15" : "shadow-none"}
         `}
       >
         {/* Subtle decorative background gradient */}
@@ -178,21 +178,21 @@ function SectionCard({
         {/* Section Header Button */}
         <button
           onClick={onToggle}
-          className="relative w-full flex items-center justify-between p-3.5 sm:p-4.5 text-left group/btn cursor-pointer select-none"
+          className="relative w-full flex items-center justify-between py-2.5 sm:py-3 px-3.5 sm:px-4 text-left group/btn cursor-pointer select-none"
         >
-          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0 pr-2">
+          <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0 pr-2">
             {/* Number Badge */}
             <span
               className={`
                 flex-shrink-0
-                w-8 h-8 sm:w-9 sm:h-9
-                rounded-xl
+                w-7 h-7 sm:w-8 sm:h-8
+                rounded-lg
                 border
                 ${iconColor}
-                text-xs sm:text-sm
-                font-extrabold
+                text-[11px] sm:text-xs
+                font-bold
                 flex items-center justify-center
-                shadow-sm
+                shadow-xs
                 transition-transform duration-200
                 group-hover/btn:scale-105
               `}
@@ -202,7 +202,7 @@ function SectionCard({
 
             {/* Title */}
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm sm:text-base font-bold text-ink group-hover/btn:text-accent-dark transition-colors truncate">
+              <h3 className="text-[13px] sm:text-[14.5px] font-semibold text-ink group-hover/btn:text-accent transition-colors leading-snug">
                 {section.title}
               </h3>
             </div>
@@ -212,19 +212,19 @@ function SectionCard({
           <div
             className={`
               flex-shrink-0
-              w-7 h-7 sm:w-8 sm:h-8
+              w-6 h-6 sm:w-7 sm:h-7
               rounded-lg
               flex items-center justify-center
               bg-surface-2/80
               border border-border/50
-              shadow-sm
+              shadow-xs
               transition-all duration-200
               group-hover/btn:border-accent/40
               ${isOpen ? "bg-accent/10 border-accent/30 text-accent" : "text-muted"}
             `}
           >
             <ChevronDown
-              className={`w-4 h-4 transition-transform duration-300 ${
+              className={`w-3.5 h-3.5 transition-transform duration-300 ${
                 isOpen ? "rotate-180 text-accent" : ""
               }`}
             />
@@ -233,12 +233,12 @@ function SectionCard({
 
         {/* Section Body (Collapsible / Expandable) */}
         {isOpen && (
-          <div className="relative border-t border-border/40 px-3.5 sm:px-5 py-4 sm:py-5 bg-surface/50">
+          <div className="relative border-t border-border/40 px-3.5 sm:px-5 py-3.5 sm:py-4.5 bg-surface/50">
             {/* Side-by-Side Grid if Image Exists, Full-width if No Image */}
             <div
               className={
                 hasImage
-                  ? "grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start"
+                  ? "grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start"
                   : "w-full"
               }
             >
@@ -246,23 +246,23 @@ function SectionCard({
               <div
                 className={
                   hasImage
-                    ? "lg:col-span-7 order-2 lg:order-1 space-y-3"
-                    : "w-full space-y-3"
+                    ? "lg:col-span-7 order-2 lg:order-1 space-y-2.5"
+                    : "w-full space-y-2.5"
                 }
               >
                 <div
                   ref={contentRef}
                   className="
                     rich-text-content
-                    text-xs sm:text-sm leading-relaxed text-muted
-                    [&_h4]:text-accent-dark [&_h4]:font-bold [&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-xs sm:[&_h4]:text-sm
-                    [&_p]:leading-relaxed [&_p]:my-2
+                    text-[13px] sm:text-sm leading-relaxed text-ink/80
+                    [&_h4]:text-accent-dark [&_h4]:font-bold [&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-xs sm:[&_h4]:text-[13px]
+                    [&_p]:leading-relaxed [&_p]:my-2 sm:[&_p]:my-2.5 [&_p]:text-[13px] sm:[&_p]:text-sm
                     [&_strong]:text-ink [&_strong]:font-semibold
                     [&_em]:text-accent [&_em]:italic [&_em]:font-medium
-                    [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-2.5 [&_ul]:!space-y-1.5
-                    [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-2.5 [&_ol]:!space-y-1.5
+                    [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-2 sm:[&_ul]:!my-2.5 [&_ul]:!space-y-1 sm:[&_ul]:!space-y-1.5 [&_ul]:text-[13px] sm:[&_ul]:text-sm
+                    [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-2 sm:[&_ol]:!my-2.5 [&_ol]:!space-y-1 sm:[&_ol]:!space-y-1.5 [&_ol]:text-[13px] sm:[&_ol]:text-sm
                     [&_li]:!pl-1 [&_li]:!marker:text-accent
-                    [&_h5]:text-ink [&_h5]:font-semibold [&_h5]:mt-2 [&_h5]:mb-1 [&_h5]:text-xs
+                    [&_h5]:text-ink [&_h5]:font-semibold [&_h5]:mt-2 [&_h5]:mb-1 [&_h5]:text-xs sm:[&_h5]:text-[13px]
                   "
                   dangerouslySetInnerHTML={{ __html: section.content }}
                 />
