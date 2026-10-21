@@ -11,6 +11,7 @@ import Link from "next/link";
 import { StrukturViewer } from "@/components/struktur-viewer";
 import { PraktikumViewer } from "@/components/praktikum-viewer";
 import { RichContentRenderer } from "@/components/rich-content-renderer";
+import { AnalogiSection } from "@/components/analogi-card";
 import {
   CheckCircle,
   XCircle,
@@ -309,6 +310,14 @@ export function BabContent({ babId, initialSubKey }: { babId: string; initialSub
           )}
         </div>
       </div>
+
+      {/* Analogi Sehari-hari ("Ibaratnya Begini 💡") */}
+      <AnalogiSection
+        babId={babId}
+        subKey={currentSubKey}
+        subIdx={subIdx}
+        lang={lang}
+      />
 
       {/* Animation — per-sub only (no hardcoded fallback; kalau ga ada di DB, ga tampil) */}
       <InlineAnimationSection
