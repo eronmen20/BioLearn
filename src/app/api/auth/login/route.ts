@@ -93,19 +93,17 @@ export async function POST(req: NextRequest) {
       response.cookies.set("access_token", accessToken, {
         httpOnly: true,
         secure: isProd,
-        sameSite: "strict",
-        // "/" so every server-side route handler (not only proxy-guarded
-        // /api/admin paths) can verify the admin session itself.
+        sameSite: "lax",
         path: "/",
-        maxAge: 15 * 60, // 15 minutes
+        maxAge: 7 * 24 * 60 * 60, // 7 days
       });
 
       response.cookies.set("refresh_token", refreshToken, {
         httpOnly: true,
         secure: isProd,
-        sameSite: "strict",
-        path: "/api/auth/refresh",
-        maxAge: 7 * 24 * 60 * 60, // 7 days
+        sameSite: "lax",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60, // 30 days
       });
     }
 

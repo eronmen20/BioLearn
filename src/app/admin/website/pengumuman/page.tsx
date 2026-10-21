@@ -81,7 +81,14 @@ export default function PengumumanPage() {
     try {
       const res = await adminFetch('/api/announcements', { cache: 'no-store' as any });
       const json = await res.json();
-      setData(json.announcements || []);
+      const list = json.announcements || [];
+      list.sort((a: Announcement, b: Announcement) => {
+        const timeA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const timeB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (timeB !== timeA) return timeB - timeA;
+        return (b.id || 0) - (a.id || 0);
+      });
+      setData(list);
     } catch {
       showToast('Gagal memuat daftar pengumuman');
     } finally {
@@ -158,6 +165,9 @@ export default function PengumumanPage() {
       }
 
       if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Sesi login admin Anda telah berakhir. Silakan login kembali di /admin/login.');
+        }
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || 'Failed');
       }

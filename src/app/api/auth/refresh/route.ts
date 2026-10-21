@@ -20,9 +20,9 @@ export async function POST(req: NextRequest) {
     response.cookies.set("access_token", accessToken, {
       httpOnly: true,
       secure: isProd,
-      sameSite: "strict",
+      sameSite: "lax",
       path: "/",
-      maxAge: 15 * 60,
+      maxAge: 7 * 24 * 60 * 60, // 7 days
     });
 
     return response;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
+  Layout,
   BookOpen,
   FileText,
   Layers,
@@ -94,6 +95,7 @@ const MENU_GROUPS: MenuGroup[] = [
   {
     label: "Website",
     items: [
+      { href: "/admin/website/dashboard", icon: <Layout className="w-[18px] h-[18px]" />, label: "Dashboard" },
       { href: "/admin/website/banner", icon: <Megaphone className="w-[18px] h-[18px]" />, label: "Banner" },
       { href: "/admin/website/pengumuman", icon: <ScrollText className="w-[18px] h-[18px]" />, label: "Pengumuman" },
       { href: "/admin/website/homepage", icon: <Globe className="w-[18px] h-[18px]" />, label: "Homepage" },

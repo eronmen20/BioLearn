@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
     let query = supabase
       .from("announcements")
       .select("*")
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
 
     if (!isAdmin) {
       query = query.eq("status", "published");
@@ -58,23 +58,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title dan body wajib diisi" }, { status: 400 });
     }
 
-    const { data, error } = await supabase
+    const insertData: Record<string, unknown> = {
+      title: body.title,
+      body: body.body,
+      pinned: body.pinned || false,
+      status: body.status || "published",
+      category: body.category || "info",
+      icon: body.icon || "📣",
+      bab_id: body.bab_id || null,
+      starts_at: body.starts_at || null,
+      ends_at: body.ends_at || null,
+    };
+    if (body.title_en) insertData.title_en = body.title_en;
+    if (body.body_en) insertData.body_en = body.body_en;
+
+    let { data, error } = await supabase
       .from("announcements")
-      .insert({
-        title: body.title,
-        title_en: body.title_en || null,
-        body: body.body,
-        body_en: body.body_en || null,
-        pinned: body.pinned || false,
-        status: body.status || "published",
-        category: body.category || "info",
-        icon: body.icon || "📣",
-        bab_id: body.bab_id || null,
-        starts_at: body.starts_at || null,
-        ends_at: body.ends_at || null,
-      })
+      .insert(insertData)
       .select("id")
       .single();
+
+    // Fallback if title_en or body_en columns don't exist in Supabase schema yet
+    if (error && (error.code === "PGRST204" || error.message?.includes("column"))) {
+      delete insertData.title_en;
+      delete insertData.body_en;
+      const retry = await supabase
+        .from("announcements")
+        .insert(insertData)
+        .select("id")
+        .single();
+      data = retry.data;
+      error = retry.error;
+    }
 
     if (error) throw error;
     return NextResponse.json({ success: true, id: data?.id });
@@ -113,10 +128,21 @@ export async function PUT(req: NextRequest) {
     if (body.starts_at !== undefined) updateFields.starts_at = body.starts_at;
     if (body.ends_at !== undefined) updateFields.ends_at = body.ends_at;
 
-    const { error } = await supabase
+    let { error } = await supabase
       .from("announcements")
       .update(updateFields)
       .eq("id", body.id);
+
+    // Fallback if title_en or body_en columns don't exist in Supabase schema yet
+    if (error && (error.code === "PGRST204" || error.message?.includes("column"))) {
+      delete updateFields.title_en;
+      delete updateFields.body_en;
+      const retry = await supabase
+        .from("announcements")
+        .update(updateFields)
+        .eq("id", body.id);
+      error = retry.error;
+    }
 
     if (error) throw error;
     return NextResponse.json({ success: true, id: body.id });

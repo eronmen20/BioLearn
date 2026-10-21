@@ -3,7 +3,10 @@ let refreshPromise: Promise<boolean> | null = null;
 
 async function tryRefresh(): Promise<boolean> {
   try {
-    const res = await fetch("/api/auth/refresh", { method: "POST" });
+    const res = await fetch("/api/auth/refresh", {
+      method: "POST",
+      credentials: "same-origin",
+    });
     return res.ok;
   } catch {
     return false;

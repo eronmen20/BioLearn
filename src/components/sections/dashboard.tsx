@@ -5,6 +5,8 @@ import { useLangStore } from "@/lib/lang-store";
 import { useProgressStore, useProgressReady } from "@/lib/progress-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
+import { useDashboardSettings } from "@/store/use-dashboard-settings";
+import { useActiveBanners } from "@/store/use-active-banners";
 import Link from "next/link";
 import { BookOpen, CheckCircle, TrendingUp, Library, Loader2, Sparkles, Megaphone } from "lucide-react";
 
@@ -14,6 +16,8 @@ export function Dashboard() {
   const hydrated = useProgressReady();
   const progress = useProgressStore();
   const { archivedIds, subKeysByBab, loaded: archiveLoaded } = useBabArchiveIds();
+  const { settings: dashSettings } = useDashboardSettings();
+  const { banners: activeBanners } = useActiveBanners();
   const ready = mounted && hydrated;
   // Apply whitelist filter: only ALWAYS_VISIBLE babs by default; after
   // archiveLoaded, also exclude babs explicitly archived in DB.
@@ -47,34 +51,83 @@ export function Dashboard() {
     <div className="animate-fade-in-up">
       {/* Page Header */}
       <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl font-extrabold mb-2" dangerouslySetInnerHTML={{ __html: t("welcome.title") }} />
-        <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">{t("welcome.desc")}</p>
+        <h1
+          className="text-2xl sm:text-3xl font-extrabold mb-2"
+          dangerouslySetInnerHTML={{
+            __html: dashSettings?.welcome_title?.trim() || t("welcome.title"),
+          }}
+        />
+        <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
+          {dashSettings?.welcome_desc?.trim() || t("welcome.desc")}
+        </p>
 
-        {/* Stay-tuned banner — Materi baru akan di-update berkala */}
-        <div className="mt-4 sm:mt-5 relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-200/60 shadow-sm animate-fade-in-up">
-          {/* Pulse ring glow di pojok */}
-          <span className="absolute -top-1 -right-1 w-20 h-20 rounded-full bg-amber-300/30 blur-2xl animate-pulse-slow pointer-events-none" />
-          <div className="relative flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
-            <Megaphone className="w-5 h-5 text-white" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-          </div>
-          <div className="relative flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
-                {t("dashboard.stay_tuned")}
-              </span>
-              <span className="text-[10px] font-semibold text-amber-700">
-                {t("dashboard.new_material_soon")}
-              </span>
+        {/* Stay-tuned banner — Materi baru akan di-update berkala (dapat dikontrol admin) */}
+        {(dashSettings?.show_banner ?? true) && (
+          <div className="mt-4 sm:mt-5 relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-200/60 shadow-sm animate-fade-in-up">
+            {/* Pulse ring glow di pojok */}
+            <span className="absolute -top-1 -right-1 w-20 h-20 rounded-full bg-amber-300/30 blur-2xl animate-pulse-slow pointer-events-none" />
+            <div className="relative flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
+              <Megaphone className="w-5 h-5 text-white" />
+              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-rose-500 animate-ping" />
             </div>
-            <p className="text-sm text-ink leading-snug">
-              {t("dashboard.material_desc")}
-              <span className="inline-flex items-center gap-0.5 ml-1 text-amber-600 font-semibold">
-                <Sparkles className="w-3 h-3" /> {t("dashboard.stay_tuned_cta")}
-              </span>
-            </p>
+            <div className="relative flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500 text-white">
+                  {dashSettings?.banner_badge?.trim() || t("dashboard.stay_tuned")}
+                </span>
+                <span className="text-[10px] font-semibold text-amber-700">
+                  {dashSettings?.banner_title?.trim() || t("dashboard.new_material_soon")}
+                </span>
+              </div>
+              <p className="text-sm text-ink leading-snug">
+                {dashSettings?.banner_desc?.trim() || t("dashboard.material_desc")}
+                {(dashSettings?.banner_cta?.trim() || t("dashboard.stay_tuned_cta")) && (
+                  <span className="inline-flex items-center gap-0.5 ml-1 text-amber-600 font-semibold">
+                    <Sparkles className="w-3 h-3" /> {dashSettings?.banner_cta?.trim() || t("dashboard.stay_tuned_cta")}
+                  </span>
+                )}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Dynamic Published Banners from Admin Panel */}
+        {activeBanners.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {activeBanners.map((b) => (
+              <div
+                key={b.id}
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-accent/10 via-purple-50 to-pink-50 border border-accent/20 p-4 flex items-center justify-between gap-4 shadow-sm animate-fade-in-up"
+              >
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  {b.image_url ? (
+                    <img src={b.image_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Megaphone className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-sm text-ink">{b.judul}</h4>
+                    {b.deskripsi && (
+                      <p className="text-xs text-muted leading-relaxed mt-0.5">{b.deskripsi}</p>
+                    )}
+                  </div>
+                </div>
+                {b.link_url && (
+                  <a
+                    href={b.link_url}
+                    className="flex-shrink-0 px-3.5 py-1.5 bg-accent text-white hover:bg-accent-dark text-xs font-semibold rounded-xl transition-all shadow-xs"
+                    target={b.link_url.startsWith("http") ? "_blank" : undefined}
+                    rel="noreferrer"
+                  >
+                    Buka →
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Stat Cards */}

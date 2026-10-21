@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { FlaskConical, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell, Eye, Globe } from "lucide-react";
+import { FlaskConical, ArrowRight, Sparkles, ChevronRight, Dna, Clock, Bell, Eye, Globe, Megaphone } from "lucide-react";
+import { useActiveBanners } from "@/store/use-active-banners";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useLangStore } from "@/lib/lang-store";
 import { LearnModes, MiniQuiz, RealWorldIssues, Eyebrow } from "@/components/sections/landing-interactive";
@@ -187,6 +188,7 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
+  const { banners: activeBanners } = useActiveBanners();
   const { t } = useLangStore();
   const showMateri = settings?.show_materi_terbaru !== false;
   const showStatistik = settings?.show_statistik !== false;
@@ -412,6 +414,49 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
           </AnimatedSection>
         </div>
       </section>
+
+      {/* Banners aktif dari Admin Panel */}
+      {activeBanners.length > 0 && (
+        <section className="relative z-10 px-4 sm:px-6 mb-6">
+          <div className="max-w-4xl mx-auto space-y-3">
+            {activeBanners.map((b) => (
+              <motion.div
+                key={b.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-accent/10 via-purple-50 to-pink-50 border border-accent/20 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-sm"
+              >
+                <div className="flex items-start sm:items-center gap-3 min-w-0">
+                  {b.image_url ? (
+                    <img src={b.image_url} alt="" className="w-12 h-12 rounded-xl object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <Megaphone className="w-5 h-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-sm sm:text-base text-ink truncate">{b.judul}</h4>
+                    {b.deskripsi && (
+                      <p className="text-xs sm:text-sm text-muted leading-relaxed line-clamp-2 mt-0.5">{b.deskripsi}</p>
+                    )}
+                  </div>
+                </div>
+                {b.link_url && (
+                  <a
+                    href={b.link_url}
+                    className="flex-shrink-0 px-4 py-2 bg-accent text-white hover:bg-accent-dark text-xs font-semibold rounded-xl transition-all shadow-xs"
+                    target={b.link_url.startsWith("http") ? "_blank" : undefined}
+                    rel="noreferrer"
+                  >
+                    Buka →
+                  </a>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Stay-tuned banner — only when some babs are archived */}
       {archiveLoaded && archivedCount > 0 && (

@@ -16,8 +16,8 @@ export interface TokenPayload {
 }
 
 export const TOKEN_TTL_MS: Record<TokenType, number> = {
-  access: 15 * 60 * 1000, // 15 minutes
-  refresh: 7 * 24 * 60 * 60 * 1000, // 7 days
+  access: 7 * 24 * 60 * 60 * 1000, // 7 days (prevents premature session expiration)
+  refresh: 30 * 24 * 60 * 60 * 1000, // 30 days
   user: 30 * 24 * 60 * 60 * 1000, // 30 days
 };
 

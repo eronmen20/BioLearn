@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
-import { Image, Plus, Edit3, Trash2 } from 'lucide-react';
+import { Image, Plus, Edit3, Trash2, Megaphone } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
 import { adminFetch } from "@/lib/admin-fetch";
 
@@ -86,7 +87,14 @@ export default function BannerPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error('gagal');
+      if (!res.ok) {
+        if (res.status === 401) {
+          showToast('Sesi login admin berakhir. Silakan login ulang.');
+          return;
+        }
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'gagal');
+      }
       showToast(selectedBanner ? 'Banner berhasil diperbarui!' : 'Banner berhasil ditambahkan!');
       setShowModal(false);
       fetchBanners();
@@ -102,7 +110,14 @@ export default function BannerPage() {
     setSaving(true);
     try {
       const res = await adminFetch(`/api/admin/banner?id=${selectedBanner.id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('gagal');
+      if (!res.ok) {
+        if (res.status === 401) {
+          showToast('Sesi login admin berakhir. Silakan login ulang.');
+          return;
+        }
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'gagal');
+      }
       showToast('Banner berhasil dihapus!');
       setShowDelete(false);
       fetchBanners();
@@ -165,6 +180,30 @@ export default function BannerPage() {
         description="Kelola banner yang tampil di website"
         action={{ label: 'Tambah Banner', onClick: handleAdd, icon: <Plus className="w-4 h-4" /> }}
       />
+
+      {/* Quick link ke banner Stay Tuned dashboard */}
+      <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white flex-shrink-0 shadow-xs">
+            <Megaphone className="w-5 h-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-ink flex items-center gap-2">
+              Banner Dashboard Siswa (Stay Tuned)
+              <span className="text-[10px] uppercase font-extrabold px-1.5 py-0.5 bg-amber-500 text-white rounded-full">Dashboard</span>
+            </h3>
+            <p className="text-xs text-muted mt-0.5">
+              Banner informasi materi baru di halaman dashboard siswa kini dapat dikontrol, diedit, atau disembunyikan.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/admin/website/dashboard"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl transition-colors shadow-xs whitespace-nowrap self-start sm:self-auto"
+        >
+          Kelola Banner Dashboard →
+        </Link>
+      </div>
 
       <div className="bg-surface rounded-xl border border-border overflow-hidden">
         <DataTable
