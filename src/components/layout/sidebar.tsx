@@ -28,10 +28,9 @@ export function Sidebar() {
   const { isAuthenticated } = useAuthStore();
   const mounted = useIsMounted();
   const isGuest = mounted && !isAuthenticated;
-  // Conservative visible set:
-  //   - Before mounted: only ALWAYS_VISIBLE_BABS (whitelist, default = ["bakteri"])
-  //   - After mounted: only babs in ALL_VISIBLE that are NOT in archivedIds
-  // This prevents FOUC and is safe even if SQL migration hasn't been run.
+
+  // HANYA tampilkan bab yang aktif / tidak diarsip oleh admin (bakteri, virus, pencernaan).
+  // Bab yang belum selesai dan berstatus arsip di admin panel tetap disembunyikan.
   const visibleBabIds: Set<string> = (() => {
     if (!archiveLoaded) return new Set(ALWAYS_VISIBLE_BABS);
     const out = new Set<string>();
@@ -211,7 +210,7 @@ export function Sidebar() {
                     );
 
                     if (!bab) return null;
-                    // Hide bab outside permanent visible whitelist
+                    // HANYA tampilkan jika TIDAK diarsip di admin panel
                     if (!visibleBabIds.has(bab.id)) return null;
 
                     const isFreeHook = bab.id === "bakteri" && isGuest;
@@ -253,7 +252,7 @@ export function Sidebar() {
             <div className="text-xl mb-1">🧬</div>
             <p className="text-xs font-bold text-ink mb-1">{lang === "en" ? "BioLearn Student Account" : "BioLearn Akun Siswa"}</p>
             <p className="text-[11px] text-muted mb-3 leading-snug">
-              {lang === "en" ? "Sign up free to unlock all materials & track your learning progress." : "Daftar gratis untuk buka semua materi & simpan progres belajarmu."}
+              {lang === "en" ? "Sign up free to unlock all available materials & track your learning progress." : "Daftar gratis untuk buka semua materi yang tersedia & simpan progres belajarmu."}
             </p>
             <Link
               href="/login?mode=register&redirect=/bab/bakteri"

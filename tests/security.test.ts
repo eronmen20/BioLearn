@@ -212,3 +212,11 @@ run("static: media-proxy re-validates redirect destination", () => {
   assert.match(proxy, /isHostAllowed\(finalUrl\.hostname\)/, "post-redirect final URL must be re-validated");
   assert.equal(proxy.includes('"localhost"'), false, "localhost must not be embedded in proxy code");
 });
+
+run("static: quiz public GET does not expose correct_answer or explanations", () => {
+  const quizRoute = src("src/app/api/quiz/route.ts");
+  assert.doesNotMatch(quizRoute, /\.select\("\*"\)/, "quiz public GET must not do select('*')");
+  assert.match(quizRoute, /SAFE_QUESTION_COLUMNS/, "quiz route must use explicit SAFE_QUESTION_COLUMNS whitelist");
+  assert.match(quizRoute, /action === "verify_one"/, "quiz route must provide server-side single answer verification");
+  assert.match(quizRoute, /action === "submit_quiz"/, "quiz route must provide server-side full quiz grading");
+});

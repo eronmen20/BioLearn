@@ -7,8 +7,9 @@ import { useIsMounted } from "@/lib/use-is-mounted";
 import { useBabArchiveIds, ALWAYS_VISIBLE_BABS } from "@/store/use-bab-archive";
 import { useDashboardSettings } from "@/store/use-dashboard-settings";
 import { useActiveBanners } from "@/store/use-active-banners";
+import { useAuthStore } from "@/lib/auth-store";
 import Link from "next/link";
-import { BookOpen, CheckCircle, TrendingUp, Library, Loader2, Sparkles, Megaphone, ArrowRight } from "lucide-react";
+import { BookOpen, CheckCircle, TrendingUp, Library, Sparkles, Megaphone, ArrowRight } from "lucide-react";
 
 export function Dashboard() {
   const { t, lang } = useLangStore();
@@ -18,23 +19,28 @@ export function Dashboard() {
   const { archivedIds, subKeysByBab, loaded: archiveLoaded } = useBabArchiveIds();
   const { settings: dashSettings } = useDashboardSettings();
   const { banners: activeBanners } = useActiveBanners();
+  const { isAuthenticated } = useAuthStore();
+  const isGuest = mounted && !isAuthenticated;
+
   const ready = mounted && hydrated;
-  // Apply whitelist filter: only ALWAYS_VISIBLE babs by default; after
-  // archiveLoaded, also exclude babs explicitly archived in DB.
-  const visibleBabs = (mounted ? BAB.filter((b) => {
-    if (!archiveLoaded) return ALWAYS_VISIBLE_BABS.includes(b.id);
-    if (archivedIds.has(b.id)) return false;
-    return true;
-  }) : BAB.filter((b) => ALWAYS_VISIBLE_BABS.includes(b.id)));
+
+  // HANYA tampilkan bab yang aktif / tidak diarsip di admin panel (bakteri, virus, pencernaan).
+  // Bab yang belum selesai dan berstatus arsip di database tetap disembunyikan.
+  const visibleBabs = mounted
+    ? BAB.filter((b) => {
+        if (!archiveLoaded) return ALWAYS_VISIBLE_BABS.includes(b.id);
+        if (archivedIds.has(b.id)) return false;
+        return true;
+      })
+    : BAB.filter((b) => ALWAYS_VISIBLE_BABS.includes(b.id));
+
   const visibleSubCount = visibleBabs.reduce((s, b) => s + b.subs.length, 0);
   const visibleBabCount = visibleBabs.length;
 
   const totalQuizzes = ready ? progress.getTotalQuizzes() : 0;
   const totalCorrect = ready ? progress.getTotalCorrect() : 0;
   const totalQs = ready ? Object.values(progress.progress).reduce((s, p) => s + p.total, 0) : 0;
-  // Live per-bab completion (sama rumusnya dengan halaman bab: sub-bab done +
-  // refleksi dibagi TOTAL sub-bab). Key sub-bab dipakai dari DB (sub_bab)
-  // supaya identik dengan key yang direkam quiz di halaman bab.
+
   const pctForBab = (babId: string): number => {
     if (!ready) return 0;
     const keys =
@@ -43,7 +49,7 @@ export function Dashboard() {
         : (BAB.find((b) => b.id === babId)?.subs ?? []);
     return progress.getCompletionPct(babId, keys);
   };
-  // Count of fully completed visible babs
+
   const visibleBabIds = visibleBabs.map((b) => b.id);
   const completedBabs = visibleBabIds.filter((id) => pctForBab(id) >= 100).length;
 
@@ -61,10 +67,34 @@ export function Dashboard() {
           {lang === "en" ? dashSettings?.welcome_desc_en?.trim() || t("welcome.desc") : dashSettings?.welcome_desc?.trim() || t("welcome.desc")}
         </p>
 
-        {/* Stay-tuned banner — Materi baru akan di-update berkala (dapat dikontrol admin) */}
+        {/* Guest Conversion Teaser */}
+        {isGuest && (
+          <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-accent/15 via-purple-50 to-pink-50 border border-accent/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-fade-in-up">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl mt-0.5">🚀</span>
+              <div>
+                <h4 className="font-bold text-sm text-ink">
+                  {lang === "en" ? "Free Hook Preview Mode" : "Mode Akses Bebas Pengantar"}
+                </h4>
+                <p className="text-xs text-muted leading-relaxed mt-0.5">
+                  {lang === "en"
+                    ? "Explore the Bacteria chapter freely! Sign up for free to unlock all available chapters and save your quiz scores."
+                    : "Kamu sedang mengakses materi Bakteri secara bebas! Daftar akun gratis untuk membuka seluruh materi bab yang tersedia dan menyimpan progres belajarmu."}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/login?mode=register&redirect=/dashboard"
+              className="flex-shrink-0 px-4 py-2 bg-accent hover:bg-accent-dark text-white text-xs font-bold rounded-xl shadow-xs transition-colors"
+            >
+              {lang === "en" ? "Sign Up Free" : "Daftar Gratis"}
+            </Link>
+          </div>
+        )}
+
+        {/* Stay-tuned banner */}
         {(dashSettings?.show_banner ?? true) && (
           <div className="mt-4 sm:mt-5 relative overflow-hidden flex items-start gap-3 px-4 py-3.5 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-rose-50 border border-amber-200/60 shadow-sm animate-fade-in-up">
-            {/* Pulse ring glow di pojok */}
             <span className="absolute -top-1 -right-1 w-20 h-20 rounded-full bg-amber-300/30 blur-2xl animate-pulse-slow pointer-events-none" />
             <div className="relative flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
               <Megaphone className="w-5 h-5 text-white" />
@@ -101,6 +131,7 @@ export function Dashboard() {
               >
                 <div className="flex items-start sm:items-center gap-3 min-w-0">
                   {b.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
                     <img src={b.image_url} alt="" className="w-10 h-10 rounded-xl object-cover flex-shrink-0" />
                   ) : (
                     <div className="w-9 h-9 rounded-xl bg-accent text-white flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -217,16 +248,14 @@ export function Dashboard() {
         </div>
       </div>
 
-      {/* Chapter Cards */}
+      {/* Chapter Cards — HANYA bab yang tidak diarsip (bakteri, virus, pencernaan) */}
       <div className="flex items-center gap-3 mb-4 sm:mb-5">
         <h2 className="text-lg sm:text-xl font-bold">{t("browse.title")}</h2>
         <div className="h-px flex-1 bg-border" />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {visibleBabs.map((b) => {
           const p = progress.getProgress(b.id);
-          // Live same-formula completion (bab SELESAI berdasarkan total sub-bab
-          // + refleksi), konsisten dengan halaman bab.
           const rawPct = pctForBab(b.id);
           const pct = Math.max(0, Math.min(100, rawPct));
           const quizzes = mounted ? p.quizzes : 0;
