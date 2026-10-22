@@ -23,16 +23,16 @@ export const viewport: Viewport = {
 const DEFAULT_META = {
   title: "BioLearn — Belajar Biologi Interaktif",
   description:
-    "Pembelajaran biologi interaktif untuk SMA & persiapan kuliah. Jelajahi, belajar, uji pemahamanmu! Interactive biology learning for high school & college prep.",
+    "Pembelajaran biologi interaktif untuk siapapun yang berminat. Jelajahi, belajar, uji pemahamanmu! Interactive biology learning for anyone interested.",
   openGraph: {
     title: "BioLearn — Belajar Biologi Interaktif",
-    description: "Pembelajaran biologi interaktif untuk SMA & persiapan kuliah.",
+    description: "Pembelajaran biologi interaktif untuk siapapun yang berminat.",
     type: "website" as const,
   },
   twitter: {
     card: "summary_large_image" as const,
     title: "BioLearn — Belajar Biologi Interaktif",
-    description: "Pembelajaran biologi interaktif untuk SMA & persiapan kuliah.",
+    description: "Pembelajaran biologi interaktif untuk siapapun yang berminat.",
   },
 };
 

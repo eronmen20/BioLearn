@@ -22,8 +22,8 @@ export function Dashboard() {
   // Apply whitelist filter: only ALWAYS_VISIBLE babs by default; after
   // archiveLoaded, also exclude babs explicitly archived in DB.
   const visibleBabs = (mounted ? BAB.filter((b) => {
-    if (!ALWAYS_VISIBLE_BABS.includes(b.id)) return false;
-    if (archiveLoaded && archivedIds.has(b.id)) return false;
+    if (!archiveLoaded) return ALWAYS_VISIBLE_BABS.includes(b.id);
+    if (archivedIds.has(b.id)) return false;
     return true;
   }) : BAB.filter((b) => ALWAYS_VISIBLE_BABS.includes(b.id)));
   const visibleSubCount = visibleBabs.reduce((s, b) => s + b.subs.length, 0);
@@ -54,11 +54,11 @@ export function Dashboard() {
         <h1
           className="text-2xl sm:text-3xl font-extrabold mb-2"
           dangerouslySetInnerHTML={{
-            __html: dashSettings?.welcome_title?.trim() || t("welcome.title"),
+            __html: lang === "en" ? dashSettings?.welcome_title_en?.trim() || t("welcome.title") : dashSettings?.welcome_title?.trim() || t("welcome.title"),
           }}
         />
         <p className="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
-          {dashSettings?.welcome_desc?.trim() || t("welcome.desc")}
+          {lang === "en" ? dashSettings?.welcome_desc_en?.trim() || t("welcome.desc") : dashSettings?.welcome_desc?.trim() || t("welcome.desc")}
         </p>
 
         {/* Stay-tuned banner — Materi baru akan di-update berkala (dapat dikontrol admin) */}
@@ -169,8 +169,8 @@ export function Dashboard() {
                 </h3>
                 <p className="text-white/85 text-xs sm:text-sm leading-relaxed mb-4 max-w-sm">
                   {lang === "en"
-                    ? "Experiment with virtual microscopes, petri dish antibiotic zones, and procedural lab guides."
-                    : "Uji coba mikroskop virtual, simulasi zona hambat antibiotik, dan panduan langkah praktikum nyata."}
+                    ? "Interactive dry-labs: virtual microscope, antibiotic inhibition zone, and BioChem food & enzyme reactions."
+                    : "Simulasi praktikum interaktif: mikroskop virtual, uji daya hambat bakteri, dan BioChem Lab (uji makanan & enzim)."}
                 </p>
               </div>
               <div className="relative z-10 pt-1">

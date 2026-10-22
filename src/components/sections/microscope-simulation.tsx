@@ -275,6 +275,7 @@ export function VirtualMicroscopeSimulation() {
   // State Preparat
   const [specimens, setSpecimens] = useState<Specimen[]>(DEFAULT_SPECIMENS);
   const [activeSpecimenId, setActiveSpecimenId] = useState<string>("bawang");
+  const [isSpecimenDropdownOpen, setIsSpecimenDropdownOpen] = useState(false);
 
   // State Optik Mikroskop
   const [mag, setMag] = useState<number>(10);
@@ -683,27 +684,96 @@ export function VirtualMicroscopeSimulation() {
 
             {/* Dropdown Select Preparat */}
             <div className="relative">
-              <select
+              <button
+                type="button"
                 id="specimen-select"
-                value={activeSpecimenId}
-                onChange={(e) => handleSelectSpecimen(e.target.value)}
-                className="w-full appearance-none px-3.5 py-3 pr-10 rounded-2xl border border-border-light bg-surface text-ink text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent transition-all cursor-pointer shadow-xs"
+                onClick={() => setIsSpecimenDropdownOpen(!isSpecimenDropdownOpen)}
+                className="w-full text-left px-3.5 py-2.5 rounded-2xl text-xs sm:text-sm font-bold transition-all border border-border bg-bg-alt/70 hover:bg-bg-alt hover:border-accent/50 text-ink flex items-center justify-between shadow-2xs cursor-pointer"
               >
-                {specimens.map((spec, idx) => {
-                  const isLocked = isGuest && idx >= 2;
-                  const name = lang === "en" ? spec.nameEn : spec.nameId;
-                  return (
-                    <option key={spec.id} value={spec.id} className="bg-surface text-ink py-1">
-                      {isLocked ? "🔒 " : ""}{name}
-                      {spec.latinName ? ` (${spec.latinName})` : ""}
-                      {isLocked ? (lang === "en" ? " [Members Only]" : " [Khusus Akun Siswa]") : ""}
-                    </option>
-                  );
-                })}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted">
-                <ChevronDown className="w-4 h-4" />
-              </div>
+                <div className="flex items-center gap-2.5 truncate flex-1 min-w-0 pr-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent shrink-0 shadow-2xs" />
+                  <span className="truncate text-ink">
+                    {lang === "en" ? activeSpecimen.nameEn : activeSpecimen.nameId}
+                  </span>
+                  {activeSpecimen.latinName && (
+                    <span className="text-[11px] text-muted italic font-serif truncate hidden sm:inline">
+                      ({activeSpecimen.latinName})
+                    </span>
+                  )}
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 text-muted shrink-0 transition-transform duration-200 ${
+                    isSpecimenDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Popover */}
+              <AnimatePresence>
+                {isSpecimenDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-20"
+                      onClick={() => setIsSpecimenDropdownOpen(false)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-surface rounded-2xl border border-border shadow-dropdown p-1.5 max-h-[280px] overflow-y-auto space-y-1"
+                    >
+                      {specimens.map((spec, idx) => {
+                        const isLocked = isGuest && idx >= 2;
+                        const isSelected = activeSpecimenId === spec.id;
+                        const name = lang === "en" ? spec.nameEn : spec.nameId;
+
+                        return (
+                          <button
+                            key={spec.id}
+                            type="button"
+                            onClick={() => {
+                              handleSelectSpecimen(spec.id);
+                              setIsSpecimenDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center justify-between cursor-pointer ${
+                              isSelected
+                                ? "bg-accent/10 text-accent font-bold"
+                                : "hover:bg-bg-alt text-ink"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 truncate min-w-0 pr-2">
+                              {isLocked ? (
+                                <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              ) : (
+                                <span className="w-2 h-2 rounded-full bg-accent/60 shrink-0" />
+                              )}
+                              <div className="truncate">
+                                <span className="truncate block font-bold text-ink">{name}</span>
+                                {spec.latinName && (
+                                  <span className="text-[10px] text-muted italic font-serif block truncate">
+                                    {spec.latinName}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {isLocked ? (
+                                <span className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full font-bold">
+                                  {lang === "en" ? "Locked" : "Terkunci"}
+                                </span>
+                              ) : isSelected ? (
+                                <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                              ) : null}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Info Singkat Preparat Terpilih */}
@@ -937,27 +1007,27 @@ export function VirtualMicroscopeSimulation() {
                     Khusus Akun Siswa
                   </span>
                   <h3 className="text-lg font-bold text-ink mt-0.5">
-                    Buka Semua Preparat Mikroskop
+                    {lang === "en" ? "Unlock All Microscope Specimens" : "Buka Semua Preparat Mikroskop"}
                   </h3>
                 </div>
               </div>
 
               <p className="text-xs text-muted leading-relaxed mb-4">
-                Spesimen <strong className="text-ink">{lockedSpecimenTitle}</strong> dan preparat mikroskopis lainnya memerlukan akun BioLearn. Buat akun gratis sekarang untuk membuka semua preparat!
+                {lang === "en" ? <>Specimen <strong className="text-ink">{lockedSpecimenTitle}</strong> and other microscopic samples require a BioLearn account. Create a free account now to unlock all specimens!</> : <>Spesimen <strong className="text-ink">{lockedSpecimenTitle}</strong> dan preparat mikroskopis lainnya memerlukan akun BioLearn. Buat akun gratis sekarang untuk membuka semua preparat!</>}
               </p>
 
               <div className="space-y-2 p-3.5 rounded-2xl bg-bg-alt/70 border border-border/60 mb-5 text-xs text-ink">
                 <div className="flex items-center gap-2">
                   <span>🔬</span>
-                  <span>Akses seluruh preparat tumbuhan, hewan, embrio, & bakteri</span>
+                  <span>{lang === "en" ? "Access all plant, animal, embryo & bacterial specimens" : "Akses seluruh preparat tumbuhan, hewan, embrio, & bakteri"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🔍</span>
-                  <span>Eksplorasi organel sel dengan perbesaran hingga 100x</span>
+                  <span>{lang === "en" ? "Explore cell organelles up to 100x magnification" : "Eksplorasi organel sel dengan perbesaran hingga 100x"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🧪</span>
-                  <span>Akses seluruh modul praktikum interaktif BioLab</span>
+                  <span>{lang === "en" ? "Access all BioLab interactive practical modules" : "Akses seluruh modul praktikum interaktif BioLab"}</span>
                 </div>
               </div>
 
@@ -967,13 +1037,13 @@ export function VirtualMicroscopeSimulation() {
                   className="w-full py-3 px-4 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2 text-center"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Daftar Akun Gratis Sekarang (30 Detik)
+                  {lang === "en" ? "Sign Up Free (30 Seconds)" : "Daftar Akun Gratis Sekarang (30 Detik)"}
                 </Link>
                 <Link
                   href="/login?mode=login&redirect=/biolab/mikroskop"
                   className="w-full py-2.5 px-4 bg-surface hover:bg-bg-alt border border-border text-ink font-semibold rounded-xl text-xs sm:text-sm transition-all text-center block"
                 >
-                  Sudah Memiliki Akun? Masuk di Sini
+                  {lang === "en" ? "Already have an account? Sign in here" : "Sudah Memiliki Akun? Masuk di Sini"}
                 </Link>
               </div>
 
@@ -982,7 +1052,7 @@ export function VirtualMicroscopeSimulation() {
                   onClick={() => setShowAuthModal(false)}
                   className="text-[11px] text-muted hover:text-ink underline transition-colors"
                 >
-                  Nanti saja, tetap amati preparat gratis
+                  {lang === "en" ? "Maybe later, continue observing free specimens" : "Nanti saja, tetap amati preparat gratis"}
                 </button>
               </div>
             </div>

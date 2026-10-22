@@ -89,8 +89,42 @@ export function BioLabList() {
       </div>
 
       {/* Simulasi interaktif unggulan */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        {/* Card 1: Zona Hambat */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* Card 1: BioChem Lab */}
+        <Link href="/biolab/biochem">
+          <div className="group relative p-5 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600">
+            <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">⚗️</div>
+            <div className="absolute bottom-0 left-10 text-4xl opacity-15">🧪</div>
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-white/20">
+                    {lang === "en" ? "Biochemical Dry-Lab" : "Lab Biokimia Virtual"}
+                  </span>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-300 text-amber-950 shadow-xs">
+                    ⭐ NEW
+                  </span>
+                </div>
+                <p className="font-extrabold text-base sm:text-lg leading-snug mb-1">
+                  BioChem Lab
+                </p>
+                <p className="text-white/80 text-xs sm:text-sm mb-4">
+                  {lang === "en"
+                    ? "Investigate food biomolecules, simulate enzyme kinetics, and generate virtual lab reports."
+                    : "Uji biomolekul pangan, simulasikan kinetika enzim, dan susun laporan praktikum virtual."}
+                </p>
+              </div>
+              <div>
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-white text-purple-700 px-4 py-2 rounded-full group-hover:gap-2.5 transition-all shadow-sm">
+                  {lang === "en" ? "Enter BioChem Lab" : "Masuk BioChem Lab"}
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Card 2: Zona Hambat */}
         <Link href="/biolab/zona-hambat">
           <div className="group relative p-5 rounded-3xl text-white overflow-hidden shadow-card hover:-translate-y-1 transition-all h-full bg-gradient-to-br from-accent via-accent-dark to-[#4834d4]">
             <div className="absolute top-0 right-6 text-6xl opacity-20 group-hover:scale-110 transition-transform">🧫</div>
@@ -190,7 +224,7 @@ export function BioLabList() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-                            Khusus Akun Siswa
+                            {lang === "en" ? "Student Members Only" : "Khusus Akun Siswa"}
                           </span>
                           <span className="text-[11px] text-muted">{m.bab_id}</span>
                         </div>
@@ -256,27 +290,27 @@ export function BioLabList() {
                     Khusus Akun Siswa
                   </span>
                   <h3 className="text-lg font-bold text-ink mt-0.5">
-                    Buka Modul Praktikum BioLab
+                    {lang === "en" ? "Unlock BioLab Practical Modules" : "Buka Modul Praktikum BioLab"}
                   </h3>
                 </div>
               </div>
 
               <p className="text-xs text-muted leading-relaxed mb-4">
-                Modul praktikum <strong className="text-ink">{targetModuleTitle}</strong> dan panduan langkah kerja interaktif hanya tersedia untuk akun terdaftar BioLearn. Daftar akun gratis sekarang!
+                {lang === "en" ? <>Practical module <strong className="text-ink">{targetModuleTitle}</strong> and interactive procedures are only available with a registered account. Sign up free now!</> : <>Modul praktikum <strong className="text-ink">{targetModuleTitle}</strong> dan panduan langkah kerja interaktif hanya tersedia untuk akun terdaftar BioLearn. Daftar akun gratis sekarang!</>}
               </p>
 
               <div className="space-y-2 p-3.5 rounded-2xl bg-bg-alt/70 border border-border/60 mb-5 text-xs text-ink">
                 <div className="flex items-center gap-2">
                   <span>📋</span>
-                  <span>Panduan langkah demi langkah prosedur praktikum riil</span>
+                  <span>{lang === "en" ? "Step-by-step real laboratory procedures guide" : "Panduan langkah demi langkah prosedur praktikum riil"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>🎴</span>
-                  <span>Flashcard identifikasi alat, bahan, dan keselamatan kerja</span>
+                  <span>{lang === "en" ? "Equipment, material, and lab safety identification flashcards" : "Flashcard identifikasi alat, bahan, dan keselamatan kerja"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span>📊</span>
-                  <span>Catat dan pantau lembar kerja hasil pengamatan</span>
+                  <span>{lang === "en" ? "Record and track experimental observation worksheets" : "Catat dan pantau lembar kerja hasil pengamatan"}</span>
                 </div>
               </div>
 
@@ -286,13 +320,13 @@ export function BioLabList() {
                   className="w-full py-3 px-4 bg-accent hover:bg-accent-dark text-white font-bold rounded-xl text-xs sm:text-sm transition-all shadow-sm flex items-center justify-center gap-2 text-center"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Daftar Akun Gratis (30 Detik)
+                  {lang === "en" ? "Sign Up Free (30 Seconds)" : "Daftar Akun Gratis (30 Detik)"}
                 </Link>
                 <Link
                   href="/login?mode=login&redirect=/biolab"
                   className="w-full py-2.5 px-4 bg-surface hover:bg-bg-alt border border-border text-ink font-semibold rounded-xl text-xs sm:text-sm transition-all text-center block"
                 >
-                  Sudah Memiliki Akun? Masuk di Sini
+                  {lang === "en" ? "Already have an account? Sign in here" : "Sudah Memiliki Akun? Masuk di Sini"}
                 </Link>
               </div>
 
@@ -301,7 +335,7 @@ export function BioLabList() {
                   onClick={() => setShowAuthModal(false)}
                   className="text-[11px] text-muted hover:text-ink underline transition-colors"
                 >
-                  Nanti saja, tetap di halaman BioLab
+                  {lang === "en" ? "Maybe later, stay on BioLab" : "Nanti saja, tetap di halaman BioLab"}
                 </button>
               </div>
             </div>

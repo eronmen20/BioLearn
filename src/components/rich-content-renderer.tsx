@@ -26,23 +26,14 @@ interface RichContentRendererProps {
   lang?: string;
 }
 
-// Warna gradient per section index (cycle)
-const SECTION_GRADIENTS = [
-  "from-emerald-500/10 via-teal-500/5 to-transparent",
-  "from-amber-500/10 via-orange-500/5 to-transparent",
-  "from-indigo-500/10 via-blue-500/5 to-transparent",
-  "from-violet-500/10 via-purple-500/5 to-transparent",
-  "from-rose-500/10 via-pink-500/5 to-transparent",
-  "from-cyan-500/10 via-sky-500/5 to-transparent",
-];
-
-const SECTION_ICON_COLORS = [
-  "text-emerald-700 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800",
-  "text-amber-700 bg-amber-100 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-800",
-  "text-indigo-700 bg-indigo-100 dark:bg-indigo-950/60 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800",
-  "text-violet-700 bg-violet-100 dark:bg-violet-950/60 dark:text-violet-300 border-violet-300 dark:border-violet-800",
-  "text-rose-700 bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 border-rose-300 dark:border-rose-800",
-  "text-cyan-700 bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800",
+// Tema warna per section index (cycle sesuai urutan visual referensi: ungu, biru, hijau, amber, rose, cyan)
+const SECTION_THEMES = [
+  { badge: "section-badge-violet", grad: "section-card-grad-violet" },
+  { badge: "section-badge-blue",   grad: "section-card-grad-blue" },
+  { badge: "section-badge-green",  grad: "section-card-grad-green" },
+  { badge: "section-badge-amber",  grad: "section-card-grad-amber" },
+  { badge: "section-badge-rose",   grad: "section-card-grad-rose" },
+  { badge: "section-badge-cyan",   grad: "section-card-grad-cyan" },
 ];
 
 // Helper to extract image from section HTML
@@ -100,6 +91,42 @@ function extractImageFromContent(html: string): { cleanedContent: string; image:
   return { cleanedContent: html, image: null };
 }
 
+// Helper to sanitize and balance section HTML content
+function sanitizeSectionHtml(raw: string): string {
+  let res = raw.trim();
+  // Strip leading orphan closing tags (e.g., leftover from a previous section)
+  res = res.replace(/^(\s*<\/(?:div|section|article|p)>)+/gi, "").trim();
+  // Strip trailing unclosed opening tags that had no inner content before next <h3>
+  res = res.replace(/(<(?:div|section|article|p)[^>]*>\s*)+$/gi, "").trim();
+  // Strip leading/trailing empty breaks and empty paragraphs
+  res = res.replace(/^(\s*<(?:br|hr)[^>]*\/?>)+/gi, "").trim();
+  res = res.replace(/^(\s*<p[^>]*>(?:\s|&nbsp;|<br[^>]*\/?>)*<\/p>)+/gi, "").trim();
+  res = res.replace(/(\s*<(?:br|hr)[^>]*\/?>)+$/gi, "").trim();
+  res = res.replace(/(\s*<p[^>]*>(?:\s|&nbsp;|<br[^>]*\/?>)*<\/p>)+$/gi, "").trim();
+  // Strip empty container divs
+  let prev = "";
+  while (prev !== res) {
+    prev = res;
+    res = res.replace(/<div[^>]*>\s*<\/div>/gi, "").trim();
+  }
+
+  // Balance div tags
+  const openMatches = res.match(/<div(?:\s+[^>]*)?>/gi) || [];
+  const closeMatches = res.match(/<\/div>/gi) || [];
+  const diff = openMatches.length - closeMatches.length;
+  if (diff > 0) {
+    res += "</div>".repeat(diff);
+  } else if (diff < 0) {
+    let excess = -diff;
+    while (excess > 0 && /<\/div>\s*$/i.test(res)) {
+      res = res.replace(/<\/div>\s*$/i, "").trim();
+      excess--;
+    }
+  }
+
+  return res;
+}
+
 // Parse HTML into sections based on <h3>
 function parseSections(html: string): ParsedSection[] {
   const sections: ParsedSection[] = [];
@@ -107,7 +134,7 @@ function parseSections(html: string): ParsedSection[] {
   const h3Matches = [...html.matchAll(h3Regex)];
 
   if (h3Matches.length === 0) {
-    const trimmed = html.trim();
+    const trimmed = sanitizeSectionHtml(html);
     if (trimmed) {
       const { cleanedContent, image } = extractImageFromContent(trimmed);
       return [{ title: "", content: cleanedContent, image }];
@@ -121,11 +148,13 @@ function parseSections(html: string): ParsedSection[] {
     const nextStart = i < h3Matches.length - 1 ? h3Matches[i + 1].index! : html.length;
     const rawContent = html.slice(startIndex + m[0].length, nextStart).trim();
 
-    if (!rawContent || rawContent === "<br>" || rawContent === "<br/>" || rawContent === "<p></p>") {
+    const sanitized = sanitizeSectionHtml(rawContent);
+
+    if (!sanitized || sanitized === "<br>" || sanitized === "<br/>" || sanitized === "<p></p>") {
       return;
     }
 
-    const { cleanedContent, image } = extractImageFromContent(rawContent);
+    const { cleanedContent, image } = extractImageFromContent(sanitized);
     sections.push({ title, content: cleanedContent, image });
   });
 
@@ -149,8 +178,7 @@ function SectionCard({
   lang?: string;
 }) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const gradient = SECTION_GRADIENTS[index % SECTION_GRADIENTS.length];
-  const iconColor = SECTION_ICON_COLORS[index % SECTION_ICON_COLORS.length];
+  const theme = SECTION_THEMES[index % SECTION_THEMES.length];
   const hasImage = Boolean(section.image && section.image.src);
 
   return (
@@ -172,32 +200,31 @@ function SectionCard({
       >
         {/* Subtle decorative background gradient */}
         <div
-          className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none opacity-80`}
+          className={`absolute inset-0 ${theme.grad} pointer-events-none opacity-80`}
         />
 
         {/* Section Header Button */}
         <button
           onClick={onToggle}
-          className="relative w-full flex items-center justify-between py-2.5 sm:py-3 px-3.5 sm:px-4 text-left group/btn cursor-pointer select-none"
+          className="relative w-full flex items-center justify-between py-2 sm:py-2.5 px-3.5 sm:px-4 text-left group/btn cursor-pointer select-none"
         >
           <div className="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0 pr-2">
-            {/* Number Badge */}
+            {/* Soft Number Badge (Matches pillowy pastel design) */}
             <span
               className={`
                 flex-shrink-0
                 w-7 h-7 sm:w-8 sm:h-8
-                rounded-lg
-                border
-                ${iconColor}
-                text-[11px] sm:text-xs
-                font-bold
+                rounded-full
+                ${theme.badge}
+                text-xs sm:text-[13px]
+                font-extrabold
                 flex items-center justify-center
-                shadow-xs
+                shadow-[0_2px_6px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)]
                 transition-transform duration-200
                 group-hover/btn:scale-105
               `}
             >
-              {String(index + 1).padStart(2, "0")}
+              {index + 1}
             </span>
 
             {/* Title */}
@@ -233,12 +260,12 @@ function SectionCard({
 
         {/* Section Body (Collapsible / Expandable) */}
         {isOpen && (
-          <div className="relative border-t border-border/40 px-3.5 sm:px-5 py-3.5 sm:py-4.5 bg-surface/50">
+          <div className="relative border-t border-border/40 px-3.5 sm:px-4.5 pt-1.5 sm:pt-2 pb-3 sm:pb-3.5 bg-surface/50">
             {/* Side-by-Side Grid if Image Exists, Full-width if No Image */}
             <div
               className={
                 hasImage
-                  ? "grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-start"
+                  ? "grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 items-start"
                   : "w-full"
               }
             >
@@ -246,8 +273,8 @@ function SectionCard({
               <div
                 className={
                   hasImage
-                    ? "lg:col-span-7 order-2 lg:order-1 space-y-2.5"
-                    : "w-full space-y-2.5"
+                    ? "lg:col-span-7 order-2 lg:order-1 space-y-1.5"
+                    : "w-full space-y-1.5"
                 }
               >
                 <div
@@ -255,14 +282,23 @@ function SectionCard({
                   className="
                     rich-text-content
                     text-[13px] sm:text-sm leading-relaxed text-ink/80
-                    [&_h4]:text-accent-dark [&_h4]:font-bold [&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-xs sm:[&_h4]:text-[13px]
-                    [&_p]:leading-relaxed [&_p]:my-2 sm:[&_p]:my-2.5 [&_p]:text-[13px] sm:[&_p]:text-sm
+                    [&>*:first-child]:!mt-0
+                    [&_h4:first-child]:!mt-0
+                    [&_p:first-child]:!mt-0
+                    [&_div:first-child]:!mt-0
+                    [&_ul:first-child]:!mt-0
+                    [&_ol:first-child]:!mt-0
+                    [&_h5:first-child]:!mt-0
+                    [&_h4]:text-accent-dark [&_h4]:font-bold [&_h4]:mt-2 [&_h4]:mb-1 [&_h4]:text-xs sm:[&_h4]:text-[13px]
+                    [&_h3+h4]:!mt-0.5
+                    [&_p]:leading-relaxed [&_p]:my-1.5 sm:[&_p]:my-2 [&_p]:text-[13px] sm:[&_p]:text-sm
+                    [&_p:last-child]:!mb-0
                     [&_strong]:text-ink [&_strong]:font-semibold
                     [&_em]:text-accent [&_em]:italic [&_em]:font-medium
-                    [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-2 sm:[&_ul]:!my-2.5 [&_ul]:!space-y-1 sm:[&_ul]:!space-y-1.5 [&_ul]:text-[13px] sm:[&_ul]:text-sm
-                    [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-2 sm:[&_ol]:!my-2.5 [&_ol]:!space-y-1 sm:[&_ol]:!space-y-1.5 [&_ol]:text-[13px] sm:[&_ol]:text-sm
+                    [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-1.5 sm:[&_ul]:!my-2 [&_ul]:!space-y-1 sm:[&_ul]:!space-y-1 [&_ul]:text-[13px] sm:[&_ul]:text-sm
+                    [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-1.5 sm:[&_ol]:!my-2 [&_ol]:!space-y-1 sm:[&_ol]:!space-y-1 [&_ol]:text-[13px] sm:[&_ol]:text-sm
                     [&_li]:!pl-1 [&_li]:!marker:text-accent
-                    [&_h5]:text-ink [&_h5]:font-semibold [&_h5]:mt-2 [&_h5]:mb-1 [&_h5]:text-xs sm:[&_h5]:text-[13px]
+                    [&_h5]:text-ink [&_h5]:font-semibold [&_h5]:mt-1.5 [&_h5]:mb-1 [&_h5]:text-xs sm:[&_h5]:text-[13px]
                   "
                   dangerouslySetInnerHTML={{ __html: section.content }}
                 />
@@ -413,13 +449,14 @@ export function RichContentRenderer({ html, lang = "id" }: RichContentRendererPr
     return (
       <div
         className="text-xs sm:text-sm leading-relaxed text-muted
-          [&_h3]:text-accent-dark [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-2 [&_h3]:text-sm sm:[&_h3]:text-base
-          [&_h4]:text-accent [&_h4]:font-semibold [&_h4]:mt-3 [&_h4]:mb-1.5 [&_h4]:text-xs sm:[&_h4]:text-sm
-          [&_p]:leading-relaxed [&_p]:my-2
+          [&_h3]:text-accent-dark [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-1 [&_h3]:text-sm sm:[&_h3]:text-base
+          [&_h4]:text-accent [&_h4]:font-semibold [&_h4]:mt-1.5 [&_h4]:mb-1 [&_h4]:text-xs sm:[&_h4]:text-sm
+          [&_h3+h4]:!mt-0.5
+          [&_p]:leading-relaxed [&_p]:my-1.5
           [&_strong]:text-ink [&_strong]:font-semibold
           [&_em]:text-accent [&_em]:italic
-          [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-2.5
-          [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-2.5"
+          [&_ul]:!list-disc [&_ul]:!pl-5 [&_ul]:!my-2
+          [&_ol]:!list-decimal [&_ol]:!pl-5 [&_ol]:!my-2"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     );

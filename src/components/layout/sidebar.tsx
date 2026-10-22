@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 export function Sidebar() {
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
   const pathname = usePathname();
   const { open, mobileOpen, setOpen, setMobileOpen } = useSidebarStore();
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
@@ -35,8 +35,8 @@ export function Sidebar() {
   const visibleBabIds: Set<string> = (() => {
     if (!archiveLoaded) return new Set(ALWAYS_VISIBLE_BABS);
     const out = new Set<string>();
-    for (const id of ALWAYS_VISIBLE_BABS) {
-      if (!archivedIds.has(id)) out.add(id);
+    for (const b of BAB) {
+      if (!archivedIds.has(b.id)) out.add(b.id);
     }
     return out;
   })();
@@ -100,8 +100,8 @@ export function Sidebar() {
             type="button"
             onClick={() => setOpen(false)}
             className="p-2 rounded-lg hover:bg-bg-alt text-muted hover:text-ink transition-colors"
-            title="Tutup sidebar"
-            aria-label="Tutup sidebar"
+            title={lang === "en" ? "Close sidebar" : "Tutup sidebar"}
+            aria-label={lang === "en" ? "Close sidebar" : "Tutup sidebar"}
           >
             <X className="w-4 h-4" />
           </button>
@@ -251,15 +251,15 @@ export function Sidebar() {
         {isGuest && (
           <div className="mx-4 mb-6 p-4 rounded-2xl bg-gradient-to-br from-accent/15 to-purple-500/10 border border-accent/20 text-center">
             <div className="text-xl mb-1">🧬</div>
-            <p className="text-xs font-bold text-ink mb-1">BioLearn Akun Siswa</p>
+            <p className="text-xs font-bold text-ink mb-1">{lang === "en" ? "BioLearn Student Account" : "BioLearn Akun Siswa"}</p>
             <p className="text-[11px] text-muted mb-3 leading-snug">
-              Daftar gratis untuk buka semua materi & simpan progres belajarmu.
+              {lang === "en" ? "Sign up free to unlock all materials & track your learning progress." : "Daftar gratis untuk buka semua materi & simpan progres belajarmu."}
             </p>
             <Link
               href="/login?mode=register&redirect=/bab/bakteri"
               className="block w-full py-2 bg-accent text-white text-xs font-bold rounded-xl hover:bg-accent-dark transition-colors shadow-sm"
             >
-              Daftar Gratis
+              {lang === "en" ? "Sign Up Free" : "Daftar Gratis"}
             </Link>
           </div>
         )}

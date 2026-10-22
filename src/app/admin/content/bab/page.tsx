@@ -8,6 +8,7 @@ import { showToast } from '@/components/ui/toaster';
 import { TranslateButton } from '@/components/admin/translate-button';
 import { BookOpen, Edit, Trash2, Plus, Video, FileText, Save, Loader2, Archive, ArchiveRestore } from 'lucide-react';
 import { adminFetch } from "@/lib/admin-fetch";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 function ArchivedToggleOffIcon() {
   return <Archive className="w-4 h-4" />;
@@ -382,15 +383,15 @@ export default function BabPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Kelas</label>
-              <select
+              <CustomSelect
                 value={form.kelas_id}
-                onChange={(e) => setForm({ ...form, kelas_id: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <option value="x">📗 Kelas X</option>
-                <option value="xi">📘 Kelas XI</option>
-                <option value="xii">📙 Kelas XII</option>
-              </select>
+                onChange={(val) => setForm({ ...form, kelas_id: val })}
+                options={[
+                  { value: "x", label: "Kelas X", icon: <span className="text-sm">📗</span> },
+                  { value: "xi", label: "Kelas XI", icon: <span className="text-sm">📘</span> },
+                  { value: "xii", label: "Kelas XII", icon: <span className="text-sm">📙</span> },
+                ]}
+              />
               <p className="text-xs text-muted mt-1">Pilih kelas untuk bab ini</p>
             </div>
           </div>

@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 export interface DashboardSettings {
   welcome_title?: string;
+  welcome_title_en?: string;
   welcome_desc?: string;
+  welcome_desc_en?: string;
   show_banner: boolean;
   banner_badge?: string;
   banner_title?: string;
@@ -14,7 +16,9 @@ export interface DashboardSettings {
 
 export const DEFAULT_DASHBOARD_SETTINGS: DashboardSettings = {
   welcome_title: "",
+  welcome_title_en: "",
   welcome_desc: "",
+  welcome_desc_en: "",
   show_banner: true,
   banner_badge: "",
   banner_title: "",

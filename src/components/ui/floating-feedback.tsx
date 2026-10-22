@@ -4,24 +4,26 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquareHeart, X, Send, CheckCircle2, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
+import { useLangStore } from "@/lib/lang-store";
 
 const EMOJIS = [
-  { rating: 1, emoji: "😡", label: "Buruk" },
-  { rating: 2, emoji: "🙁", label: "Kurang" },
-  { rating: 3, emoji: "😐", label: "Cukup" },
-  { rating: 4, emoji: "😊", label: "Bagus" },
-  { rating: 5, emoji: "🤩", label: "Keren!" },
+  { rating: 1, emoji: "😡", labelId: "Buruk", labelEn: "Poor" },
+  { rating: 2, emoji: "🙁", labelId: "Kurang", labelEn: "Fair" },
+  { rating: 3, emoji: "😐", labelId: "Cukup", labelEn: "Good" },
+  { rating: 4, emoji: "😊", labelId: "Bagus", labelEn: "Great" },
+  { rating: 5, emoji: "🤩", labelId: "Keren!", labelEn: "Awesome!" },
 ];
 
 const CATEGORIES = [
-  { id: "general", label: "💬 Umum" },
-  { id: "bug", label: "🐛 Bug/Error" },
-  { id: "feature", label: "💡 Saran" },
-  { id: "content", label: "📖 Materi" },
+  { id: "general", labelId: "💬 Umum", labelEn: "💬 General" },
+  { id: "bug", labelId: "🐛 Bug/Error", labelEn: "🐛 Bug/Issue" },
+  { id: "feature", labelId: "💡 Saran", labelEn: "💡 Suggestion" },
+  { id: "content", labelId: "📖 Materi", labelEn: "📖 Content" },
 ];
 
 export function FloatingFeedback() {
   const user = useAuthStore((s) => s.user);
+  const { lang } = useLangStore();
 
   const [isOpen, setIsOpen] = useState(false);
   const [rating, setRating] = useState<number>(5);
@@ -35,7 +37,7 @@ export function FloatingFeedback() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
-      setErrorMsg("Tuliskan masukan singkatmu ya.");
+      setErrorMsg(lang === "en" ? "Please write a short message." : "Tuliskan masukan singkatmu ya.");
       return;
     }
 
@@ -59,7 +61,7 @@ export function FloatingFeedback() {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || "Gagal mengirim feedback.");
+        throw new Error(data.error || (lang === "en" ? "Failed to send feedback." : "Gagal mengirim feedback."));
       }
 
       setSubmitted(true);
@@ -69,7 +71,7 @@ export function FloatingFeedback() {
         setIsOpen(false);
       }, 2500);
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal mengirim.");
+      setErrorMsg(err.message || (lang === "en" ? "Failed to send." : "Gagal mengirim."));
     } finally {
       setLoading(false);
     }
@@ -84,7 +86,7 @@ export function FloatingFeedback() {
           whileTap={{ scale: 0.92 }}
           className="group relative flex items-center justify-center h-11 rounded-full bg-accent text-white shadow-xl hover:bg-accent-dark transition-all duration-300 border border-white/20 px-3 cursor-pointer overflow-hidden"
           aria-label="Feedback"
-          title="Beri Feedback"
+          title={lang === "en" ? "Send Feedback" : "Beri Feedback"}
         >
           {isOpen ? (
             <X className="w-5 h-5 flex-shrink-0" />
@@ -114,13 +116,18 @@ export function FloatingFeedback() {
                   <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-ink">Beri Feedback</h4>
-                  <p className="text-[11px] text-muted">Bantu kami perbaiki & lengkapi web ini</p>
+                  <h4 className="text-sm font-bold text-ink">
+                    {lang === "en" ? "Send Feedback" : "Beri Feedback"}
+                  </h4>
+                  <p className="text-[11px] text-muted">
+                    {lang === "en" ? "Help us improve & expand this platform" : "Bantu kami perbaiki & lengkapi web ini"}
+                  </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
                 className="p-1 rounded-lg text-muted hover:text-ink hover:bg-surface-2 transition-colors"
+                aria-label={lang === "en" ? "Close" : "Tutup"}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -133,15 +140,19 @@ export function FloatingFeedback() {
                 className="py-8 text-center"
               >
                 <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-2" />
-                <h5 className="text-base font-bold text-ink">Terima Kasih!</h5>
-                <p className="text-xs text-muted mt-1">Masukanmu sangat berarti bagi kami.</p>
+                <h5 className="text-base font-bold text-ink">
+                  {lang === "en" ? "Thank You!" : "Terima Kasih!"}
+                </h5>
+                <p className="text-xs text-muted mt-1">
+                  {lang === "en" ? "Your feedback means a lot to us." : "Masukanmu sangat berarti bagi kami."}
+                </p>
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Emoji Rating */}
                 <div>
                   <label className="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
-                    Seberapa puas kamu?
+                    {lang === "en" ? "How satisfied are you?" : "Seberapa puas kamu?"}
                   </label>
                   <div className="flex justify-between items-center bg-surface-2 p-2 rounded-2xl border border-border/50">
                     {EMOJIS.map((e) => (
@@ -156,7 +167,9 @@ export function FloatingFeedback() {
                         }`}
                       >
                         <span className="text-2xl leading-none">{e.emoji}</span>
-                        <span className="text-[10px] text-muted font-medium mt-1">{e.label}</span>
+                        <span className="text-[10px] text-muted font-medium mt-1">
+                          {lang === "en" ? e.labelEn : e.labelId}
+                        </span>
                       </button>
                     ))}
                   </div>
@@ -165,7 +178,7 @@ export function FloatingFeedback() {
                 {/* Categories */}
                 <div>
                   <label className="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
-                    Kategori
+                    {lang === "en" ? "Category" : "Kategori"}
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {CATEGORIES.map((c) => (
@@ -179,7 +192,7 @@ export function FloatingFeedback() {
                             : "bg-surface-2 text-ink/80 border border-border/60 hover:bg-border/50"
                         }`}
                       >
-                        {c.label}
+                        {lang === "en" ? c.labelEn : c.labelId}
                       </button>
                     ))}
                   </div>
@@ -188,14 +201,14 @@ export function FloatingFeedback() {
                 {/* Message */}
                 <div>
                   <label className="block text-[11px] font-bold text-muted uppercase tracking-wider mb-1.5">
-                    Kritik / Saran / Kendala <span className="text-red-500">*</span>
+                    {lang === "en" ? "Feedback / Suggestion / Issue" : "Kritik / Saran / Kendala"} <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={3}
                     required
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Tuliskan pengalaman atau kendala yang kamu temukan..."
+                    placeholder={lang === "en" ? "Write your experience or any issues you found..." : "Tuliskan pengalaman atau kendala yang kamu temukan..."}
                     className="w-full px-3 py-2 text-xs rounded-xl bg-surface-2 border border-border focus:border-accent focus:ring-1 focus:ring-accent outline-none text-ink resize-none"
                   />
                 </div>
@@ -206,7 +219,7 @@ export function FloatingFeedback() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Email kamu (opsional, jika ingin dihubungi)"
+                    placeholder={lang === "en" ? "Your email (optional, if you'd like a reply)" : "Email kamu (opsional, jika ingin dihubungi)"}
                     className="w-full px-3 py-2 text-xs rounded-xl bg-surface-2 border border-border focus:border-accent focus:ring-1 focus:ring-accent outline-none text-ink"
                   />
                 </div>
@@ -224,7 +237,7 @@ export function FloatingFeedback() {
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>Kirim Feedback</span>
+                      <span>{lang === "en" ? "Submit Feedback" : "Kirim Feedback"}</span>
                     </>
                   )}
                 </button>

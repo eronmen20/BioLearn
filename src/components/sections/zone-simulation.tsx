@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowRight, BookOpen, FlaskConical, RotateCcw, Play, Ruler, 
 import { useLangStore } from "@/lib/lang-store";
 import { useAuthStore } from "@/lib/auth-store";
 import { useIsMounted } from "@/lib/use-is-mounted";
+import { BACTERIAL_COLONIES } from "@/lib/bacterial-colonies-data";
 
 /* ───────── Model simulasi (disederhanakan untuk pembelajaran) ───────── */
 
@@ -37,7 +38,7 @@ interface PlacedDisc {
 type Phase = "setup" | "incubating" | "results";
 
 const DISH_C = 150;
-const DISH_R = 138;
+const DISH_R = 132;
 const MM_TO_PX = DISH_R / 45; // cawan 90 mm
 
 // Variasi deterministik (±2 mm) dari posisi — stabil antar render
@@ -287,63 +288,106 @@ export function ZoneSimulation() {
                 <clipPath id="dishClip">
                   <circle cx={DISH_C} cy={DISH_C} r={DISH_R} />
                 </clipPath>
-                <radialGradient id="agarGrad" cx="50%" cy="42%" r="65%">
-                  <stop offset="0%" stopColor="#ffffff" />
-                  <stop offset="70%" stopColor="#f7f7f8" />
-                  <stop offset="100%" stopColor="#e9e9ec" />
+                <radialGradient id="agarGrad" cx="50%" cy="45%" r="68%">
+                  <stop offset="0%" stopColor="#cde2d3" />
+                  <stop offset="70%" stopColor="#c3d8c9" />
+                  <stop offset="92%" stopColor="#b6d0be" />
+                  <stop offset="100%" stopColor="#a5c4ad" />
                 </radialGradient>
+
+                {/* Mask for clear inhibition zones */}
+                <mask id="inhibitionMask">
+                  <rect x="0" y="0" width="300" height="300" fill="#ffffff" />
+                  {phase === "results" &&
+                    results.map(({ disc, dmm }, i) =>
+                      dmm >= 6 ? (
+                        <circle
+                          key={`mask-cut-${i}`}
+                          cx={disc.x}
+                          cy={disc.y}
+                          r={(dmm / 2) * MM_TO_PX}
+                          fill="#000000"
+                        />
+                      ) : null
+                    )}
+                </mask>
               </defs>
-              {/* Cawan kaca */}
-              <circle cx={DISH_C} cy={DISH_C} r={DISH_R + 8} fill="#f4f4f5" stroke="#d4d4d8" strokeWidth="3" />
-              <circle cx={DISH_C} cy={DISH_C} r={DISH_R} fill="url(#agarGrad)" stroke="#d4d4d8" strokeWidth="1.5" />
-              {/* Lawn samar merata (tumbuh bertahap saat inkubasi) */}
-              {(phase === "incubating" || phase === "results") && (
-                <g clipPath="url(#dishClip)">
-                  {(() => {
-                    const growth = phase === "results" ? 1 : progress / 100;
-                    return (
-                      <>
-                        <circle cx={DISH_C} cy={DISH_C} r={DISH_R} fill="#e9e7d8" opacity={0.35 * growth} />
-                        {Array.from({ length: 46 }).map((_, i) => {
-                          const angle = i * 2.39996;
-                          const rr = (DISH_R - 8) * Math.sqrt(((i * 2654435761) % 1000) / 1000);
-                          const px = DISH_C + Math.cos(angle) * rr;
-                          const py = DISH_C + Math.sin(angle) * rr;
-                          if (i / 46 > growth) return null;
-                          return <circle key={`sp-${i}`} cx={px} cy={py} r={0.9 + (i % 3) * 0.4} fill="#a9b198" opacity={0.3} />;
-                        })}
-                      </>
-                    );
-                  })()}
-                </g>
-              )}
-              {/* Zona bening tegas (agar bersih, koloni "mati") */}
+
+              {/* Triple-layer rim Petri Dish from reference image */}
+              {/* Outer dark teal rim */}
+              <circle cx={DISH_C} cy={DISH_C} r={DISH_R + 8} fill="none" stroke="#235061" strokeWidth="8" />
+              {/* Mid bright teal rim */}
+              <circle cx={DISH_C} cy={DISH_C} r={DISH_R + 4.5} fill="none" stroke="#4ea2ae" strokeWidth="4" />
+              {/* Inner bezel green highlight */}
+              <circle cx={DISH_C} cy={DISH_C} r={DISH_R + 1.2} fill="none" stroke="#8cb89e" strokeWidth="2" />
+
+              {/* Mint/Sage Agar Base */}
+              <circle cx={DISH_C} cy={DISH_C} r={DISH_R} fill="url(#agarGrad)" />
+              {/* Glass subtle inner bevel highlight */}
+              <circle cx={DISH_C} cy={DISH_C} r={DISH_R - 2} fill="none" stroke="#ffffff" strokeWidth="1" strokeOpacity="0.32" />
+
+              {/* Bacterial Growth (Pink / Coral colonies - starts plain, grows during incubation) */}
+              {(phase === "incubating" || phase === "results") && (() => {
+                const growth = phase === "results" ? 1 : progress / 100;
+                return (
+                  <g mask="url(#inhibitionMask)" opacity={growth} clipPath="url(#dishClip)">
+                    {BACTERIAL_COLONIES.map((col, idx) => (
+                      <circle
+                        key={`colony-${idx}`}
+                        cx={col.x}
+                        cy={col.y}
+                        r={col.r * (0.25 + 0.75 * growth)}
+                        fill={col.c}
+                        opacity={0.92}
+                      />
+                    ))}
+                  </g>
+                );
+              })()}
+
+              {/* Zona Hambat Bening (Muncul saat results) */}
               {phase === "results" &&
                 results.map(({ disc, dmm }, i) =>
                   dmm >= 6 ? (
-                    <circle
-                      key={`clear-${i}`}
-                      cx={disc.x}
-                      cy={disc.y}
-                      r={(dmm / 2) * MM_TO_PX}
-                      fill="#f8fbfd"
-                      opacity="0.96"
-                      stroke="#c3cfdb"
-                      strokeWidth="1"
-                    />
+                    <g key={`clear-zone-${i}`}>
+                      {/* Translucent clear agar highlight inside zone */}
+                      <circle
+                        cx={disc.x}
+                        cy={disc.y}
+                        r={(dmm / 2) * MM_TO_PX}
+                        fill="#d5e8dd"
+                        fillOpacity="0.45"
+                        stroke="#5c9372"
+                        strokeWidth="1.2"
+                        strokeDasharray="4 3"
+                      />
+                    </g>
                   ) : null
                 )}
-              {/* Cakram putih polos ala Kirby-Bauer */}
+
+              {/* Cakram antibiotik putih Kirby-Bauer */}
               {results.map(({ disc, ab }, i) => (
                 <g key={`${disc.antibioticId}-${i}`}>
-                  <circle cx={disc.x} cy={disc.y} r="9" fill="#ffffff" stroke="#9fb0c3" strokeWidth="1.5" />
-                  <text x={disc.x} y={disc.y + 3.5} textAnchor="middle" fontSize="9" fontWeight="bold" fill="#334155">
+                  {/* Subtle paper shadow */}
+                  <circle cx={disc.x + 0.8} cy={disc.y + 1.2} r="9.5" fill="#000000" fillOpacity="0.16" />
+                  {/* Paper disc body */}
+                  <circle cx={disc.x} cy={disc.y} r="9.5" fill="#ffffff" stroke="#94a3b8" strokeWidth="1.2" />
+                  {/* Text on disc */}
+                  <text
+                    x={disc.x}
+                    y={disc.y + 3.5}
+                    textAnchor="middle"
+                    fontSize="9.5"
+                    fontWeight="800"
+                    fill="#334155"
+                  >
                     {ab.short}
                   </text>
                 </g>
               ))}
+
               {discs.length === 0 && phase === "setup" && (
-                <text x={DISH_C} y={DISH_C} textAnchor="middle" fontSize="12" fill="#9aa3b2">
+                <text x={DISH_C} y={DISH_C} textAnchor="middle" fontSize="12" fill="#2d5242" fontWeight="bold">
                   {lang === "en" ? "Click to place a disc" : "Klik untuk menaruh cakram"}
                 </text>
               )}

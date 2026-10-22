@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
+import { CustomSelect } from '@/components/ui/custom-select';
 import { Brain, Plus, Edit3, Trash2, Copy, Zap } from 'lucide-react';
 
 interface Prompt {
@@ -92,18 +93,28 @@ export default function PromptsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Model</label>
-              <select value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
-                <option value="gpt-4o">GPT-4o</option>
-                <option value="gpt-4o-mini">GPT-4o Mini</option>
-                <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
-              </select>
+              <CustomSelect
+                value={form.model}
+                onChange={(val) => setForm({ ...form, model: val })}
+                size="sm"
+                options={[
+                  { value: 'gpt-4o', label: 'GPT-4o' },
+                  { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+                  { value: 'claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Status</label>
-              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as 'aktif' | 'nonaktif' })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-              </select>
+              <CustomSelect
+                value={form.status}
+                onChange={(val) => setForm({ ...form, status: val as 'aktif' | 'nonaktif' })}
+                size="sm"
+                options={[
+                  { value: 'aktif', label: 'Aktif' },
+                  { value: 'nonaktif', label: 'Nonaktif' },
+                ]}
+              />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

@@ -13,7 +13,7 @@ interface AnalogiProps {
 }
 
 export function AnalogiSection({ babId, subKey, subIdx = 0, lang = "id" }: AnalogiProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const data = getAnalogiForSub(babId, subKey, subIdx);
 
   if (!data || !data.items || data.items.length === 0) {

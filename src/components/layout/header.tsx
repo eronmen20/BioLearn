@@ -42,7 +42,7 @@ export function Header() {
         <button
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label="Buka menu"
+          aria-label={lang === "en" ? "Open menu" : "Buka menu"}
           className="md:hidden flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none"
         >
           <Menu className="w-5 h-5 text-ink" />
@@ -52,8 +52,8 @@ export function Header() {
         <button
           type="button"
           onClick={toggleOpen}
-          aria-label={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
-          title={sidebarOpen ? "Tutup sidebar" : "Buka sidebar"}
+          aria-label={lang === "en" ? (sidebarOpen ? "Close sidebar" : "Open sidebar") : (sidebarOpen ? "Tutup sidebar" : "Buka sidebar")}
+          title={lang === "en" ? (sidebarOpen ? "Close sidebar" : "Open sidebar") : (sidebarOpen ? "Tutup sidebar" : "Buka sidebar")}
           className="hidden md:flex items-center justify-center w-10 h-10 rounded-xl hover:bg-bg-alt cursor-pointer select-none transition-colors"
         >
           <PanelLeft className="w-5 h-5 text-ink" />

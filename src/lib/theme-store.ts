@@ -26,6 +26,11 @@ function resolveTheme(theme: Theme): "light" | "dark" {
 function applyTheme(resolved: "light" | "dark") {
   if (typeof document === "undefined") return;
   document.documentElement.setAttribute("data-theme", resolved);
+  if (resolved === "dark") {
+    document.documentElement.classList.add("dark");
+  } else {
+    document.documentElement.classList.remove("dark");
+  }
 }
 
 export const useThemeStore = create<ThemeState>()((set) => ({

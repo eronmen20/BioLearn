@@ -14,6 +14,7 @@ import {
 import { BAB } from '@/lib/bab-data';
 import { adminFetch } from "@/lib/admin-fetch";
 import { BabSelect } from '@/components/admin/bab-select';
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface PraktikumCard {
   name: string;
@@ -456,15 +457,15 @@ export default function PraktikumPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Tingkat Kesulitan</label>
-              <select
+              <CustomSelect
                 value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <option value="mudah">🟢 Mudah</option>
-                <option value="sedang">🟡 Sedang</option>
-                <option value="sulit">🔴 Sulit</option>
-              </select>
+                onChange={(val) => setForm({ ...form, difficulty: val })}
+                options={[
+                  { value: "mudah", label: "Mudah", icon: <span className="text-sm">🟢</span> },
+                  { value: "sedang", label: "Sedang", icon: <span className="text-sm">🟡</span> },
+                  { value: "sulit", label: "Sulit", icon: <span className="text-sm">🔴</span> },
+                ]}
+              />
             </div>
           </div>
 
@@ -801,14 +802,14 @@ export default function PraktikumPage() {
           <div className="border-t border-border pt-4 grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Status</label>
-              <select
+              <CustomSelect
                 value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as PraktikumItem['status'] })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <option value="draft">📝 Draft — belum tampil ke user</option>
-                <option value="published">🟢 Published — tampil ke user</option>
-              </select>
+                onChange={(val) => setForm({ ...form, status: val as PraktikumItem['status'] })}
+                options={[
+                  { value: "draft", label: "Draft — belum tampil ke user", icon: <span className="text-sm">📝</span> },
+                  { value: "published", label: "Published — tampil ke user", icon: <span className="text-sm">🟢</span> },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Urutan</label>

@@ -71,8 +71,9 @@ export function settingsText(v: unknown): string {
 
 // Hero description/subtitle lines — editable via admin settings
 function HeroDesc({ settings }: { settings?: HomepageSettings }) {
-  const { t } = useLangStore();
-  const desc = settings?.hero_subtitle?.trim() || "Jelajahi 8 bab biologi dengan materi lengkap, kuis, animasi, dan tracking progress.\nCocok untuk siswa SMA & persiapan kuliah.";
+  const { t, lang } = useLangStore();
+  const defaultDesc = lang === "en" ? "Interactive biology learning for anyone interested.\nExplore, learn, and test your understanding!" : "Pembelajaran biologi interaktif untuk siapapun yang berminat.\nJelajahi, belajar, uji pemahamanmu!";
+  const desc = (lang === "en" ? (settings as { hero_subtitle_en?: string })?.hero_subtitle_en?.trim() : settings?.hero_subtitle?.trim()) || defaultDesc;
   const lines = desc.split("\n");
   return (
     <motion.p
@@ -148,8 +149,8 @@ const SUBJECTS = [
 
 // AnimatedTitle - slide-up reveal animation
 function AnimatedTitle({ heroTitle }: { heroTitle?: string }) {
-  const { t } = useLangStore();
-  const title = heroTitle?.trim() || "Belajar Biologi Jadi Menyenangkan";
+  const { t, lang } = useLangStore();
+  const title = lang === "en" ? "Learning Biology Made Fun" : (heroTitle?.trim() || "Belajar Biologi Jadi Menyenangkan");
   return (
     <h1 className="text-[2.1rem] sm:text-[2.65rem] md:text-[4rem] font-extrabold mb-6 leading-tight">
       <div className="overflow-hidden">
@@ -191,16 +192,16 @@ export function LandingPage({ settings }: { settings?: HomepageSettings }) {
   const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -50]);
   const { archivedIds, loaded: archiveLoaded } = useBabArchiveIds();
   const { banners: activeBanners } = useActiveBanners();
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
   const { isAuthenticated } = useAuthStore();
   const mounted = useIsMounted();
   const isGuest = mounted && !isAuthenticated;
   const showMateri = settings?.show_materi_terbaru !== false;
   const showStatistik = settings?.show_statistik !== false;
-  const heroCta = settings?.hero_cta?.trim() || t("landing.cta_start");
+  const heroCta = lang === "en" ? t("landing.cta_start") : (settings?.hero_cta?.trim() || t("landing.cta_start"));
   const visibleSubjects = SUBJECTS.filter((s) => {
-    if (!ALWAYS_VISIBLE_BABS.includes(s.id)) return false;
-    if (archiveLoaded && archivedIds.has(s.id)) return false;
+    if (!archiveLoaded) return ALWAYS_VISIBLE_BABS.includes(s.id);
+    if (archivedIds.has(s.id)) return false;
     return true;
   });
   const archivedCount = SUBJECTS.length - visibleSubjects.length;

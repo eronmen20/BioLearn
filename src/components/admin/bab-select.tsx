@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { adminFetch } from '@/lib/admin-fetch';
+import { CustomSelect, CustomSelectGroup } from '@/components/ui/custom-select';
 
 export interface BabSelectItem {
   id: string;
@@ -36,11 +37,11 @@ interface BabSelectProps {
   label?: string;
   disabled?: boolean;
   className?: string;
+  size?: "sm" | "md";
 }
 
 /** Select bab tergroup per kelas — dipakai admin throughout.
- *  Local component styling konsisten dengan picker di Editor Materi:
- *  kotak kompak w-fit, border tipis, arrow dekat tepi. */
+ *  Sleek custom animated dropdown with groups, checkmarks, and icons. */
 export function BabSelect({
   value,
   onChange,
@@ -49,6 +50,7 @@ export function BabSelect({
   label,
   disabled,
   className,
+  size = "md",
 }: BabSelectProps) {
   const [fetchedList, setFetchedList] = useState<BabSelectItem[]>([]);
 
@@ -63,7 +65,35 @@ export function BabSelect({
   }, [items]);
 
   const list = items && items.length > 0 ? items : fetchedList;
-  const groups = groupItems(list);
+  const rawGroups = groupItems(list);
+
+  const selectGroups: CustomSelectGroup[] = [];
+
+  if (includeAll) {
+    selectGroups.push({
+      label: '',
+      options: [
+        {
+          value: '',
+          label: 'Semua Bab',
+          icon: <span className="text-sm">📚</span>,
+        },
+      ],
+    });
+  }
+
+  rawGroups.forEach(({ label: gLabel, items: gItems }) => {
+    if (gItems.length > 0) {
+      selectGroups.push({
+        label: gLabel,
+        options: gItems.map((bab) => ({
+          value: bab.id,
+          label: formatBabLabel(bab.id),
+          icon: <span className="text-sm">{bab.icon}</span>,
+        })),
+      });
+    }
+  });
 
   return (
     <div className={className}>
@@ -72,26 +102,14 @@ export function BabSelect({
           {label}
         </label>
       )}
-      <select
+      <CustomSelect
         value={value}
+        onChange={onChange}
+        groups={selectGroups}
+        placeholder={includeAll ? 'Semua Bab' : '— Pilih bab —'}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-1.5 pr-8 rounded-lg border border-border bg-surface text-ink text-sm font-medium focus:outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/20 cursor-pointer transition-colors disabled:opacity-50"
-      >
-        {includeAll && <option value="">Semua Bab</option>}
-        {!includeAll && !value && list.length > 0 && <option value="">— Pilih bab —</option>}
-        {groups.map(({ label: gLabel, items: gItems }) =>
-          gItems.length > 0 ? (
-            <optgroup key={gLabel} label={gLabel}>
-              {gItems.map((bab) => (
-                <option key={bab.id} value={bab.id}>
-                  {bab.icon} {formatBabLabel(bab.id)}
-                </option>
-              ))}
-            </optgroup>
-          ) : null
-        )}
-      </select>
+        size={size}
+      />
     </div>
   );
 }

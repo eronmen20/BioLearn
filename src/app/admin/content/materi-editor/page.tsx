@@ -23,6 +23,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { adminFetch } from "@/lib/admin-fetch";
+import { BabSelect } from "@/components/admin/bab-select";
 
 // Types — each sub tracks its DB ID for upsert
 interface SubBab {
@@ -485,19 +486,6 @@ export default function MateriEditorPage() {
 
   const currentSub = content.subs[activeSub];
 
-  // Kelompokkan bab per kelas agar dropdown pilihan-mu tertata: X, XI, XII, lalu sisanya
-  const buildBabGroups = () => {
-    const classOrder = ["x", "xi", "xii"];
-    const labels: Record<string, string> = { x: "Kelas X", xi: "Kelas XI", xii: "Kelas XII" };
-    const groups = classOrder.map((k) => ({
-      label: labels[k],
-      items: babList.filter((b) => (b.kelas_id || "") === k),
-    }));
-    const others = babList.filter((b) => !classOrder.includes(b.kelas_id || ""));
-    if (others.length > 0) groups.push({ label: "Tanpa Kelas", items: others });
-    return groups;
-  };
-
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -520,28 +508,14 @@ export default function MateriEditorPage() {
 
       {/* Bab Selector + Actions */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center justify-between">
-        <div className="w-fit">
-          <label htmlFor="bab-select" className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
-            Pilih Bab
-          </label>
-          <select
-            id="bab-select"
+        <div className="w-full sm:w-72">
+          <BabSelect
+            label="Pilih Bab"
             value={selectedBab}
-            onChange={(e) => setSelectedBab(e.target.value)}
-            className="w-full px-3 py-1.5 pr-8 rounded-lg border border-border bg-surface text-ink text-sm font-medium focus:outline-none focus:border-accent/40 focus:ring-2 focus:ring-accent/20 cursor-pointer transition-colors"
-          >
-            {buildBabGroups().map(({ label, items }) =>
-              items.length > 0 ? (
-                <optgroup key={label} label={label}>
-                  {items.map((bab) => (
-                    <option key={bab.id} value={bab.id}>
-                      {bab.icon} {bab.id.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                    </option>
-                  ))}
-                </optgroup>
-              ) : null
-            )}
-          </select>
+            onChange={(id) => setSelectedBab(id)}
+            items={babList}
+            size="md"
+          />
         </div>
 
         <div className="flex gap-2 sm:items-end">

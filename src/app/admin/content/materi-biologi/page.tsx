@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { adminFetch } from "@/lib/admin-fetch";
 import { BabSelect } from '@/components/admin/bab-select';
+import { CustomSelect } from '@/components/ui/custom-select';
 
 interface BabItem { id: string; icon: string; color: string; kelas_id?: string; }
 
@@ -675,16 +676,16 @@ export default function MateriBiologiPage() {
           {/* Tipe Konten */}
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Tipe Konten</label>
-            <select
+            <CustomSelect
               value={form.type}
-              onChange={(e) => setForm({ ...form, type: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-            >
-              <option value="html">HTML / Teks</option>
-              <option value="video">Video</option>
-              <option value="animation">Animasi</option>
-              <option value="image">Gambar</option>
-            </select>
+              onChange={(val) => setForm({ ...form, type: val })}
+              options={[
+                { value: "html", label: "HTML / Teks", icon: <FileText className="w-4 h-4 text-accent" /> },
+                { value: "video", label: "Video", icon: <Video className="w-4 h-4 text-blue-500" /> },
+                { value: "animation", label: "Animasi", icon: <Sparkles className="w-4 h-4 text-purple-500" /> },
+                { value: "image", label: "Gambar", icon: <ImageIcon className="w-4 h-4 text-emerald-500" /> },
+              ]}
+            />
           </div>
 
           {/* Tabs */}
@@ -854,18 +855,18 @@ export default function MateriBiologiPage() {
                 <label className="block text-sm font-medium text-ink mb-1">
                   Tipe Animasi
                 </label>
-                <select
+                <CustomSelect
                   value={form.animation_type}
-                  onChange={(e) => setForm({ ...form, animation_type: e.target.value })}
-                  className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-                >
-                  <option value="">Auto-detect (dari ekstensi file)</option>
-                  <option value="svg">SVG Animated (Smil/CSS)</option>
-                  <option value="gif">GIF</option>
-                  <option value="h5p">H5P Interactive</option>
-                  <option value="iframe">Iframe Embed</option>
-                  <option value="lottie">Lottie Animation</option>
-                </select>
+                  onChange={(val) => setForm({ ...form, animation_type: val })}
+                  options={[
+                    { value: "", label: "Auto-detect (dari ekstensi file)" },
+                    { value: "svg", label: "SVG Animated (Smil/CSS)" },
+                    { value: "gif", label: "GIF" },
+                    { value: "h5p", label: "H5P Interactive" },
+                    { value: "iframe", label: "Iframe Embed" },
+                    { value: "lottie", label: "Lottie Animation" },
+                  ]}
+                />
                 <p className="text-xs text-muted mt-1">
                   File hasil upload .svg/.gif otomatis terdeteksi.
                   Set manual hanya kalau pakai URL eksternal atau format lain.

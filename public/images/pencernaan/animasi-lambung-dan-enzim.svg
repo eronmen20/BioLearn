@@ -1,0 +1,277 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%" role="img" aria-label="Fisiologi Lambung, Kelenjar Aksesori, dan Enzim">
+  <defs>
+    <linearGradient id="bgGrad2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f8fafc"/>
+    </linearGradient>
+    <linearGradient id="liverGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dc2626"/>
+      <stop offset="100%" stop-color="#991b1b"/>
+    </linearGradient>
+    <linearGradient id="stomachGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="chymeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="100%" stop-color="#eab308"/>
+    </linearGradient>
+    <filter id="shadow2" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.08"/>
+    </filter>
+    <style>
+      @keyframes churnStomach {
+        0%, 100% { transform: scale(1) rotate(0deg); }
+        50% { transform: scale(1.03, 0.97) rotate(0.8deg); }
+      }
+      @keyframes bileFlow {
+        0% { stroke-dashoffset: 32; }
+        100% { stroke-dashoffset: 0; }
+      }
+      @keyframes acidDrop {
+        0% { transform: translateY(0); opacity: 0; }
+        30% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { transform: translateY(46px); opacity: 0; }
+      }
+      @keyframes emulsifyLipid {
+        0% { transform: scale(1.1); opacity: 1; }
+        50% { transform: scale(0.7) translate(15px, 0); opacity: 0.9; }
+        100% { transform: scale(0.4) translate(30px, 0); opacity: 0.85; }
+      }
+      .churning {
+        transform-origin: 120px 170px;
+        animation: churnStomach 3.5s ease-in-out infinite;
+      }
+      .bile-pulse {
+        stroke-dasharray: 7, 4;
+        animation: bileFlow 1.4s linear infinite;
+      }
+      .drop-parietal { animation: acidDrop 2s ease-in infinite; }
+      .drop-chief { animation: acidDrop 2.2s 0.6s ease-in infinite; }
+      .emuls-anim { animation: emulsifyLipid 3.8s ease-in-out infinite; }
+      .font-sans { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="540" rx="20" fill="url(#bgGrad2)" stroke="#e2e8f0" stroke-width="2"/>
+
+  <!-- Top Title Bar -->
+  <g transform="translate(28, 18)">
+    <rect width="460" height="34" rx="8" fill="#e11d48" fill-opacity="0.1"/>
+    <text x="14" y="22" class="font-sans" font-size="13.5" font-weight="800" fill="#be123c">
+      FISIOLOGI LAMBUNG, ENZIM &amp; KELENJAR AKSESORI
+    </text>
+    <text x="500" y="22" class="font-sans" font-size="12" font-weight="600" fill="#64748b">
+      Koordinasi Lambung, Hati, Empedu, &amp; Pankreas
+    </text>
+  </g>
+
+  <!-- ================= LEFT COLUMN: ORGAN ANATOMY ================= -->
+  <g transform="translate(28, 62)">
+    <!-- Container Card for Organs -->
+    <rect width="430" height="456" rx="16" fill="#ffffff" stroke="#f1f5f9" stroke-width="1.8" filter="url(#shadow2)"/>
+    <rect x="0" y="0" width="430" height="32" rx="16" fill="#fff1f2"/>
+    <text x="16" y="21" class="font-sans" font-size="12" font-weight="800" fill="#be123c">
+      ANATOMI FUNGSIONAL &amp; HUBUNGAN SALURAN
+    </text>
+
+    <!-- 1. HATI (Liver) - Top Right Area -->
+    <path d="M 215 50 C 275 35 365 42 390 75 C 390 102 345 125 285 122 C 245 120 205 85 215 50 Z" fill="url(#liverGrad)" stroke="#7f1d1d" stroke-width="2" opacity="0.95"/>
+    <text x="302" y="75" class="font-sans" font-size="11.5" font-weight="800" fill="#ffffff" text-anchor="middle">HATI (LIVER)</text>
+    <text x="302" y="90" class="font-sans" font-size="9" font-weight="600" fill="#fecaca" text-anchor="middle">Sintesis Garam Empedu</text>
+
+    <!-- 2. KANTUNG EMPEDU (Gallbladder) - Under Liver -->
+    <path d="M 240 120 C 255 120 264 135 258 148 C 253 160 238 160 232 148 C 228 138 228 120 240 120 Z" fill="#22c55e" stroke="#15803d" stroke-width="2"/>
+    <!-- Gallbladder Label Badge -->
+    <g transform="translate(270, 122)">
+      <rect width="138" height="28" rx="6" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.2"/>
+      <text x="69" y="13" class="font-sans" font-size="10" font-weight="800" fill="#15803d" text-anchor="middle">Kantung Empedu</text>
+      <text x="69" y="23" class="font-sans" font-size="8" fill="#166534" text-anchor="middle">Simpan &amp; Pekatkan Empedu</text>
+    </g>
+
+    <!-- Saluran Empedu (Ductus Choledochus) dari empedu menuju muara duodenum -->
+    <path d="M 245 154 C 245 190 220 225 182 258" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" class="bile-pulse"/>
+
+    <!-- 3. PANKREAS (Pancreas) - Sitting cleanly between y=205 and y=238 -->
+    <!-- Pancreas organ path -->
+    <path d="M 185 220 C 225 204 310 202 368 215 C 378 224 358 236 315 238 C 245 240 205 235 185 220 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.8"/>
+    <!-- Pancreas duct line -->
+    <line x1="345" y1="220" x2="185" y2="220" stroke="#d97706" stroke-width="2" stroke-dasharray="4,3"/>
+    
+    <!-- Pancreas Dedicated Label Badge (Above organ, completely separated) -->
+    <g transform="translate(225, 172)">
+      <rect width="150" height="28" rx="6" fill="#fffbeb" stroke="#fde68a" stroke-width="1.2"/>
+      <line x1="75" y1="28" x2="75" y2="38" stroke="#d97706" stroke-width="1.5"/>
+      <text x="75" y="13" class="font-sans" font-size="10" font-weight="800" fill="#92400e" text-anchor="middle">Pankreas Eksokrin</text>
+      <text x="75" y="23" class="font-sans" font-size="8" font-weight="600" fill="#78350f" text-anchor="middle">Lipase, Tripsin, NaHCO₃</text>
+    </g>
+
+    <!-- 4. LAMBUNG (Stomach) with Churning Animation -->
+    <g class="churning">
+      <!-- Esophagus entering stomach -->
+      <path d="M 80 45 L 80 85" stroke="#fecdd3" stroke-width="16" stroke-linecap="round"/>
+      <path d="M 80 45 L 80 85" stroke="#fda4af" stroke-width="8" stroke-linecap="round"/>
+      <text x="42" y="65" class="font-sans" font-size="9.5" font-weight="700" fill="#9f1239">Esofagus</text>
+
+      <!-- Stomach Body -->
+      <path d="M 80 85 C 120 72 175 90 180 145 C 188 205 150 250 110 240 C 65 225 50 155 80 85 Z" fill="url(#stomachGrad)" stroke="#be123c" stroke-width="2.5"/>
+      
+      <!-- Chyme puddle inside lumen -->
+      <path d="M 75 160 C 100 150 145 160 162 195 C 150 235 115 240 85 220 Z" fill="url(#chymeGrad)" opacity="0.92"/>
+      <text x="115" y="195" class="font-sans" font-size="11" font-weight="800" fill="#854d0e" text-anchor="middle">Kimus (Chyme)</text>
+      <text x="115" y="208" class="font-sans" font-size="9.5" font-weight="700" fill="#a16207" text-anchor="middle">pH 1.5 - 2.0</text>
+
+      <!-- Secretion Droplets (HCl & Pepsinogen) -->
+      <circle cx="100" cy="125" r="4" fill="#facc15" class="drop-parietal"/>
+      <circle cx="135" cy="135" r="4" fill="#38bdf8" class="drop-chief"/>
+      <circle cx="118" cy="130" r="3.5" fill="#facc15" class="drop-parietal"/>
+    </g>
+
+    <!-- Sfingter Pilorus -->
+    <ellipse cx="108" cy="240" rx="7" ry="10" fill="#e11d48" opacity="0.85"/>
+    <text x="25" y="244" class="font-sans" font-size="9.5" font-weight="800" fill="#be123c">Sfingter Pilorus</text>
+
+    <!-- 5. DUODENUM (Usus 12 Jari U-Loop) -->
+    <!-- Outer tissue tube -->
+    <path d="M 108 240 C 108 285 130 330 180 330 C 235 330 260 295 260 265" fill="none" stroke="#fed7aa" stroke-width="20" stroke-linecap="round"/>
+    <!-- Inner lumen passage -->
+    <path d="M 108 240 C 108 285 130 330 180 330 C 235 330 260 295 260 265" fill="none" stroke="#fff7ed" stroke-width="10" stroke-linecap="round"/>
+
+    <!-- Duodenum Label at bottom of curve -->
+    <text x="180" y="358" class="font-sans" font-size="11" font-weight="800" fill="#ea580c" text-anchor="middle">
+      Duodenum (Usus 12 Jari)
+    </text>
+
+    <!-- 6. PAPILLA VATERI (Muara Bersama Saluran Empedu & Pankreas) -->
+    <!-- Red junction dot on duodenum medial wall -->
+    <circle cx="182" cy="258" r="5.5" fill="#dc2626"/>
+    <!-- Dedicated Callout Badge (No overlapping with pancreas or duodenum) -->
+    <g transform="translate(205, 252)">
+      <line x1="-18" y1="6" x2="0" y2="12" stroke="#dc2626" stroke-width="1.5"/>
+      <rect width="168" height="28" rx="6" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.2"/>
+      <text x="84" y="13" class="font-sans" font-size="10" font-weight="800" fill="#c2410c" text-anchor="middle">Papilla Vateri (Muara)</text>
+      <text x="84" y="23" class="font-sans" font-size="8" fill="#9a3412" text-anchor="middle">Muara Empedu &amp; Getah Pankreas</text>
+    </g>
+
+    <!-- Cell Secretion Legend Pill at Bottom Left -->
+    <g transform="translate(16, 396)">
+      <rect width="398" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+      <circle cx="18" cy="16" r="4.5" fill="#facc15"/>
+      <text x="28" y="19" class="font-sans" font-size="10" font-weight="700" fill="#334155">
+        Sel Parietal: Sekresi HCl (pH 1.5–2.0 membunuh kuman)
+      </text>
+      <circle cx="18" cy="32" r="4.5" fill="#38bdf8"/>
+      <text x="28" y="35" class="font-sans" font-size="10" font-weight="700" fill="#334155">
+        Sel Chief: Sekresi Pepsinogen (diaktifkan oleh HCl)
+      </text>
+    </g>
+  </g>
+
+  <!-- ================= RIGHT COLUMN: 3 MECHANISMS + BANNER ================= -->
+  <g transform="translate(480, 62)">
+
+    <!-- Card 1: Aktivasi Pepsin & Denaturasi Protein -->
+    <g transform="translate(0, 0)">
+      <rect width="452" height="106" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.6" filter="url(#shadow2)"/>
+      <rect x="0" y="0" width="8" height="106" rx="4" fill="#e11d48"/>
+      <text x="20" y="24" class="font-sans" font-size="13" font-weight="800" fill="#be123c">
+        1. Aktivasi Enzim &amp; Denaturasi Protein
+      </text>
+      <!-- Flow Diagram Pill -->
+      <g transform="translate(20, 36)">
+        <rect width="125" height="24" rx="6" fill="#f1f5f9"/>
+        <text x="62.5" y="16" class="font-sans" font-size="10.5" font-weight="700" fill="#475569" text-anchor="middle">Pepsinogen (inaktif)</text>
+        
+        <text x="142" y="17" class="font-sans" font-size="13" font-weight="900" fill="#e11d48">→</text>
+        
+        <rect x="156" y="0" width="105" height="24" rx="6" fill="#fef2f2" stroke="#fecaca"/>
+        <text x="208.5" y="16" class="font-sans" font-size="10.5" font-weight="800" fill="#b91c1c" text-anchor="middle">Pepsin Aktif</text>
+
+        <rect x="270" y="0" width="140" height="24" rx="6" fill="#f0f9ff"/>
+        <text x="340" y="16" class="font-sans" font-size="10" fill="#0284c7" font-weight="800" text-anchor="middle">+ HCl (pH 1.5–2.0)</text>
+      </g>
+      <!-- Description wrapped cleanly into 2 short lines -->
+      <text x="20" y="79" class="font-sans" font-size="11" fill="#475569">
+        HCl mendenaturasi ikatan protein agar terbuka,
+      </text>
+      <text x="20" y="95" class="font-sans" font-size="11" fill="#475569">
+        lalu pepsin memotong rantai peptida menjadi pepton.
+      </text>
+    </g>
+
+    <!-- Card 2: Emulsifikasi Garam Empedu -->
+    <g transform="translate(0, 118)">
+      <rect width="452" height="110" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.6" filter="url(#shadow2)"/>
+      <rect x="0" y="0" width="8" height="110" rx="4" fill="#16a34a"/>
+      <text x="20" y="24" class="font-sans" font-size="13" font-weight="800" fill="#15803d">
+        2. Emulsifikasi Lemak (Garam Empedu)
+      </text>
+      <!-- Emulsification flow -->
+      <g transform="translate(20, 36)">
+        <circle cx="18" cy="14" r="13" fill="#facc15" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="18" y="18" class="font-sans" font-size="9" font-weight="800" fill="#713f12" text-anchor="middle">Lipid</text>
+
+        <text x="50" y="19" class="font-sans" font-size="12" font-weight="900" fill="#16a34a">+ Empedu →</text>
+
+        <g class="emuls-anim" transform="translate(155, 0)">
+          <circle cx="10" cy="8" r="5.5" fill="#fde047" stroke="#ca8a04"/>
+          <circle cx="25" cy="10" r="5" fill="#fde047" stroke="#ca8a04"/>
+          <circle cx="17" cy="20" r="5.5" fill="#fde047" stroke="#ca8a04"/>
+          <circle cx="32" cy="18" r="5" fill="#fde047" stroke="#ca8a04"/>
+        </g>
+        <rect x="228" y="2" width="180" height="24" rx="6" fill="#f0fdf4" stroke="#bbf7d0"/>
+        <text x="318" y="18" class="font-sans" font-size="10" font-weight="800" fill="#15803d" text-anchor="middle">Misel Halus (Luas Kontak ↑)</text>
+      </g>
+      <!-- Description wrapped cleanly into 2 short lines -->
+      <text x="20" y="81" class="font-sans" font-size="11" fill="#475569">
+        Empedu memecah lemak besar jadi misel droplet kecil;
+      </text>
+      <text x="20" y="97" class="font-sans" font-size="11" font-weight="700" fill="#166534">
+        luas kontak enzim lipase melompat ribuan kali lipat!
+      </text>
+    </g>
+
+    <!-- Card 3: Netralisasi Bikarbonat Pankreas -->
+    <g transform="translate(0, 240)">
+      <rect width="452" height="110" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.6" filter="url(#shadow2)"/>
+      <rect x="0" y="0" width="8" height="110" rx="4" fill="#d97706"/>
+      <text x="20" y="24" class="font-sans" font-size="13" font-weight="800" fill="#b45309">
+        3. Netralisasi Asam Kimus oleh NaHCO₃
+      </text>
+      <!-- Chemical Equation Box -->
+      <g transform="translate(20, 36)">
+        <rect width="412" height="26" rx="6" fill="#fffbeb" stroke="#fde68a"/>
+        <text x="206" y="17" class="font-sans" font-size="10.5" font-weight="800" fill="#92400e" text-anchor="middle">
+          HCl (Kimus) + NaHCO₃ → NaCl + H₂O + CO₂ (pH Netral ~8)
+        </text>
+      </g>
+      <!-- Description wrapped cleanly into 2 lines -->
+      <text x="20" y="81" class="font-sans" font-size="11" fill="#475569">
+        Sekretin merangsang sekresi NaHCO₃ saat kimus tiba.
+      </text>
+      <text x="20" y="97" class="font-sans" font-size="11" font-weight="700" fill="#b45309">
+        Netralisasi pH ini mutlak agar lipase &amp; tripsin aktif.
+      </text>
+    </g>
+
+    <!-- Bottom Protection Banner: Cleanly Spanned & Contained -->
+    <g transform="translate(0, 362)">
+      <rect width="452" height="96" rx="14" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5" filter="url(#shadow2)"/>
+      <rect x="0" y="0" width="8" height="96" rx="4" fill="#22c55e"/>
+      <text x="20" y="23" class="font-sans" font-size="12" font-weight="800" fill="#166534">
+        🛡️ Proteksi Mukosa: Mengapa Lambung Aman dari Asam?
+      </text>
+      <text x="20" y="44" class="font-sans" font-size="10.5" fill="#15803d">
+        • <tspan font-weight="700">Mukus Bikarbonat:</tspan> Lendir tebal kaya HCO₃⁻ penetral asam.
+      </text>
+      <text x="20" y="61" class="font-sans" font-size="10.5" fill="#15803d">
+        • <tspan font-weight="700">Tight Junction:</tspan> Tautan rapat antarsel cegah rembesan HCl.
+      </text>
+      <text x="20" y="78" class="font-sans" font-size="10.5" fill="#15803d">
+        • <tspan font-weight="700">Regenerasi Cepat:</tspan> Sel epitel lambung diganti tiap 3–5 hari!
+      </text>
+    </g>
+  </g>
+</svg>

@@ -12,6 +12,7 @@ import { StrukturViewer } from "@/components/struktur-viewer";
 import { PraktikumViewer } from "@/components/praktikum-viewer";
 import { RichContentRenderer } from "@/components/rich-content-renderer";
 import { AnalogiSection } from "@/components/analogi-card";
+import { DigestiveInteractiveSection } from "@/components/sections/digestive-interactive";
 import {
   CheckCircle,
   XCircle,
@@ -30,6 +31,8 @@ import {
   Eye,
   X,
   Sparkles,
+  Maximize2,
+  Minimize2,
 } from "lucide-react";
 
 /* ───────── Quiz-v2 API types ───────── */
@@ -386,6 +389,7 @@ export function BabContent({ babId, initialSubKey }: { babId: string; initialSub
  * aman terhadap hydration mismatch.
  */
 function ScrollToTopButton() {
+  const { lang } = useLangStore();
   const [visible, setVisible] = useState(false);
   const mounted = useIsMounted();
 
@@ -405,7 +409,7 @@ function ScrollToTopButton() {
   return (
     <button
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-      title="Kembali ke atas"
+      title={lang === "en" ? "Back to top" : "Kembali ke atas"}
       className="fixed right-4 bottom-4 z-40 w-11 h-11 rounded-full bg-accent text-white shadow-card flex items-center justify-center hover:bg-accent-dark active:scale-95 transition-all"
     >
       <ArrowUp className="w-5 h-5" />
@@ -596,7 +600,7 @@ function SubbabNav({
                 <span className="inline-flex items-center gap-1.5">
                   <Lock className="w-3 h-3 text-accent" />
                   {getSubLabel(i)}
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-1.5 py-0.2 rounded-full hidden sm:inline">Kunci</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-1.5 py-0.2 rounded-full hidden sm:inline">{lang === "en" ? "Locked" : "Kunci"}</span>
                 </span>
               </button>
             );
@@ -639,13 +643,13 @@ function SubbabNav({
         {isGuestOnHook ? (
           <button
             type="button"
-            onClick={() => onRequireAuth?.("Quiz Refleksi")}
-            title="Daftar akun gratis untuk membuka Quiz Refleksi"
+            onClick={() => onRequireAuth?.(lang === "en" ? "Reflection Quiz" : "Quiz Refleksi")}
+            title={lang === "en" ? "Sign up free to unlock Reflection Quiz" : "Daftar akun gratis untuk membuka Quiz Refleksi"}
             className="relative px-3 sm:px-4 py-2 sm:py-2 rounded-full text-xs font-semibold border-2 border-dashed border-purple-300 bg-purple-50 text-purple-700 hover:border-purple-500 transition-all cursor-pointer touch-manipulation active:scale-[0.97]"
           >
             <span className="inline-flex items-center gap-1.5">
               <Lock className="w-3 h-3 text-purple-600" />
-              🪞 Quiz Refleksi
+              🪞 {lang === "en" ? "Reflection Quiz" : "Quiz Refleksi"}
               <span className="text-[9px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-1.5 py-0.2 rounded-full hidden sm:inline">Kunci</span>
             </span>
           </button>
@@ -673,7 +677,7 @@ function SubbabNav({
               ) : (
                 <Trophy className="w-3 h-3" />
               )}
-              🪞 Quiz Refleksi
+              🪞 {lang === "en" ? "Reflection Quiz" : "Quiz Refleksi"}
             </span>
           </button>
         )}
@@ -814,7 +818,7 @@ function SubBabQuiz({
           {score}%
         </p>
         <p className="text-sm text-muted mb-1">
-          {correctCount}/{questions.length} jawaban benar
+          {correctCount}/{questions.length} {lang === "en" ? "correct answers" : "jawaban benar"}
         </p>
         {passed ? (
           <p className="text-sm text-green font-semibold mb-4">
@@ -834,10 +838,10 @@ function SubBabQuiz({
               </span>
             </div>
             <button
-              onClick={() => onRequireAuth?.(nextSubTitle || "Sub Bab Berikutnya")}
+              onClick={() => onRequireAuth?.(nextSubTitle || (lang === "en" ? "Next Sub-chapter" : "Sub Bab Berikutnya"))}
               className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-all shadow-md active:scale-95"
             >
-              <span>{nextSubTitle ? `${lang === "en" ? "Continue" : "Lanjut"}: ${nextSubTitle}` : "Lanjut ke Sub Bab Berikutnya"}</span>
+              <span>{nextSubTitle ? `${lang === "en" ? "Continue" : "Lanjut"}: ${nextSubTitle}` : (lang === "en" ? "Continue to next sub-chapter" : "Lanjut ke Sub Bab Berikutnya")}</span>
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -1074,9 +1078,9 @@ function ReflectionQuiz({
           <div className="flex items-center justify-between gap-3 mb-4">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <span className="text-lg">🔍</span>
-              Review Quiz Refleksi
+              {lang === "en" ? "Reflection Quiz Review" : "Review Quiz Refleksi"}
             </h3>
-            <span className="text-xs text-muted">Skor terbaik: {storedScore}%</span>
+            <span className="text-xs text-muted">{lang === "en" ? "Best score: " : "Skor terbaik: "}{storedScore}%</span>
           </div>
 
           <div className="space-y-4">
@@ -1091,7 +1095,7 @@ function ReflectionQuiz({
                 <div key={q.id} className="bg-surface rounded-xl border border-border/50 p-4">
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <p className="text-xs font-semibold text-muted">
-                      Soal {qi + 1}/{questions.length}
+                      {lang === "en" ? "Question " : "Soal "}{qi + 1}/{questions.length}
                     </p>
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
                       {getQuestionTypeLabel(qType, lang)}
@@ -1137,7 +1141,7 @@ function ReflectionQuiz({
                           <span>
                             {opt}
                             {isUserWrong && (
-                              <span className="ml-2 text-[11px] font-semibold">Jawabanmu</span>
+                              <span className="ml-2 text-[11px] font-semibold">{lang === "en" ? "Your answer" : "Jawabanmu"}</span>
                             )}
                           </span>
                         </div>
@@ -1161,7 +1165,7 @@ function ReflectionQuiz({
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Kembali
+            {lang === "en" ? "Back" : "Kembali"}
           </button>
         </div>
       </div>
@@ -1173,12 +1177,10 @@ function ReflectionQuiz({
     return (
       <div id="reflection-quiz" className="bg-gradient-to-br from-green-light to-surface rounded-2xl shadow-card border border-green/20 p-6 mb-6 text-center">
         <Trophy className="w-10 h-10 text-green mx-auto mb-3" />
-        <h3 className="text-lg font-extrabold text-green mb-1">Selamat! Bab ini selesai! 🎉</h3>
-        <p className="text-sm text-muted">
-          Kamu telah menyelesaikan semua sub-bab dan quiz refleksi.
-        </p>
+        <h3 className="text-lg font-extrabold text-green mb-1">{lang === "en" ? "Congratulations! Chapter completed! 🎉" : "Selamat! Bab ini selesai! 🎉"}</h3>
+        <p className="text-sm text-muted">{lang === "en" ? "You have completed all sub-chapters and the reflection quiz." : "Kamu telah menyelesaikan semua sub-bab dan quiz refleksi."}</p>
         {prog?.reflection_score !== undefined && (
-          <p className="text-xs text-muted mt-2">Skor refleksi: {prog.reflection_score}%</p>
+          <p className="text-xs text-muted mt-2">{lang === "en" ? "Reflection score: " : "Skor refleksi: "}{prog.reflection_score}%</p>
         )}
         {storedScore >= 80 ? (
           <button
@@ -1186,7 +1188,7 @@ function ReflectionQuiz({
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
           >
             <Eye className="w-4 h-4" />
-            Review Soal
+            {lang === "en" ? "Review Questions" : "Review Soal"}
           </button>
         ) : (
           <button
@@ -1194,7 +1196,7 @@ function ReflectionQuiz({
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
           >
             <RotateCcw className="w-4 h-4" />
-            Ulangi Quiz Refleksi
+            {lang === "en" ? "Retake Reflection Quiz" : "Ulangi Quiz Refleksi"}
           </button>
         )}
       </div>
@@ -1238,7 +1240,7 @@ function ReflectionQuiz({
       <div id="reflection-quiz" className="bg-gradient-to-br from-accent/[0.05] to-surface rounded-2xl shadow-card border border-accent/20 p-6 mb-6 text-center">
         <div className="flex items-center justify-center gap-2 mb-3">
           <Trophy className={`w-6 h-6 ${passed ? "text-green" : "text-accent"}`} />
-          <h3 className="text-lg font-bold">Hasil Quiz Refleksi</h3>
+          <h3 className="text-lg font-bold">{lang === "en" ? "Reflection Quiz Results" : "Hasil Quiz Refleksi"}</h3>
         </div>
         <p className={`text-4xl font-extrabold mb-2 ${passed ? "text-green" : "text-accent"}`}>
           {score}%
@@ -1248,20 +1250,20 @@ function ReflectionQuiz({
         </p>
         {passed ? (
           <div className="mt-3">
-            <p className="text-green font-bold text-lg mb-1">🎉 Selamat! Bab ini selesai!</p>
-            <p className="text-sm text-muted">Kamu telah menyelesaikan semua materi dan quiz.</p>
+            <p className="text-green font-bold text-lg mb-1">{lang === "en" ? "🎉 Congratulations! Chapter completed!" : "🎉 Selamat! Bab ini selesai!"}</p>
+            <p className="text-sm text-muted">{lang === "en" ? "You have completed all materials and quizzes." : "Kamu telah menyelesaikan semua materi dan quiz."}</p>
             <button
               onClick={() => setReviewMode(true)}
               className="mt-3 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-xl text-sm font-semibold hover:bg-accent-dark transition-colors"
             >
               <Eye className="w-4 h-4" />
-              Review Soal
+              {lang === "en" ? "Review Questions" : "Review Soal"}
             </button>
           </div>
         ) : (
           <div className="mt-3">
             <p className="text-red font-semibold text-sm mb-3">
-              ❌ Skor minimal 80%. Coba lagi ya!
+              {lang === "en" ? "❌ Minimum score 80%. Try again!" : "❌ Skor minimal 80%. Coba lagi ya!"}
             </p>
             <button
               onClick={restartQuiz}
@@ -1282,7 +1284,7 @@ function ReflectionQuiz({
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-sm flex items-center gap-2">
             <span className="text-lg">🪞</span>
-            Quiz Refleksi
+            {lang === "en" ? "Reflection Quiz" : "Quiz Refleksi"}
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-accent/10 text-accent">
               {getQuestionTypeLabel(qType, lang)}
             </span>
@@ -1398,25 +1400,7 @@ function AnimationSection({ babId, color, icon }: { babId: string; color: string
   }
 
   if (babId === "pencernaan") {
-    return (
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">🎬</span>
-          <h3 className="font-bold text-sm">{t("animasi")}</h3>
-        </div>
-        <div className="bg-gradient-to-br from-[#d1fae5] to-[#a7f3d0] rounded-2xl p-8 text-center min-h-[220px] flex flex-col items-center justify-center overflow-hidden shadow-card border border-green/10">
-          <div className="relative w-full max-w-[320px] h-[200px]">
-            <div className="absolute top-[10px] right-[20px] w-[50px] h-[50px] rounded-full animate-glow" style={{ background: "radial-gradient(circle, #fdcb6e, #f39c12)" }} />
-            <div className="absolute bottom-[30px] left-1/2 -translate-x-1/2 w-[6px] h-[40px] bg-green rounded-full" />
-            <div className="absolute bottom-[30px] left-1/2 -translate-x-1/2 w-[80px] h-[40px] bg-green rounded-[50%] animate-sway" />
-            <div className="absolute top-[40%] right-[10px] text-sm font-bold text-red animate-float-right">CO₂</div>
-            <div className="absolute top-[30%] left-[10px] text-sm font-bold text-green animate-float-left">O₂</div>
-            <div className="absolute bottom-[5px] left-[30%] text-xs text-blue">H₂O</div>
-            <div className="absolute bottom-[5px] left-1/2 -translate-x-1/2 text-xs font-semibold text-muted">{t("animasi.pencernaan")}</div>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -1435,7 +1419,12 @@ function AnimationSection({ babId, color, icon }: { babId: string; color: string
 
 /* ───────── HotspotSection (unchanged) ───────── */
 function HotspotSection({ babId, hotspotted }: { babId: string; hotspotted: string }) {
-  const { t } = useLangStore();
+  const { t, lang } = useLangStore();
+
+  if (babId === "pencernaan" || hotspotted === "pencernaan") {
+    return <DigestiveInteractiveSection lang={lang} />;
+  }
+
   if (hotspotted === "sel") {
     return (
       <div className="mb-6">
@@ -1574,6 +1563,7 @@ function InlineAnimationSection({
   subMedia: { video_url: string; image_url: string; animation_url: string; animation_type: string };
 }) {
   const { t } = useLangStore();
+  const [isExpanded, setIsExpanded] = useState(false);
 
   if (!subMedia.animation_url) {
     // Tidak ada animasi di DB → jangan tampil apa-apa (ga ada fallback hardcoded lagi).
@@ -1589,29 +1579,34 @@ function InlineAnimationSection({
     /\/svg/i.test(url);
 
   return (
-    <div className="mb-6">
-      <AnimationHeader t={t} typeLabel={resolvedAnimLabel(type, url)} />
+    <div className={`mb-6 transition-all duration-300 ${isExpanded ? "relative z-20" : ""}`}>
+      <AnimationHeader
+        t={t}
+        typeLabel={resolvedAnimLabel(type, url)}
+        isExpanded={isExpanded}
+        onToggleExpand={() => setIsExpanded(!isExpanded)}
+      />
       {type === "iframe" || type === "h5p" ? (
         <FullBleedIframe url={animUrlAsEmbed(url)} title={`Animasi ${subKey}`} />
       ) : type === "gif" ? (
         <SimpleImg
           url={url}
           title={`Animasi ${subKey}`}
-          maxHeightClass="max-h-[360px]"
+          maxHeightClass={isExpanded ? "max-h-[750px]" : "max-h-[480px]"}
         />
       ) : looksLikeSvg ? (
         <SvgWithFallback
           url={url}
           title={`Animasi ${subKey}`}
           subKey={subKey}
-          maxHeightClass="max-h-[420px]"
+          isExpanded={isExpanded}
         />
       ) : (
         // lottie / unknown → <img> works as static fallback
         <SimpleImg
           url={url}
           title={`Animasi ${subKey}`}
-          maxHeightClass="max-h-[320px]"
+          maxHeightClass={isExpanded ? "max-h-[750px]" : "max-h-[480px]"}
         />
       )}
     </div>
@@ -1688,12 +1683,12 @@ function SvgWithFallback({
   url,
   title,
   subKey,
-  maxHeightClass,
+  isExpanded,
 }: {
   url: string;
   title: string;
   subKey: string;
-  maxHeightClass: string;
+  isExpanded?: boolean;
 }) {
   const [inline, setInline] = useState<string | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
@@ -1710,8 +1705,9 @@ function SvgWithFallback({
 
     (async () => {
       try {
-        const proxied = `/api/media-proxy?url=${encodeURIComponent(url)}`;
-        const res = await fetch(proxied);
+        const isExternal = /^https?:\/\//i.test(url);
+        const targetUrl = isExternal ? `/api/media-proxy?url=${encodeURIComponent(url)}` : url;
+        const res = await fetch(targetUrl);
         if (!res.ok) {
           const err = (await res.json().catch(() => ({})))?.error || `HTTP ${res.status}`;
           throw new Error(err);
@@ -1733,17 +1729,28 @@ function SvgWithFallback({
     };
   }, [url]);
 
-  // Object URL for tier 2 — let the <object> tag stream the bytes directly.
-  const objectUrl = `/api/media-proxy?url=${encodeURIComponent(url)}`;
+  // Object URL for tier 2 — local files direct, external via proxy.
+  const isExternal = /^https?:\/\//i.test(url);
+  const objectUrl = isExternal ? `/api/media-proxy?url=${encodeURIComponent(url)}` : url;
 
   return (
-    <div className="bg-surface rounded-2xl p-4 shadow-card border border-border/50 flex items-center justify-center min-h-[260px] overflow-hidden">
+    <div
+      className={`bg-surface rounded-2xl p-2 sm:p-5 shadow-card border border-border/50 flex flex-col items-center justify-center transition-all duration-300 w-full overflow-hidden ${
+        isExpanded
+          ? "min-h-[500px] sm:min-h-[640px] p-3 sm:p-6 border-accent/40 shadow-xl"
+          : "min-h-[380px] sm:min-h-[460px]"
+      }`}
+    >
       {/* Tier 1: inline (animations run guaranteed) */}
       {inline ? (
         <SvgScope
           html={inline}
           aria-label={title}
-          className={`${maxHeightClass} w-auto max-w-full`}
+          className={`w-full flex items-center justify-center transition-all duration-300 [&>svg]:w-full [&>svg]:h-auto [&>svg]:drop-shadow-xs ${
+            isExpanded
+              ? "max-w-6xl [&>svg]:max-w-6xl [&>svg]:max-h-[820px]"
+              : "max-w-4xl [&>svg]:max-w-4xl [&>svg]:max-h-[580px]"
+          }`}
         />
       ) : /* Tier 2: <object> */
       !objectFailed && !inlineError ? (
@@ -1751,7 +1758,9 @@ function SvgWithFallback({
           type="image/svg+xml"
           data={objectUrl}
           aria-label={title}
-          className={`${maxHeightClass} w-full rounded-xl`}
+          className={`w-full rounded-xl transition-all duration-300 ${
+            isExpanded ? "max-w-6xl h-[680px]" : "max-w-4xl h-[480px]"
+          }`}
           onError={() => setObjectFailed(true)}
           // React <object> error events are unreliable; layer an Image()
           // probe so 404 / malformed XML falls back gracefully.
@@ -1770,7 +1779,9 @@ function SvgWithFallback({
         <img
           src={objectUrl}
           alt={title}
-          className={`${maxHeightClass} rounded-xl object-contain`}
+          className={`rounded-xl object-contain transition-all duration-300 ${
+            isExpanded ? "max-w-6xl max-h-[750px]" : "max-w-4xl max-h-[520px]"
+          }`}
           loading="lazy"
           data-why-static="GIF tidak tersedia atau SVG tanpa animasi"
           onError={() => setImgFailed(true)}
@@ -1816,17 +1827,52 @@ function SvgScope({
 }
 
 /**
- * Reusable header for animation section.
+ * Reusable header for animation section with theater mode toggle.
  */
-function AnimationHeader({ t, typeLabel }: { t: (k: string) => string; typeLabel: string }) {
+function AnimationHeader({
+  t,
+  typeLabel,
+  isExpanded,
+  onToggleExpand,
+}: {
+  t: (k: string) => string;
+  typeLabel: string;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
+}) {
   return (
-    <div className="flex items-center gap-2 mb-3">
-      <span className="text-lg">🎬</span>
-      <h3 className="font-bold text-sm">{t("animasi")}</h3>
-      {typeLabel && (
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 font-semibold">
-          {typeLabel.toUpperCase()}
-        </span>
+    <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center gap-2">
+        <span className="text-lg">🎬</span>
+        <h3 className="font-bold text-sm sm:text-base">{t("animasi")}</h3>
+        {typeLabel && (
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-600 dark:text-purple-400 font-extrabold uppercase tracking-wide">
+            {typeLabel}
+          </span>
+        )}
+      </div>
+
+      {onToggleExpand && (
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          className="text-xs font-bold px-3 py-1.5 rounded-xl border border-border bg-surface hover:bg-bg-alt text-ink flex items-center gap-1.5 shadow-2xs transition-all active:scale-95 cursor-pointer"
+          title={isExpanded ? "Perkecil tampilan animasi" : "Perbesar tampilan animasi"}
+        >
+          {isExpanded ? (
+            <>
+              <Minimize2 className="w-3.5 h-3.5 text-accent" />
+              <span className="hidden sm:inline">Ukuran Standar</span>
+              <span className="sm:hidden">Kecilkan</span>
+            </>
+          ) : (
+            <>
+              <Maximize2 className="w-3.5 h-3.5 text-accent" />
+              <span className="hidden sm:inline">Perbesar Animasi</span>
+              <span className="sm:hidden">Perbesar</span>
+            </>
+          )}
+        </button>
       )}
     </div>
   );
@@ -2042,17 +2088,18 @@ function GuestBottomHookCard({
   nextSubTitle?: string | null;
   onOpenModal: () => void;
 }) {
+  const { lang } = useLangStore();
   return (
     <div className="mt-6 mb-8 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-accent/10 via-purple-500/5 to-surface border border-accent/25 shadow-sm text-center relative overflow-hidden">
       <div className="relative z-10 max-w-xl mx-auto">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] sm:text-[11px] font-bold mb-2">
-          <span>🚀</span> Buka Seluruh Bab Bakteri
+          <span>🚀</span> {lang === "en" ? "Unlock Full Bacteria Chapter" : "Buka Seluruh Bab Bakteri"}
         </div>
         <h3 className="text-sm sm:text-base font-bold text-ink mb-1.5">
-          Tertarik Belajar Lebih Dalam tentang Bakteri?
+          {lang === "en" ? "Interested in Learning More About Bacteria?" : "Tertarik Belajar Lebih Dalam tentang Bakteri?"}
         </h3>
         <p className="text-muted text-xs sm:text-[13px] leading-relaxed mb-4">
-          Di sub-bab berikutnya ({nextSubTitle || "Struktur Sel Bakteri"}), kamu bisa mempelajari organel sel prokariotik, pewarnaan Gram positif vs negatif, serta praktikum mikroskop virtual!
+          {lang === "en" ? <>In the next sub-chapter ({nextSubTitle || "Bacterial Cell Structure"}), you will explore prokaryotic cell organelles, Gram staining, and virtual microscope labs!</> : <>Di sub-bab berikutnya ({nextSubTitle || "Struktur Sel Bakteri"}), kamu bisa mempelajari organel sel prokariotik, pewarnaan Gram positif vs negatif, serta praktikum mikroskop virtual!</>}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 max-w-md mx-auto">
           <Link
@@ -2060,18 +2107,18 @@ function GuestBottomHookCard({
             className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-accent hover:bg-accent-dark text-white rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-sm hover:shadow active:scale-95 text-center flex items-center justify-center gap-1.5 whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5 shrink-0" />
-            <span>Daftar Gratis & Lanjut</span>
+            <span>{lang === "en" ? "Sign Up Free & Continue" : "Daftar Gratis & Lanjut"}</span>
           </Link>
           <button
             onClick={onOpenModal}
             className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-surface hover:bg-bg-alt text-ink border border-border hover:border-accent rounded-xl text-xs sm:text-sm font-semibold transition-all text-center flex items-center justify-center gap-1.5 whitespace-nowrap"
           >
             <Lock className="w-3.5 h-3.5 text-accent shrink-0" />
-            <span>Lihat Fitur Terkunci</span>
+            <span>{lang === "en" ? "View Locked Features" : "Lihat Fitur Terkunci"}</span>
           </button>
         </div>
         <p className="text-[10px] text-muted-2 mt-2.5">
-          ⚡ Gratis 100%. Cukup daftar 30 detik untuk membuka seluruh materi.
+          {lang === "en" ? "⚡ 100% Free. Takes 30 seconds to sign up and unlock all materials." : "⚡ Gratis 100%. Cukup daftar 30 detik untuk membuka seluruh materi."}
         </p>
       </div>
     </div>
@@ -2088,6 +2135,7 @@ function AuthGateModal({
   onClose: () => void;
   targetTitle?: string | null;
 }) {
+  const { lang } = useLangStore();
   if (!isOpen) return null;
 
   return (
@@ -2106,7 +2154,7 @@ function AuthGateModal({
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-full text-muted hover:text-ink hover:bg-bg-alt transition-colors"
-          aria-label="Tutup"
+          aria-label={lang === "en" ? "Close" : "Tutup"}
         >
           <X className="w-5 h-5" />
         </button>
@@ -2119,23 +2167,35 @@ function AuthGateModal({
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-accent bg-accent/10 px-2.5 py-0.5 rounded-full">
-                Fitur Siswa Terdaftar
+                {lang === "en" ? "Registered Student Feature" : "Fitur Siswa Terdaftar"}
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-ink mt-1">
-                Buka Akses Penuh Materi
+                {lang === "en" ? "Unlock Full Course Access" : "Buka Akses Penuh Materi"}
               </h3>
             </div>
           </div>
 
           <p className="text-xs sm:text-sm text-muted leading-relaxed mb-5">
             {targetTitle ? (
-              <>
-                Sub-materi <strong className="text-ink">{targetTitle}</strong> dan fitur lanjutan lainnya membutuhkan akun BioLearn. Buat akun gratis sekarang untuk melanjutkan!
-              </>
+              lang === "en" ? (
+                <>
+                  Sub-chapter <strong className="text-ink">{targetTitle}</strong> and other advanced features require a BioLearn account. Create a free account now to continue!
+                </>
+              ) : (
+                <>
+                  Sub-materi <strong className="text-ink">{targetTitle}</strong> dan fitur lanjutan lainnya membutuhkan akun BioLearn. Buat akun gratis sekarang untuk melanjutkan!
+                </>
+              )
             ) : (
-              <>
-                Lanjutkan petualangan belajarmu dengan membuka seluruh sub-bab materi, praktikum interaktif, dan kuis secara gratis.
-              </>
+              lang === "en" ? (
+                <>
+                  Continue your learning adventure by unlocking all chapter materials, interactive labs, and quizzes for free.
+                </>
+              ) : (
+                <>
+                  Lanjutkan petualangan belajarmu dengan membuka seluruh sub-bab materi, praktikum interaktif, dan kuis secara gratis.
+                </>
+              )
             )}
           </p>
 
@@ -2143,19 +2203,19 @@ function AuthGateModal({
           <div className="space-y-2.5 p-4 rounded-2xl bg-bg-alt/70 border border-border/60 mb-6">
             <div className="flex items-start gap-2.5 text-xs sm:text-sm text-ink">
               <span className="text-accent text-base leading-none">📖</span>
-              <span><strong>Akses Lengkap Seluruh Sub-Bab:</strong> Struktur Sel, Reproduksi, Klasifikasi Gram, & Peranan Bakteri</span>
+              <span>{lang === "en" ? <><strong>Full Access to All Sub-Chapters:</strong> Cell Structure, Reproduction, Gram Staining, & Bacterial Roles</> : <><strong>Akses Lengkap Seluruh Sub-Bab:</strong> Struktur Sel, Reproduksi, Klasifikasi Gram, & Peranan Bakteri</>}</span>
             </div>
             <div className="flex items-start gap-2.5 text-xs sm:text-sm text-ink">
               <span className="text-green text-base leading-none">🔬</span>
-              <span><strong>Praktikum Virtual & Visualisasi 3D:</strong> Amati preparat mikroskopis secara langsung</span>
+              <span>{lang === "en" ? <><strong>Virtual Labs & 3D Visuals:</strong> Directly observe microscopic specimens</> : <><strong>Praktikum Virtual & Visualisasi 3D:</strong> Amati preparat mikroskopis secara langsung</>}</span>
             </div>
             <div className="flex items-start gap-2.5 text-xs sm:text-sm text-ink">
               <span className="text-amber-500 text-base leading-none">🏆</span>
-              <span><strong>Kuis & Pembahasan Mendalam:</strong> Uji pemahaman dengan bank soal kurikulum terbaru</span>
+              <span>{lang === "en" ? <><strong>Quizzes & In-depth Solutions:</strong> Test understanding with updated curriculum question banks</> : <><strong>Kuis & Pembahasan Mendalam:</strong> Uji pemahaman dengan bank soal kurikulum terbaru</>}</span>
             </div>
             <div className="flex items-start gap-2.5 text-xs sm:text-sm text-ink">
               <span className="text-purple-500 text-base leading-none">📊</span>
-              <span><strong>Simpan Catatan & Progres Belajar:</strong> Lacak persentase ketuntasan materi dan riwayat nilai kuis</span>
+              <span>{lang === "en" ? <><strong>Save Notes & Learning Progress:</strong> Track completion rate and quiz scores</> : <><strong>Simpan Catatan & Progres Belajar:</strong> Lacak persentase ketuntasan materi dan riwayat nilai kuis</>}</span>
             </div>
           </div>
 
@@ -2166,14 +2226,14 @@ function AuthGateModal({
               className="w-full py-3.5 px-4 bg-accent hover:bg-accent-dark text-white font-bold rounded-2xl text-sm transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 active:scale-[0.99] text-center"
             >
               <Sparkles className="w-4 h-4" />
-              Daftar Akun Gratis Sekarang (30 Detik)
+              {lang === "en" ? "Sign Up Free Now (30 Seconds)" : "Daftar Akun Gratis Sekarang (30 Detik)"}
             </Link>
 
             <Link
               href="/login?mode=login&redirect=/bab/bakteri"
               className="w-full py-3 px-4 bg-surface hover:bg-bg-alt border border-border text-ink font-semibold rounded-2xl text-sm transition-all flex items-center justify-center gap-2 text-center"
             >
-              Sudah Memiliki Akun? Masuk di Sini
+              {lang === "en" ? "Already have an account? Sign in here" : "Sudah Memiliki Akun? Masuk di Sini"}
             </Link>
           </div>
 
@@ -2182,7 +2242,7 @@ function AuthGateModal({
               onClick={onClose}
               className="text-xs text-muted hover:text-ink underline transition-colors"
             >
-              Nanti saja, tetap pelajari Karakteristik Bakteri
+              {lang === "en" ? "Maybe later, continue exploring free lessons" : "Nanti saja, tetap pelajari Karakteristik Bakteri"}
             </button>
           </div>
         </div>

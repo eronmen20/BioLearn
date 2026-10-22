@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc" />
+      <stop offset="100%" stop-color="#f1f5f9" />
+    </linearGradient>
+    <linearGradient id="enamelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#e2e8f0" />
+    </linearGradient>
+    <linearGradient id="dentinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a" />
+      <stop offset="100%" stop-color="#fde047" />
+    </linearGradient>
+    <linearGradient id="pulpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f87171" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+    <linearGradient id="boneGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fed7aa" />
+      <stop offset="100%" stop-color="#fdba74" />
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.1" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" rx="20" fill="url(#bgGrad)" />
+
+  <!-- Title Badge -->
+  <g transform="translate(40, 30)">
+    <rect width="280" height="36" rx="10" fill="#6c5ce7" fill-opacity="0.1" stroke="#6c5ce7" stroke-width="1.5" />
+    <text x="15" y="23" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#4834d4">
+      🦷 Anatomi Gigi &amp; Jaringan Periodontal
+    </text>
+  </g>
+
+  <!-- Gingiva / Gusi Background -->
+  <path d="M 160 260 Q 240 220 320 260 Q 400 220 480 260 Q 560 220 640 260 L 640 450 L 160 450 Z" fill="#fda4af" fill-opacity="0.5" />
+
+  <!-- Alveolar Bone (Tulang Rahang) -->
+  <path d="M 160 300 Q 400 320 640 300 L 640 470 L 160 470 Z" fill="url(#boneGrad)" opacity="0.6" stroke="#fb923c" stroke-width="1.5" stroke-dasharray="4 4" />
+  <text x="180" y="440" font-family="system-ui, sans-serif" font-size="11" font-weight="600" fill="#c2410c">Tulang Alveolar Rahang</text>
+
+  <!-- Tooth Outer Contour (Enamel / Mahkota Luar) -->
+  <g filter="url(#softShadow)">
+    <path d="M 280 230 C 260 170 280 110 320 85 C 360 60 380 90 400 90 C 420 90 440 60 480 85 C 520 110 540 170 520 230 C 510 280 500 360 470 420 C 460 440 440 440 435 400 C 425 320 415 280 400 280 C 385 280 375 320 365 400 C 360 440 340 440 330 420 C 300 360 290 280 280 230 Z"
+          fill="url(#enamelGrad)" stroke="#94a3b8" stroke-width="2.5" />
+  </g>
+
+  <!-- Dentin Layer -->
+  <path d="M 305 220 C 290 175 305 130 335 110 C 365 90 380 110 400 110 C 420 110 435 90 465 110 C 495 130 510 175 495 220 C 485 270 480 340 455 390 C 450 400 440 380 430 320 C 420 260 410 240 400 240 C 390 240 380 260 370 320 C 360 380 350 400 345 390 C 320 340 315 270 305 220 Z"
+        fill="url(#dentinGrad)" stroke="#ca8a04" stroke-width="1.5" />
+
+  <!-- Pulp Cavity (Pulpa Gigi) with Nerves & Vessels -->
+  <path d="M 350 200 C 345 170 355 145 375 140 C 385 138 395 145 400 145 C 405 145 415 138 425 140 C 445 145 455 170 450 200 C 445 230 440 270 430 350 C 427 370 422 370 420 340 C 415 280 410 220 400 220 C 390 220 385 280 380 340 C 378 370 373 370 370 350 C 360 270 355 230 350 200 Z"
+        fill="url(#pulpGrad)" stroke="#b91c1c" stroke-width="1.5" />
+
+  <!-- Nerve Fibers (Yellow) and Blood Vessels (Blue & Red lines) -->
+  <path d="M 400 160 Q 405 250 425 350" stroke="#facc15" stroke-width="2" fill="none" stroke-linecap="round" />
+  <path d="M 400 160 Q 395 250 375 350" stroke="#facc15" stroke-width="2" fill="none" stroke-linecap="round" />
+  <path d="M 398 165 Q 403 245 422 345" stroke="#38bdf8" stroke-width="1.5" fill="none" />
+  <path d="M 402 165 Q 397 245 378 345" stroke="#ef4444" stroke-width="1.5" fill="none" />
+
+  <!-- Periodontal Ligament Fibers (Sementum) -->
+  <g stroke="#be123c" stroke-width="1" opacity="0.6">
+    <line x1="285" y1="280" x2="265" y2="285" />
+    <line x1="290" y1="310" x2="270" y2="315" />
+    <line x1="300" y1="340" x2="280" y2="345" />
+    <line x1="315" y1="370" x2="295" y2="375" />
+    <line x1="515" y1="280" x2="535" y2="285" />
+    <line x1="510" y1="310" x2="530" y2="315" />
+    <line x1="500" y1="340" x2="520" y2="345" />
+    <line x1="485" y1="370" x2="505" y2="375" />
+  </g>
+
+  <!-- Pin Callout Indicators & Lines -->
+  <!-- 1. Enamel Pin (x: 50%, y: 18%) -->
+  <g transform="translate(400, 90)">
+    <circle r="14" fill="#6c5ce7" stroke="#ffffff" stroke-width="3" filter="url(#softShadow)" />
+    <text y="4" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#ffffff">1</text>
+    <rect x="25" y="-14" width="130" height="28" rx="7" fill="#ffffff" stroke="#6c5ce7" stroke-width="1.5" filter="url(#softShadow)" />
+    <text x="35" y="4" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#4834d4">Email (Enamel)</text>
+  </g>
+
+  <!-- 2. Dentin Pin (x: 32%, y: 38%) -->
+  <g transform="translate(256, 190)">
+    <line x1="0" y1="0" x2="60" y2="-10" stroke="#ca8a04" stroke-width="1.5" stroke-dasharray="3 3" />
+    <circle r="14" fill="#6c5ce7" stroke="#ffffff" stroke-width="3" filter="url(#softShadow)" />
+    <text y="4" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#ffffff">2</text>
+    <rect x="-145" y="-14" width="130" height="28" rx="7" fill="#ffffff" stroke="#ca8a04" stroke-width="1.5" filter="url(#softShadow)" />
+    <text x="-135" y="4" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#854d0e">Dentin Gigi</text>
+  </g>
+
+  <!-- 3. Pulpa Pin (x: 50%, y: 44%) -->
+  <g transform="translate(400, 220)">
+    <circle r="14" fill="#6c5ce7" stroke="#ffffff" stroke-width="3" filter="url(#softShadow)" />
+    <text y="4" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#ffffff">3</text>
+    <rect x="25" y="-14" width="140" height="28" rx="7" fill="#ffffff" stroke="#dc2626" stroke-width="1.5" filter="url(#softShadow)" />
+    <text x="35" y="4" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#991b1b">Pulpa &amp; Saraf</text>
+  </g>
+
+  <!-- 4. Sementum Pin (x: 68%, y: 72%) -->
+  <g transform="translate(544, 360)">
+    <line x1="0" y1="0" x2="-45" y2="-10" stroke="#be123c" stroke-width="1.5" stroke-dasharray="3 3" />
+    <circle r="14" fill="#6c5ce7" stroke="#ffffff" stroke-width="3" filter="url(#softShadow)" />
+    <text y="4" text-anchor="middle" font-family="system-ui, sans-serif" font-size="11" font-weight="800" fill="#ffffff">4</text>
+    <rect x="25" y="-14" width="160" height="28" rx="7" fill="#ffffff" stroke="#be123c" stroke-width="1.5" filter="url(#softShadow)" />
+    <text x="35" y="4" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#9f1239">Sementum &amp; Ligamen</text>
+  </g>
+</svg>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { DataTable, Column } from '@/components/admin/data-table';
 import { Modal, ConfirmDialog } from '@/components/admin/modal';
+import { CustomSelect } from '@/components/ui/custom-select';
 import { Image, Plus, Edit3, Trash2, Megaphone } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
 import { adminFetch } from "@/lib/admin-fetch";
@@ -249,26 +250,28 @@ export default function BannerPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Posisi</label>
-              <select
+              <CustomSelect
                 value={form.posisi}
-                onChange={(e) => setForm({ ...form, posisi: e.target.value })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <option value="hero">Hero</option>
-                <option value="sidebar">Sidebar</option>
-                <option value="footer">Footer</option>
-              </select>
+                onChange={(val) => setForm({ ...form, posisi: val })}
+                size="sm"
+                options={[
+                  { value: 'hero', label: 'Hero' },
+                  { value: 'sidebar', label: 'Sidebar' },
+                  { value: 'footer', label: 'Footer' },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Status</label>
-              <select
+              <CustomSelect
                 value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value as 'aktif' | 'nonaktif' })}
-                className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
-              >
-                <option value="aktif">Aktif</option>
-                <option value="nonaktif">Nonaktif</option>
-              </select>
+                onChange={(val) => setForm({ ...form, status: val as 'aktif' | 'nonaktif' })}
+                size="sm"
+                options={[
+                  { value: 'aktif', label: 'Aktif' },
+                  { value: 'nonaktif', label: 'Nonaktif' },
+                ]}
+              />
             </div>
           </div>
           <div>

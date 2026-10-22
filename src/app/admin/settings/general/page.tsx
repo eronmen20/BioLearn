@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { AdminPageHeader } from '@/components/admin/page-header';
 import { Settings, Save, Globe, Clock, Languages, Mail } from 'lucide-react';
 import { showToast } from '@/components/ui/toaster';
+import { CustomSelect } from '@/components/ui/custom-select';
 import { adminFetch } from "@/lib/admin-fetch";
 
 interface GeneralSettings {
@@ -110,18 +111,28 @@ export default function GeneralSettingsPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Bahasa</label>
-              <select value={settings.language} onChange={(e) => setSettings({ ...settings, language: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
-                <option value="id">Bahasa Indonesia</option>
-                <option value="en">English</option>
-              </select>
+              <CustomSelect
+                value={settings.language}
+                onChange={(val) => setSettings({ ...settings, language: val })}
+                size="sm"
+                options={[
+                  { value: 'id', label: 'Bahasa Indonesia', icon: <span className="text-sm">🇮🇩</span> },
+                  { value: 'en', label: 'English', icon: <span className="text-sm">🇬🇧</span> },
+                ]}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Zona Waktu</label>
-              <select value={settings.timezone} onChange={(e) => setSettings({ ...settings, timezone: e.target.value })} className="w-full px-3 py-2 border border-border rounded-xl bg-surface text-ink text-sm focus:outline-none focus:ring-2 focus:ring-accent/30">
-                <option value="Asia/Jakarta">WIB (Jakarta)</option>
-                <option value="Asia/Makassar">WITA (Makassar)</option>
-                <option value="Asia/Jayapura">WIT (Jayapura)</option>
-              </select>
+              <CustomSelect
+                value={settings.timezone}
+                onChange={(val) => setSettings({ ...settings, timezone: val })}
+                size="sm"
+                options={[
+                  { value: 'Asia/Jakarta', label: 'WIB (Jakarta)' },
+                  { value: 'Asia/Makassar', label: 'WITA (Makassar)' },
+                  { value: 'Asia/Jayapura', label: 'WIT (Jayapura)' },
+                ]}
+              />
             </div>
           </div>
 

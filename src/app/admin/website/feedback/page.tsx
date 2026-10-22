@@ -17,6 +17,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { showToast } from "@/components/ui/toaster";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { adminFetch } from "@/lib/admin-fetch";
 
 interface FeedbackItem {
@@ -245,31 +246,35 @@ export default function AdminFeedbackPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-surface border border-border/80 shadow-sm">
         <span className="text-xs font-bold text-muted uppercase tracking-wider">Filter:</span>
-        <select
+        <CustomSelect
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-1.5 text-xs rounded-xl bg-surface-2 border border-border text-ink font-medium outline-none"
-        >
-          <option value="all">Semua Kategori</option>
-          <option value="general">Umum</option>
-          <option value="bug">Bug / Error</option>
-          <option value="feature">Saran Fitur</option>
-          <option value="content">Materi & Kuis</option>
-          <option value="ui">Tampilan / UI</option>
-        </select>
+          onChange={(val) => setCategoryFilter(val)}
+          size="sm"
+          className="w-44"
+          options={[
+            { value: "all", label: "Semua Kategori" },
+            { value: "general", label: "Umum" },
+            { value: "bug", label: "Bug / Error" },
+            { value: "feature", label: "Saran Fitur" },
+            { value: "content", label: "Materi & Kuis" },
+            { value: "ui", label: "Tampilan / UI" },
+          ]}
+        />
 
-        <select
+        <CustomSelect
           value={ratingFilter}
-          onChange={(e) => setRatingFilter(e.target.value)}
-          className="px-3 py-1.5 text-xs rounded-xl bg-surface-2 border border-border text-ink font-medium outline-none"
-        >
-          <option value="all">Semua Rating</option>
-          <option value="5">⭐⭐⭐⭐⭐ (5 Bintang)</option>
-          <option value="4">⭐⭐⭐⭐ (4 Bintang)</option>
-          <option value="3">⭐⭐⭐ (3 Bintang)</option>
-          <option value="2">⭐⭐ (2 Bintang)</option>
-          <option value="1">⭐ (1 Bintang)</option>
-        </select>
+          onChange={(val) => setRatingFilter(val)}
+          size="sm"
+          className="w-52"
+          options={[
+            { value: "all", label: "Semua Rating" },
+            { value: "5", label: "⭐⭐⭐⭐⭐ (5 Bintang)" },
+            { value: "4", label: "⭐⭐⭐⭐ (4 Bintang)" },
+            { value: "3", label: "⭐⭐⭐ (3 Bintang)" },
+            { value: "2", label: "⭐⭐ (2 Bintang)" },
+            { value: "1", label: "⭐ (1 Bintang)" },
+          ]}
+        />
 
         <div className="ml-auto text-xs text-muted">
           Menampilkan <strong>{filteredFeedbacks.length}</strong> dari <strong>{feedbacks.length}</strong> feedback

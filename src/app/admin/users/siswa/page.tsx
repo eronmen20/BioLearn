@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/admin/modal';
 import { Users, GraduationCap, Trash2, Edit3, ShieldCheck, ShieldX, CheckCircle, XCircle } from 'lucide-react';
 import { adminFetch } from "@/lib/admin-fetch";
 import { showToast } from "@/components/ui/toaster";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface User {
   id: string;
@@ -146,15 +147,16 @@ export default function SiswaPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm mx-4">
             <h3 className="text-lg font-semibold mb-4">Edit Role — {editTarget.name}</h3>
-            <select
+            <CustomSelect
               value={editRole}
-              onChange={(e) => setEditRole(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#6c5ce7] outline-none"
-            >
-              <option value="user">Siswa</option>
-              <option value="guru">Guru</option>
-              <option value="admin">Admin</option>
-            </select>
+              onChange={(val) => setEditRole(val)}
+              size="sm"
+              options={[
+                { value: "user", label: "Siswa", icon: <span className="text-sm">🎓</span> },
+                { value: "guru", label: "Guru", icon: <span className="text-sm">👨‍🏫</span> },
+                { value: "admin", label: "Admin", icon: <span className="text-sm">🛡️</span> },
+              ]}
+            />
             <div className="flex justify-end gap-2 mt-4">
               <button onClick={() => setEditTarget(null)} className="px-4 py-2 text-sm rounded-lg border hover:bg-gray-50">Batal</button>
               <button onClick={handleEditRole} disabled={actionLoading} className="px-4 py-2 text-sm rounded-lg bg-[#6c5ce7] text-white hover:bg-[#5b4bd6] disabled:opacity-50">

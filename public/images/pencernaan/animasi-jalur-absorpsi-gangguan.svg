@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="100%" height="100%" role="img" aria-label="Jalur Penyerapan Nutrisi & Analisis Patofisiologis">
+  <defs>
+    <linearGradient id="bgGrad4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#fffbeb"/>
+    </linearGradient>
+    <filter id="shadow4" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.08"/>
+    </filter>
+    <style>
+      @keyframes flowPortal {
+        0% { stroke-dashoffset: 36; }
+        100% { stroke-dashoffset: 0; }
+      }
+      .flow-blood {
+        stroke-dasharray: 9, 4.5;
+        animation: flowPortal 1.4s linear infinite;
+      }
+      .flow-lymph {
+        stroke-dasharray: 8, 4;
+        animation: flowPortal 1.8s linear infinite;
+      }
+      .font-sans { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="960" height="540" rx="20" fill="url(#bgGrad4)" stroke="#fde68a" stroke-width="2"/>
+
+  <!-- Top Title Badge -->
+  <g transform="translate(28, 18)">
+    <rect width="525" height="34" rx="8" fill="#d97706" fill-opacity="0.12"/>
+    <text x="14" y="22" class="font-sans" font-size="13.5" font-weight="800" fill="#b45309">
+      2 JALUR ABSORPSI PASCA-VILI &amp; ANALISIS PATOFISIOLOGIS
+    </text>
+    <text x="570" y="22" class="font-sans" font-size="12" font-weight="600" fill="#64748b">
+      Sirkulasi Darah vs Limfe &amp; Studi Kasus Klinis
+    </text>
+  </g>
+
+  <!-- ================= UPPER HALF: 2 TRANSPORT ROUTES ================= -->
+  <g transform="translate(28, 62)">
+    <rect width="904" height="206" rx="16" fill="#ffffff" stroke="#fde68a" stroke-width="1.8" filter="url(#shadow4)"/>
+    <rect x="0" y="0" width="904" height="32" rx="16" fill="#fef3c7"/>
+    <text x="16" y="21" class="font-sans" font-size="12" font-weight="800" fill="#92400e">
+      SKEMA KOMPARASI 2 JALUR PENGANGKUTAN NUTRIEN PASCA-ABSORPSI
+    </text>
+
+    <!-- Route 1: Larut Air (Sirkulasi Darah Portalis) -->
+    <g transform="translate(16, 42)">
+      <rect width="426" height="150" rx="12" fill="#fef2f2" stroke="#fecaca" stroke-width="1.5"/>
+      <rect x="0" y="0" width="7" height="150" rx="3.5" fill="#ef4444"/>
+      <text x="18" y="23" class="font-sans" font-size="12" font-weight="800" fill="#b91c1c">
+        🩸 JALUR 1: NUTRIEN LARUT AIR (SISTEM PORTAL)
+      </text>
+      <text x="18" y="39" class="font-sans" font-size="9.5" font-weight="600" fill="#7f1d1d">
+        Glukosa, Asam Amino, Vit. B &amp; C, Garam Mineral, Air
+      </text>
+
+      <!-- Flow pills -->
+      <g transform="translate(18, 52)">
+        <rect width="84" height="28" rx="6" fill="#fee2e2"/>
+        <text x="42" y="18" class="font-sans" font-size="9.5" font-weight="800" fill="#991b1b" text-anchor="middle">Kapiler Vili</text>
+
+        <path d="M 87 14 L 115 14" fill="none" stroke="#ef4444" stroke-width="3" class="flow-blood"/>
+
+        <rect x="118" y="0" width="112" height="28" rx="6" fill="#fee2e2"/>
+        <text x="174" y="18" class="font-sans" font-size="9" font-weight="800" fill="#991b1b" text-anchor="middle">V. Porta Hepatika</text>
+
+        <path d="M 233 14 L 258 14" fill="none" stroke="#ef4444" stroke-width="3" class="flow-blood"/>
+
+        <rect x="261" y="0" width="115" height="28" rx="6" fill="#b91c1c"/>
+        <text x="318.5" y="18" class="font-sans" font-size="10" font-weight="800" fill="#ffffff" text-anchor="middle">HATI (LIVER)</text>
+      </g>
+
+      <!-- Wrapped description lines -->
+      <text x="18" y="104" class="font-sans" font-size="10" fill="#475569">
+        Semua sari larut air disaring &amp; diregulasi di hati
+      </text>
+      <text x="18" y="119" class="font-sans" font-size="10" fill="#475569">
+        terlebih dahulu sebelum diedarkan ke seluruh tubuh.
+      </text>
+      <text x="18" y="134" class="font-sans" font-size="10" font-weight="700" fill="#b91c1c">
+        Hati meregulasi glukosa darah &amp; menetralkan toksin.
+      </text>
+    </g>
+
+    <!-- Route 2: Larut Lemak (Sirkulasi Limfe / Lakteal) -->
+    <g transform="translate(462, 42)">
+      <rect width="426" height="150" rx="12" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+      <rect x="0" y="0" width="7" height="150" rx="3.5" fill="#22c55e"/>
+      <text x="18" y="23" class="font-sans" font-size="12" font-weight="800" fill="#15803d">
+        💧 JALUR 2: NUTRIEN LARUT LEMAK (SISTEM KIL LIMFE)
+      </text>
+      <text x="18" y="39" class="font-sans" font-size="9.5" font-weight="600" fill="#14532d">
+        Asam Lemak Bebas, Gliserol, Kilomikron, Vit. A, D, E, K
+      </text>
+
+      <!-- Flow pills -->
+      <g transform="translate(18, 52)">
+        <rect width="84" height="28" rx="6" fill="#dcfce7"/>
+        <text x="42" y="18" class="font-sans" font-size="9.5" font-weight="800" fill="#166534" text-anchor="middle">Lakteal Vili</text>
+
+        <path d="M 87 14 L 115 14" fill="none" stroke="#22c55e" stroke-width="3" class="flow-lymph"/>
+
+        <rect x="118" y="0" width="112" height="28" rx="6" fill="#dcfce7"/>
+        <text x="174" y="18" class="font-sans" font-size="9" font-weight="800" fill="#166534" text-anchor="middle">Ductus Thoracicus</text>
+
+        <path d="M 233 14 L 258 14" fill="none" stroke="#22c55e" stroke-width="3" class="flow-lymph"/>
+
+        <rect x="261" y="0" width="115" height="28" rx="6" fill="#15803d"/>
+        <text x="318.5" y="18" class="font-sans" font-size="9.5" font-weight="800" fill="#ffffff" text-anchor="middle">V. Subklavia Kiri</text>
+      </g>
+
+      <!-- Wrapped description lines -->
+      <text x="18" y="104" class="font-sans" font-size="10" fill="#475569">
+        Kilomikron berdiameter besar; tak muat di kapiler.
+      </text>
+      <text x="18" y="119" class="font-sans" font-size="10" fill="#475569">
+        Masuk ke lakteal limfe melintasi rongga dada,
+      </text>
+      <text x="18" y="134" class="font-sans" font-size="10" font-weight="700" fill="#15803d">
+        lalu bermuara ke vena subklavia tanpa lewat hati!
+      </text>
+    </g>
+  </g>
+
+  <!-- ================= LOWER HALF: 3 CLINICAL PATHOPHYSIOLOGY INSIGHTS ================= -->
+  <g transform="translate(28, 280)">
+    
+    <!-- 1. Diare Kapsaisin -->
+    <g transform="translate(0, 0)">
+      <rect width="290" height="236" rx="14" fill="#ffffff" stroke="#fecaca" stroke-width="1.6" filter="url(#shadow4)"/>
+      <rect x="0" y="0" width="290" height="32" rx="14" fill="#fee2e2"/>
+      <text x="14" y="21" class="font-sans" font-size="12" font-weight="800" fill="#991b1b">
+        🌶️ Diare Makanan Pedas (Kapsaisin)
+      </text>
+      
+      <g transform="translate(14, 44)">
+        <text x="0" y="13" class="font-sans" font-size="10.5" font-weight="800" fill="#b91c1c">Aktivasi Reseptor TRPV1:</text>
+        <text x="0" y="28" class="font-sans" font-size="10" fill="#475569">Molekul pedas menipu sensor saraf mukosa</text>
+        <text x="0" y="42" class="font-sans" font-size="10" fill="#475569">seolah ada zat racun berbahaya.</text>
+
+        <rect y="54" width="262" height="122" rx="8" fill="#fef2f2" stroke="#fee2e2"/>
+        <text x="10" y="72" class="font-sans" font-size="10" font-weight="800" fill="#991b1b">Refleks Darurat ENS:</text>
+        <text x="10" y="88" class="font-sans" font-size="9.5" fill="#7f1d1d">• Hipermotilitas peristaltik usus</text>
+        <text x="10" y="102" class="font-sans" font-size="9.5" fill="#7f1d1d">• Sekresi air masif membilas lumen</text>
+        <text x="10" y="116" class="font-sans" font-size="9.5" fill="#7f1d1d">• Kolon tak sempat serap cairan</text>
+        <text x="10" y="134" class="font-sans" font-size="9.5" font-weight="700" fill="#b91c1c">→ Feses cair demi cuci iritan!</text>
+      </g>
+    </g>
+
+    <!-- 2. Apendisitis -->
+    <g transform="translate(307, 0)">
+      <rect width="290" height="236" rx="14" fill="#ffffff" stroke="#fed7aa" stroke-width="1.6" filter="url(#shadow4)"/>
+      <rect x="0" y="0" width="290" height="32" rx="14" fill="#ffedd5"/>
+      <text x="14" y="21" class="font-sans" font-size="12" font-weight="800" fill="#9a3412">
+        ⚠️ Apendisitis: Mitos vs Fakta Klinis
+      </text>
+
+      <g transform="translate(14, 44)">
+        <text x="0" y="13" class="font-sans" font-size="10.5" font-weight="800" fill="#c2410c">Penyebab Sebenarnya:</text>
+        <text x="0" y="28" class="font-sans" font-size="10" fill="#475569">Bukan biji cabai/tomat, melainkan</text>
+        <text x="0" y="42" class="font-sans" font-size="10" font-weight="800" fill="#ea580c">Fekalit (massa feses yang membatu).</text>
+
+        <rect y="54" width="262" height="122" rx="8" fill="#fff7ed" stroke="#ffedd5"/>
+        <text x="10" y="72" class="font-sans" font-size="10" font-weight="800" fill="#9a3412">Patogenesis Sumbatan:</text>
+        <text x="10" y="88" class="font-sans" font-size="9.5" fill="#7c2d12">• Lumen apendiks tertutup rapat</text>
+        <text x="10" y="102" class="font-sans" font-size="9.5" fill="#7c2d12">• Lendir menumpuk → tekanan lumen ↑</text>
+        <text x="10" y="116" class="font-sans" font-size="9.5" fill="#7c2d12">• Iskemia dinding &amp; kuman berbiak</text>
+        <text x="10" y="134" class="font-sans" font-size="9.5" font-weight="700" fill="#c2410c">→ Radang akut &amp; risiko perforasi!</text>
+      </g>
+    </g>
+
+    <!-- 3. Operasi Bariatrik -->
+    <g transform="translate(614, 0)">
+      <rect width="290" height="236" rx="14" fill="#ffffff" stroke="#e9d5ff" stroke-width="1.6" filter="url(#shadow4)"/>
+      <rect x="0" y="0" width="290" height="32" rx="14" fill="#f3e8ff"/>
+      <text x="14" y="21" class="font-sans" font-size="12" font-weight="800" fill="#6b21a8">
+        ⚖️ Bedah Bariatrik (Gastric Bypass)
+      </text>
+
+      <g transform="translate(14, 44)">
+        <text x="0" y="13" class="font-sans" font-size="10.5" font-weight="800" fill="#7e22ce">Mekanisme Pembedahan:</text>
+        <text x="0" y="28" class="font-sans" font-size="10" fill="#475569">Kantung lambung dipangkas 80%</text>
+        <text x="0" y="42" class="font-sans" font-size="10" fill="#475569">&amp; saluran disambung ke jejunum.</text>
+
+        <rect y="54" width="262" height="122" rx="8" fill="#faf5ff" stroke="#f3e8ff"/>
+        <text x="10" y="72" class="font-sans" font-size="10" font-weight="800" fill="#581c87">Konsekuensi Fisiologis:</text>
+        <text x="10" y="88" class="font-sans" font-size="9.5" fill="#6b21a8">• Hormon lapar ghrelin anjlok</text>
+        <text x="10" y="102" class="font-sans" font-size="9.5" fill="#6b21a8">• Wajib seumur hidup: Vit. B12</text>
+        <text x="10" y="116" class="font-sans" font-size="9" fill="#7e22ce">(faktor intrinsik lambung hilang!)</text>
+        <text x="10" y="134" class="font-sans" font-size="9.5" font-weight="700" fill="#581c87">• Suplemen Fe &amp; Ca (duodenum lewat)</text>
+      </g>
+    </g>
+  </g>
+</svg>
