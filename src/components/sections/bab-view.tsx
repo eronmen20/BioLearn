@@ -8,7 +8,7 @@ import { useIsMounted } from "@/lib/use-is-mounted";
 import { useAuthStore } from "@/lib/auth-store";
 import { RichContentRenderer } from "@/components/rich-content-renderer";
 import { AnalogiSection } from "@/components/analogi-card";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, RefreshCw, ChevronRight } from "lucide-react";
 
 // Modularized subcomponents
 import { ObjectivesCard } from "@/components/bab/objectives-card";
@@ -309,10 +309,57 @@ export function BabContent({
             subKey={subs[subIdx]}
             allSubKeys={subs}
             onContinue={subIdx < subs.length - 1 ? () => handleSelectSub(subIdx + 1) : undefined}
+            onContinueToReflection={
+              subIdx === subs.length - 1
+                ? () => {
+                    if (isGuestOnHook) {
+                      handleRequireAuth(lang === "en" ? "Reflection Quiz" : "Quiz Refleksi");
+                      return;
+                    }
+                    setShowReflection(true);
+                    scrollToTop();
+                  }
+                : undefined
+            }
+            isLastSub={subIdx === subs.length - 1}
             nextSubTitle={nextSubTitle}
             isGuestOnHook={isGuestOnHook}
             onRequireAuth={handleRequireAuth}
           />
+
+          {/* Tombol Lanjut ke Quiz Refleksi di akhir materi sub-bab terakhir */}
+          {subIdx === subs.length - 1 && mounted && progress.isReflectionUnlocked(babId, subs) && (
+            <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-accent/10 to-purple-500/5 border border-purple-300/40 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3 text-left">
+                <span className="text-2xl sm:text-3xl shrink-0">🪞</span>
+                <div>
+                  <h4 className="font-bold text-sm sm:text-base text-ink">
+                    {lang === "en" ? "All Sub-chapters Completed!" : "Semua Sub-Bab Selesai!"}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-muted">
+                    {lang === "en"
+                      ? "Ready to test your full understanding? Proceed to the Reflection Quiz."
+                      : "Siap menguji pemahaman menyeluruh? Lanjut kerjakan Kuis Refleksi Bab ini."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isGuestOnHook) {
+                    handleRequireAuth(lang === "en" ? "Reflection Quiz" : "Quiz Refleksi");
+                    return;
+                  }
+                  setShowReflection(true);
+                  scrollToTop();
+                }}
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-accent to-purple-600 text-white text-sm font-bold shadow-sm hover:shadow-md hover:opacity-95 active:scale-95 transition-all cursor-pointer"
+              >
+                <span>{lang === "en" ? "Proceed to Reflection Quiz" : "Lanjut ke Kuis Refleksi"}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Bottom Hook Conversion Card khusus tamu */}
           {isGuestOnHook && subIdx === 0 && (

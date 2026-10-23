@@ -1375,9 +1375,9 @@ async function main() {
       question_en:
         "Under the ICTV taxonomic system, viral family designations uniformly conclude with the suffix...",
       question_image_url: "",
-      options_id: ["-viridae", "-virus", "-virales", "-virinae"],
-      options_en: ["-viridae", "-virus", "-virales", "-virinae"],
-      correct_answer: 0,
+      options_id: ["-virus", "-virales", "-viridae", "-virinae"],
+      options_en: ["-virus", "-virales", "-viridae", "-virinae"],
+      correct_answer: 2,
       explanation_id:
         "Famili virus berakhiran -viridae (misal Poxviridae, Retroviridae), sedangkan genus berakhiran -virus.",
       explanation_en:
@@ -1395,18 +1395,18 @@ async function main() {
         "The correct ICTV classification lineage for the smallpox virus is...",
       question_image_url: "",
       options_id: [
-        "Famili Poxviridae, Genus Orthopoxvirus, Spesies Variola virus",
         "Famili Variolaviridae, Genus Pox, Spesies Orthopoxvirus",
+        "Famili Poxviridae, Genus Orthopoxvirus, Spesies Variola virus",
         "Famili Herpesviridae, Genus Variola, Spesies Poxvirus",
         "Famili Retroviridae, Genus Lentivirus, Spesies Variola",
       ],
       options_en: [
-        "Family Poxviridae, Genus Orthopoxvirus, Species Variola virus",
         "Family Variolaviridae, Genus Pox, Species Orthopoxvirus",
+        "Family Poxviridae, Genus Orthopoxvirus, Species Variola virus",
         "Family Herpesviridae, Genus Variola, Species Poxvirus",
         "Family Retroviridae, Genus Lentivirus, Species Variola",
       ],
-      correct_answer: 0,
+      correct_answer: 1,
       explanation_id:
         "Taksonomi cacar: Famili Poxviridae → Genus Orthopoxvirus → Spesies Variola virus.",
       explanation_en:
@@ -1424,18 +1424,18 @@ async function main() {
         "Which group below consists EXCLUSIVELY of DNA viruses?",
       question_image_url: "",
       options_id: [
-        "Herpesvirus, Papovavirus, Adenovirus, Parvovirus",
         "Coronavirus, Picornavirus, Paramyxovirus, Retrovirus",
         "Flavivirus, Rhabdovirus, Togavirus, Orthomyxovirus",
         "Poliovirus, HIV, Ebola virus, Influenza virus",
+        "Herpesvirus, Papovavirus, Adenovirus, Parvovirus",
       ],
       options_en: [
-        "Herpesvirus, Papovavirus, Adenovirus, Parvovirus",
         "Coronavirus, Picornavirus, Paramyxovirus, Retrovirus",
         "Flavivirus, Rhabdovirus, Togavirus, Orthomyxovirus",
         "Poliovirus, HIV, Ebola virus, Influenza virus",
+        "Herpesvirus, Papovavirus, Adenovirus, Parvovirus",
       ],
-      correct_answer: 0,
+      correct_answer: 3,
       explanation_id:
         "Virus DNA meliputi Parvo, Papova, Adeno, Herpes, dan Poxvirus. Corona, Polio, Flavi, dan Influenza adalah virus RNA.",
       explanation_en:
@@ -1471,9 +1471,9 @@ async function main() {
       question_en:
         "Which term does NOT designate a viral morphology, but rather a bacterial cell shape?",
       question_image_url: "",
-      options_id: ["Kokus dan Streptobasil", "Heliks / Batang", "Polihedral", "Kompleks T"],
-      options_en: ["Coccus and Streptobacillus", "Helical / Rod", "Polyhedral", "Complex T"],
-      correct_answer: 0,
+      options_id: ["Heliks / Batang", "Polihedral", "Kokus dan Streptobasil", "Kompleks T"],
+      options_en: ["Helical / Rod", "Polyhedral", "Coccus and Streptobacillus", "Complex T"],
+      correct_answer: 2,
       explanation_id:
         "Kokus (bulat seluler) dan streptobasil adalah bentuk sel bakteri. Bentuk virus meliputi heliks, polihedral, sferis, peluru, dan kompleks T.",
       explanation_en:
@@ -1493,18 +1493,18 @@ async function main() {
         "In gene therapy biotechnology, Retroviruses serve as vectors delivering genes encoding the enzyme...",
       question_image_url: "",
       options_id: [
-        "Adenosin Deaminase (ADA) ke limfosit T",
         "Amilase ke sel pankreas",
+        "Adenosin Deaminase (ADA) ke limfosit T",
         "Pepsinogen ke lambung",
         "Lipase ke usus halus",
       ],
       options_en: [
-        "Adenosine Deaminase (ADA) into T lymphocytes",
         "Amylase into pancreatic cells",
+        "Adenosine Deaminase (ADA) into T lymphocytes",
         "Pepsinogen into gastric mucosa",
         "Lipase into small intestine",
       ],
-      correct_answer: 0,
+      correct_answer: 1,
       explanation_id:
         "Retrovirus dipakai sebagai vektor terapi gen untuk memasukkan gen enzim ADA ke sel limfosit T penderita SCID.",
       explanation_en:
@@ -1521,9 +1521,9 @@ async function main() {
       question_en:
         "The viral group deployed as an eco-friendly bioinsecticide against agricultural pests is...",
       question_image_url: "",
-      options_id: ["Baculovirus", "Aphthovirus", "Morbillivirus", "Picornavirus"],
-      options_en: ["Baculovirus", "Aphthovirus", "Morbillivirus", "Picornavirus"],
-      correct_answer: 0,
+      options_id: ["Aphthovirus", "Morbillivirus", "Picornavirus", "Baculovirus"],
+      options_en: ["Aphthovirus", "Morbillivirus", "Picornavirus", "Baculovirus"],
+      correct_answer: 3,
       explanation_id:
         "Baculovirus dibiakkan dan disemprotkan untuk membasmi hama ulat/serangga tanpa mencemari lingkungan.",
       explanation_en:
@@ -1560,18 +1560,18 @@ async function main() {
         "Tungro disease causing rice stunting and chlorosis is vectored by...",
       question_image_url: "",
       options_id: [
-        "Wereng hijau dan wereng cokelat",
         "Nyamuk Anopheles",
         "Kutu daun tembakau",
+        "Wereng hijau dan wereng cokelat",
         "Lalat buah",
       ],
       options_en: [
-        "Green and brown leafhoppers / planthoppers",
         "Anopheles mosquitoes",
         "Tobacco aphids",
+        "Green and brown leafhoppers / planthoppers",
         "Fruit flies",
       ],
-      correct_answer: 0,
+      correct_answer: 2,
       explanation_id:
         "Virus tungro ditularkan oleh serangga wereng hijau (Nephotettix virescens) dan wereng cokelat pada tanaman padi.",
       explanation_en:
@@ -1589,18 +1589,18 @@ async function main() {
         "Newcastle Disease (Tetelo) in poultry presents with characteristic clinical manifestations of...",
       question_image_url: "",
       options_id: [
-        "Diare, batuk, kehilangan keseimbangan, dan kepala terputar (tortikolis)",
         "Muncul bercak kuning pada bulu sayap",
+        "Diare, batuk, kehilangan keseimbangan, dan kepala terputar (tortikolis)",
         "Kuku ayam terlepas dan berlendir",
         "Pembengkakan parotis kelenjar ludah",
       ],
       options_en: [
-        "Diarrhea, coughing, loss of balance, and twisted neck tremors (torticollis)",
         "Yellow spots appearing on feathers",
+        "Diarrhea, coughing, loss of balance, and twisted neck tremors (torticollis)",
         "Detached claws and foot slime",
         "Swelling of parotid salivary glands",
       ],
-      correct_answer: 0,
+      correct_answer: 1,
       explanation_id:
         "Tetelo pada unggas disebabkan oleh virus NCD dengan ciri khas batuk, diare, gangguan syaraf dan tortikolis (kepala tertekuk berputar).",
       explanation_en:

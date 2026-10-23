@@ -33,6 +33,8 @@ export function SubBabQuiz({
   subKey,
   allSubKeys,
   onContinue,
+  onContinueToReflection,
+  isLastSub,
   nextSubTitle,
   isGuestOnHook,
   onRequireAuth,
@@ -41,6 +43,8 @@ export function SubBabQuiz({
   subKey: string;
   allSubKeys: string[];
   onContinue?: () => void;
+  onContinueToReflection?: () => void;
+  isLastSub?: boolean;
   nextSubTitle?: string | null;
   isGuestOnHook?: boolean;
   onRequireAuth?: (title?: string) => void;
@@ -258,6 +262,14 @@ export function SubBabQuiz({
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
+        ) : passed && isLastSub && onContinueToReflection ? (
+          <button
+            onClick={onContinueToReflection}
+            className="w-full max-w-xs mx-auto flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-accent to-purple-600 text-white rounded-xl text-sm font-bold hover:shadow-md hover:opacity-95 transition-all shadow-sm active:scale-95 cursor-pointer"
+          >
+            <span>🪞 {lang === "en" ? "Continue to Reflection Quiz" : "Lanjut ke Kuis Refleksi"}</span>
+            <ChevronRight className="w-4 h-4" />
+          </button>
         ) : passed && onContinue ? (
           <button
             onClick={onContinue}
